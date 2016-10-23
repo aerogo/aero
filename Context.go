@@ -6,6 +6,7 @@ import (
 	"unsafe"
 
 	"github.com/OneOfOne/xxhash"
+	"github.com/buaazp/fasthttprouter"
 	"github.com/patrickmn/go-cache"
 	"github.com/valyala/fasthttp"
 )
@@ -24,35 +25,40 @@ const (
 	ifNoneMatchHeader     = "If-None-Match"
 )
 
-// Configuration ...
-type Configuration struct {
-	GZip      bool
-	GZipCache bool
-}
-
-// Config ...
-var Config Configuration
-
 var ifNoneMatchHeaderBytes []byte
 var etagToResponse *cache.Cache
 
 func init() {
-	Config.GZip = true
-	Config.GZipCache = true
-
 	ifNoneMatchHeaderBytes = []byte(ifNoneMatchHeader)
 	etagToResponse = cache.New(responseCacheDuration, responseCacheCleanup)
 }
 
+// Context ...
+type Context struct {
+	// Keep this as the first parameter for quick pointer acquisition
+	requestCtx *fasthttp.RequestCtx
+
+	// A pointer to the application this request occured on
+	App *Application
+
+	// Parameters used in this request
+	Params fasthttprouter.Params
+}
+
+// Handle ...
+type Handle func(*Context)
+
 // Respond responds either with raw code or gzipped if the
 // code length is greater than the gzip threshold.
-func Respond(ctx *fasthttp.RequestCtx, code string) {
-	RespondBytes(ctx, *(*[]byte)(unsafe.Pointer(&code)))
+func (aeroCtx *Context) Respond(code string) {
+	aeroCtx.RespondBytes(*(*[]byte)(unsafe.Pointer(&code)))
 }
 
 // RespondBytes responds either with raw code or gzipped if the
 // code length is greater than the gzip threshold. Requires a byte slice.
-func RespondBytes(ctx *fasthttp.RequestCtx, b []byte) {
+func (aeroCtx *Context) RespondBytes(b []byte) {
+	ctx := aeroCtx.requestCtx
+
 	// ETag generation
 	h := xxhash.NewS64(0)
 	h.Write(b)
@@ -72,10 +78,10 @@ func RespondBytes(ctx *fasthttp.RequestCtx, b []byte) {
 	}
 
 	// Body
-	if Config.GZip && len(b) >= gzipThreshold {
+	if aeroCtx.App.Config.GZip && len(b) >= gzipThreshold {
 		ctx.Response.Header.Set(contentEncodingHeader, contentEncoding)
 
-		if Config.GZipCache {
+		if aeroCtx.App.Config.GZipCache {
 			cachedResponse, found := etagToResponse.Get(etag)
 
 			if found {
