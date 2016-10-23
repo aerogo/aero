@@ -1,10 +1,9 @@
 package aero
 
 import (
-	"bytes"
-	"compress/gzip"
 	"strconv"
 	"time"
+	"unsafe"
 
 	"github.com/OneOfOne/xxhash"
 	"github.com/patrickmn/go-cache"
@@ -13,7 +12,8 @@ import (
 
 const (
 	gzipThreshold         = 1450
-	responseCacheTime     = 30 * time.Second
+	responseCacheDuration = 5 * time.Minute
+	responseCacheCleanup  = 1 * time.Minute
 	contentEncodingHeader = "Content-Encoding"
 	contentEncoding       = "gzip"
 	contentTypeHeader     = "Content-Type"
@@ -25,48 +25,30 @@ const (
 	ifNoneMatchOffset     = len("If-None-Match: ")
 )
 
+// Configuration ...
+type Configuration struct {
+	GZip      bool
+	GZipCache bool
+}
+
+// Config ...
+var Config Configuration
+
 var ifNoneMatchHeaderBytes []byte
 var etagToResponse *cache.Cache
 
 func init() {
+	Config.GZip = true
+	Config.GZipCache = true
+
 	ifNoneMatchHeaderBytes = []byte(ifNoneMatchHeader)
-	etagToResponse = cache.New(responseCacheTime, responseCacheTime)
-}
-
-func sendCachedResponse(ctx *fasthttp.RequestCtx, etag string) bool {
-	// Headers
-	ctx.Response.Header.Set(contentTypeHeader, contentType)
-	ctx.Response.Header.Set(serverHeader, server)
-
-	// Is the client cache up to date?
-	headers := ctx.Request.Header.Header()
-	index := bytes.Index(headers, ifNoneMatchHeaderBytes)
-
-	if index != -1 {
-		var clientETag []byte
-		for i := index; i < len(headers); i++ {
-			if headers[i] == '\r' {
-				clientETag = headers[index+ifNoneMatchOffset : i]
-
-				// Send short 304 response if the ETags match
-				// if bytes.Compare([]byte(etag), clientETag) == 0 {
-				if etag == string(clientETag) {
-					ctx.SetStatusCode(304)
-					return true
-				}
-
-				return false
-			}
-		}
-	}
-
-	return false
+	etagToResponse = cache.New(responseCacheDuration, responseCacheCleanup)
 }
 
 // Respond responds either with raw code or gzipped if the
 // code length is greater than the gzip threshold.
 func Respond(ctx *fasthttp.RequestCtx, code string) {
-	RespondBytes(ctx, []byte(code))
+	RespondBytes(ctx, *(*[]byte)(unsafe.Pointer(&code)))
 }
 
 // RespondBytes responds either with raw code or gzipped if the
@@ -78,30 +60,32 @@ func RespondBytes(ctx *fasthttp.RequestCtx, b []byte) {
 	etag := strconv.FormatUint(h.Sum64(), 10)
 	ctx.Response.Header.Set(etagHeader, etag)
 
-	if sendCachedResponse(ctx, etag) {
+	// Headers
+	ctx.Response.Header.Set(contentTypeHeader, contentType)
+	ctx.Response.Header.Set(serverHeader, server)
+
+	// If client cache is up to date, send 304 with no response body
+	clientETag := ctx.Request.Header.Peek(ifNoneMatchHeader)
+	if etag == string(clientETag) {
+		ctx.SetStatusCode(304)
 		return
 	}
 
 	// Body
-	if len(b) >= gzipThreshold {
+	if Config.GZip && len(b) >= gzipThreshold {
 		ctx.Response.Header.Set(contentEncodingHeader, contentEncoding)
 
-		cachedResponse, found := etagToResponse.Get(etag)
+		if Config.GZipCache {
+			cachedResponse, found := etagToResponse.Get(etag)
 
-		if false && found {
-			ctx.Write(cachedResponse.([]byte))
-		} else {
-			// TODO: This needs optimization by reusing gzip writers
-			var buffer bytes.Buffer
-			gz, _ := gzip.NewWriterLevel(&buffer, 1)
-			gz.Write(b)
-			gz.Flush()
-			defer gz.Close()
-			response := buffer.Bytes()
-			etagToResponse.Set(etag, response, cache.DefaultExpiration)
-			ctx.Write(response)
-			// fasthttp.WriteGzipLevel(ctx.Response.BodyWriter(), b, 1)
+			if found {
+				ctx.Write(cachedResponse.([]byte))
+				return
+			}
 		}
+
+		fasthttp.WriteGzipLevel(ctx.Response.BodyWriter(), b, 1)
+		defer etagToResponse.Set(etag, ctx.Response.Body(), cache.DefaultExpiration)
 	} else {
 		ctx.Write(b)
 	}
