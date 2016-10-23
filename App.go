@@ -2,6 +2,7 @@ package aero
 
 import (
 	"fmt"
+	"net"
 	"strconv"
 
 	"github.com/buaazp/fasthttprouter"
@@ -17,7 +18,7 @@ type Application struct {
 	router *fasthttprouter.Router
 }
 
-// New ...
+// New creates a new application.
 func New() *Application {
 	app := new(Application)
 	app.root = ""
@@ -46,15 +47,45 @@ func (app *Application) Get(path string, handle Handle) {
 
 // Run calls app.Load() and app.Listen().
 func (app *Application) Run() {
+	app.Load()
 	app.Listen()
+}
+
+// Load loads the application data from the file system.
+func (app *Application) Load() {
+	// TODO: ...
 }
 
 // Listen starts the server.
 func (app *Application) Listen() {
 	fmt.Println("Server running on:", color.GreenString("http://localhost:"+strconv.Itoa(app.Config.Ports.HTTP)))
-	err := fasthttp.ListenAndServe(":"+strconv.Itoa(app.Config.Ports.HTTP), app.router.Handler)
 
-	if err != nil {
-		panic(err)
+	listener := app.listen()
+	app.serve(listener)
+}
+
+// listen listens on the specified host and port.
+func (app *Application) listen() net.Listener {
+	address := ":" + strconv.Itoa(app.Config.Ports.HTTP)
+
+	listener, bindError := net.Listen("tcp", address)
+
+	if bindError != nil {
+		panic(bindError)
+	}
+
+	return listener
+}
+
+// serve serves requests from the given listener.
+func (app *Application) serve(listener net.Listener) {
+	server := &fasthttp.Server{
+		Handler: app.router.Handler,
+	}
+
+	serveError := server.Serve(listener)
+
+	if serveError != nil {
+		panic(serveError)
 	}
 }
