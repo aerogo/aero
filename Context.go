@@ -35,13 +35,13 @@ func init() {
 
 // Context ...
 type Context struct {
-	// Keep this as the first parameter for quick pointer acquisition
+	// Keep this as the first parameter for quick pointer acquisition.
 	requestCtx *fasthttp.RequestCtx
 
-	// A pointer to the application this request occured on
+	// A pointer to the application this request occured on.
 	App *Application
 
-	// Parameters used in this request
+	// Parameters used in this request.
 	Params fasthttprouter.Params
 }
 
@@ -69,7 +69,7 @@ func (aeroCtx *Context) RespondBytes(b []byte) {
 	ctx.Response.Header.Set(contentTypeHeader, contentType)
 	ctx.Response.Header.Set(serverHeader, server)
 
-	// If client cache is up to date, send 304 with no response body
+	// If client cache is up to date, send 304 with no response body.
 	clientETag := ctx.Request.Header.Peek(ifNoneMatchHeader)
 
 	if etag == *(*string)(unsafe.Pointer(&clientETag)) {

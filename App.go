@@ -2,17 +2,19 @@ package aero
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/buaazp/fasthttprouter"
 	"github.com/fatih/color"
 	"github.com/valyala/fasthttp"
 )
 
-// Application ...
+// Application represents a single web service.
 type Application struct {
+	Config Configuration
+
 	root   string
 	router *fasthttprouter.Router
-	Config Configuration
 }
 
 // New ...
@@ -24,13 +26,14 @@ func New() *Application {
 	// Default configuration
 	app.Config.GZip = true
 	app.Config.GZipCache = true
+	app.Config.Ports.HTTP = 4000
 
 	return app
 }
 
-// Get ...
-func (app *Application) Get(route string, handle Handle) {
-	app.router.GET(route, func(fasthttpContext *fasthttp.RequestCtx, params fasthttprouter.Params) {
+// Get registers your function to be called when a certain path has been requested.
+func (app *Application) Get(path string, handle Handle) {
+	app.router.GET(path, func(fasthttpContext *fasthttp.RequestCtx, params fasthttprouter.Params) {
 		ctx := Context{
 			App:        app,
 			Params:     params,
@@ -41,10 +44,15 @@ func (app *Application) Get(route string, handle Handle) {
 	})
 }
 
-// Run ...
+// Run calls app.Load() and app.Listen().
 func (app *Application) Run() {
-	fmt.Println("Server running on:", color.GreenString("http://localhost:4000/"))
-	err := fasthttp.ListenAndServe(":4000", app.router.Handler)
+	app.Listen()
+}
+
+// Listen starts the server.
+func (app *Application) Listen() {
+	fmt.Println("Server running on:", color.GreenString("http://localhost:"+strconv.Itoa(app.Config.Ports.HTTP)))
+	err := fasthttp.ListenAndServe(":"+strconv.Itoa(app.Config.Ports.HTTP), app.router.Handler)
 
 	if err != nil {
 		panic(err)
