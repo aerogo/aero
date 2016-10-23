@@ -1,7 +1,8 @@
 package aero
 
 import (
-	"encoding/json"
+	"bytes"
+	"encoding/gob"
 	"runtime"
 	"strconv"
 
@@ -30,16 +31,13 @@ func init() {
 func worker(jobs <-chan renderJob, results chan<- string) {
 	vm := otto.New()
 
+	var encodedBytes bytes.Buffer
+	enc := gob.NewEncoder(&encodedBytes)
+
 	for job := range jobs {
 		h := xxhash.NewS64(0)
-
-		for _, value := range job.params {
-			jsonBytes, err := json.Marshal(value)
-
-			if err == nil {
-				h.Write(jsonBytes)
-			}
-		}
+		enc.Encode(job.params)
+		h.Write(encodedBytes.Bytes())
 
 		hash := strconv.FormatUint(h.Sum64(), 10)
 		cachedResponse, found := job.template.renderCache.Get(hash)
