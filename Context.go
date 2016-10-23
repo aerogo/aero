@@ -7,7 +7,7 @@ import (
 
 	"github.com/OneOfOne/xxhash"
 	"github.com/buaazp/fasthttprouter"
-	"github.com/patrickmn/go-cache"
+	cache "github.com/patrickmn/go-cache"
 	"github.com/valyala/fasthttp"
 )
 
