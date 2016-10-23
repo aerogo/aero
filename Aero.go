@@ -21,8 +21,7 @@ const (
 	etagHeader            = "ETag"
 	serverHeader          = "Server"
 	server                = "Aero"
-	ifNoneMatchHeader     = "If-None-Match: "
-	ifNoneMatchOffset     = len("If-None-Match: ")
+	ifNoneMatchHeader     = "If-None-Match"
 )
 
 // Configuration ...
@@ -66,7 +65,8 @@ func RespondBytes(ctx *fasthttp.RequestCtx, b []byte) {
 
 	// If client cache is up to date, send 304 with no response body
 	clientETag := ctx.Request.Header.Peek(ifNoneMatchHeader)
-	if etag == string(clientETag) {
+
+	if etag == *(*string)(unsafe.Pointer(&clientETag)) {
 		ctx.SetStatusCode(304)
 		return
 	}

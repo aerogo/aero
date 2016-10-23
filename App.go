@@ -26,7 +26,7 @@ func (app *App) Get(route string, handle fasthttprouter.Handle) {
 
 // Run ...
 func (app *App) Run() {
-	err := fasthttp.ListenAndServe(":5000", app.router.Handler)
+	err := fasthttp.ListenAndServe(":4000", app.router.Handler)
 
 	if err != nil {
 		panic(err)
