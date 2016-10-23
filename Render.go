@@ -24,11 +24,11 @@ func init() {
 	renderResults = make(chan string, 4096)
 
 	for w := 1; w <= runtime.NumCPU(); w++ {
-		go worker(renderJobs, renderResults)
+		go renderWorker(renderJobs, renderResults)
 	}
 }
 
-func worker(jobs <-chan renderJob, results chan<- string) {
+func renderWorker(jobs <-chan renderJob, results chan<- string) {
 	vm := otto.New()
 
 	var encodedBytes bytes.Buffer
