@@ -32,9 +32,10 @@ func init() {
 
 func renderWorker(jobs <-chan renderJob, results chan<- string) {
 	vm := otto.New()
+	h := xxhash.NewS64(0)
 
 	for job := range jobs {
-		h := xxhash.NewS64(0)
+		h.Reset()
 		serialized, _ := bson.Marshal(job.params)
 		h.Write(serialized)
 
