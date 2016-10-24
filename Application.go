@@ -23,11 +23,7 @@ func New() *Application {
 	app := new(Application)
 	app.root = ""
 	app.router = fasthttprouter.New()
-
-	// Default configuration
-	app.Config.GZip = true
-	app.Config.GZipCache = true
-	app.Config.Ports.HTTP = 4000
+	app.Config.Reset()
 
 	return app
 }
