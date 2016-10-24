@@ -41,7 +41,7 @@ func renderWorker(jobs <-chan renderJob, results chan<- string) {
 		hash := strconv.FormatUint(h.Sum64(), 10)
 		cachedResponse, found := job.template.renderCache.Get(hash)
 
-		if found && false {
+		if found {
 			results <- cachedResponse.(string)
 		} else {
 			for key, value := range job.params {

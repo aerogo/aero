@@ -62,7 +62,7 @@ func (aeroCtx *Context) RespondBytes(b []byte) {
 	// ETag generation
 	h := xxhash.NewS64(0)
 	h.Write(b)
-	etag := strconv.FormatUint(h.Sum64(), 10)
+	etag := strconv.FormatUint(h.Sum64(), 16)
 	ctx.Response.Header.Set(etagHeader, etag)
 
 	// Headers
