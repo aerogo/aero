@@ -1,6 +1,7 @@
 package aero
 
 import (
+	"reflect"
 	"strconv"
 	"time"
 	"unsafe"
@@ -51,7 +52,9 @@ type Handle func(*Context)
 // Respond responds either with raw code or gzipped if the
 // code length is greater than the gzip threshold.
 func (aeroCtx *Context) Respond(code string) {
-	aeroCtx.RespondBytes(*(*[]byte)(unsafe.Pointer(&code)))
+	// Convert string to byte slice
+	stringHeader := (*reflect.StringHeader)(unsafe.Pointer(&code))
+	aeroCtx.RespondBytes((*[0x7fffffff]byte)(unsafe.Pointer(stringHeader.Data))[:len(code):len(code)])
 }
 
 // RespondBytes responds either with raw code or gzipped if the
