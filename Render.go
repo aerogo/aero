@@ -1,22 +1,24 @@
 package aero
 
 import (
-	"bytes"
-	"encoding/gob"
 	"runtime"
 	"strconv"
 
 	"github.com/OneOfOne/xxhash"
 	cache "github.com/patrickmn/go-cache"
 	"github.com/robertkrimen/otto"
+	"gopkg.in/mgo.v2/bson"
 )
+
+// Map is equivalent to map[string]interface{}.
+type Map map[string]interface{}
 
 var renderJobs chan renderJob
 var renderResults chan string
 
 type renderJob struct {
 	template *Template
-	params   map[string]interface{}
+	params   Map
 }
 
 func init() {
@@ -31,26 +33,40 @@ func init() {
 func renderWorker(jobs <-chan renderJob, results chan<- string) {
 	vm := otto.New()
 
-	var encodedBytes bytes.Buffer
-	enc := gob.NewEncoder(&encodedBytes)
-
 	for job := range jobs {
 		h := xxhash.NewS64(0)
-		enc.Encode(job.params)
-		h.Write(encodedBytes.Bytes())
+		serialized, _ := bson.Marshal(job.params)
+		h.Write(serialized)
 
 		hash := strconv.FormatUint(h.Sum64(), 10)
 		cachedResponse, found := job.template.renderCache.Get(hash)
 
-		if found {
+		if found && false {
 			results <- cachedResponse.(string)
 		} else {
 			for key, value := range job.params {
 				vm.Set(key, value)
 			}
 
-			result, _ := vm.Run(job.template.Script)
-			code, _ := result.ToString()
+			if job.template.Script == nil {
+				results <- job.template.syntaxError
+				continue
+			}
+
+			result, runtimeError := vm.Run(job.template.Script)
+
+			if runtimeError != nil {
+				results <- runtimeError.Error()
+				continue
+			}
+
+			code, toStringError := result.ToString()
+
+			if toStringError != nil {
+				results <- toStringError.Error()
+				continue
+			}
+
 			results <- code
 
 			job.template.renderCache.Set(hash, code, cache.DefaultExpiration)

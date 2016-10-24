@@ -21,6 +21,7 @@ type Template struct {
 	Script      *otto.Script
 	Code        string
 	raw         string
+	syntaxError string
 	renderCache *cache.Cache
 }
 
@@ -38,6 +39,7 @@ func NewTemplate(file string) *Template {
 	t, _ := fasttemplate.NewTemplate(raw, "{{", "}}")
 
 	code := "html = '" + t.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
+		tag = strings.Replace(tag, "'", "\\'", -1)
 		if tag == "end" {
 			return w.Write([]byte("'; }\nhtml += '"))
 		}
@@ -53,14 +55,24 @@ func NewTemplate(file string) *Template {
 		return w.Write([]byte("';\nhtml += (" + tag + ");\nhtml += '"))
 	}) + "';"
 
+	// Remove useless statements
 	code = strings.Replace(code, "html += '';", "", -1)
+
+	// Optimize string concatenation
+	code = strings.Replace(code, ";\nhtml += ", " + ", -1)
+
+	// color.White(file)
+	// color.Green(raw)
+	// color.Yellow(code)
+
 	template.Code = code
 
 	compiler := otto.New()
 	script, err := compiler.Compile(file, code)
 
 	if err != nil {
-		color.Red(err.Error())
+		template.syntaxError = err.Error()
+		color.Red(template.syntaxError)
 	}
 
 	template.Script = script
