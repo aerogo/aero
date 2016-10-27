@@ -61,8 +61,8 @@ func NewTemplate(file string) *Template {
 	// Optimize string concatenation
 	code = strings.Replace(code, ";\nhtml += ", " + ", -1)
 
-	// color.White(file)
-	// color.Green(raw)
+	color.White(file)
+	color.Green(raw)
 	// color.Yellow(code)
 
 	template.Code = code
