@@ -94,7 +94,7 @@ func (aeroCtx *Context) RespondBytes(b []byte) {
 		}
 
 		fasthttp.WriteGzipLevel(ctx.Response.BodyWriter(), b, 1)
-		defer etagToResponse.Set(etag, ctx.Response.Body(), cache.DefaultExpiration)
+		etagToResponse.Set(etag, ctx.Response.Body(), cache.DefaultExpiration)
 	} else {
 		ctx.Write(b)
 	}
