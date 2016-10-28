@@ -12,7 +12,11 @@ import (
 
 // Application represents a single web service.
 type Application struct {
-	Config Configuration
+	Config   Configuration
+	Security struct {
+		Key         []byte
+		Certificate []byte
+	}
 
 	root   string
 	router *fasthttprouter.Router
@@ -77,6 +81,14 @@ func (app *Application) listen() net.Listener {
 func (app *Application) serve(listener net.Listener) {
 	server := &fasthttp.Server{
 		Handler: app.router.Handler,
+	}
+
+	if app.Security.Key != nil && app.Security.Certificate != nil {
+		serveError := server.ServeTLSEmbed(listener, app.Security.Certificate, app.Security.Key)
+
+		if serveError != nil {
+			panic(serveError)
+		}
 	}
 
 	serveError := server.Serve(listener)
