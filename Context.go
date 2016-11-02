@@ -1,6 +1,7 @@
 package aero
 
 import (
+	"encoding/json"
 	"strconv"
 	"time"
 	"unsafe"
@@ -19,6 +20,8 @@ const (
 	contentEncoding       = "gzip"
 	contentTypeHeader     = "Content-Type"
 	contentType           = "text/html;charset=utf-8"
+	contentTypeJSON       = "application/json"
+	contentTypePlainText  = "text/plain;charset=utf-8"
 	etagHeader            = "ETag"
 	serverHeader          = "Server"
 	server                = "Aero"
@@ -48,20 +51,29 @@ type Context struct {
 // Handle ...
 type Handle func(*Context)
 
+// JSON encodes the object to a JSON strings and responds.
+func (aeroCtx *Context) JSON(value interface{}) {
+	bytes, _ := json.Marshal(value)
+
+	aeroCtx.requestCtx.Response.Header.Set(contentTypeHeader, contentTypeJSON)
+	aeroCtx.RespondBytes(bytes)
+}
+
+// HTML sends a HTML string.
+func (aeroCtx *Context) HTML(html string) {
+	aeroCtx.requestCtx.Response.Header.Set(contentTypeHeader, contentType)
+	aeroCtx.Respond(html)
+}
+
+// Text sends a plain text string.
+func (aeroCtx *Context) Text(html string) {
+	aeroCtx.requestCtx.Response.Header.Set(contentTypeHeader, contentTypePlainText)
+	aeroCtx.Respond(html)
+}
+
 // Respond responds either with raw code or gzipped if the
 // code length is greater than the gzip threshold.
 func (aeroCtx *Context) Respond(code string) {
-	// // Convert string to byte slice
-	// stringHeader := (*reflect.StringHeader)(unsafe.Pointer(&code))
-
-	// if stringHeader != nil {
-	// 	converted := (*[0x7fffffff]byte)(unsafe.Pointer(stringHeader.Data))[:len(code):len(code)]
-	// 	if converted != nil {
-	// 		aeroCtx.RespondBytes(converted)
-	// 		return
-	// 	}
-	// }
-
 	aeroCtx.RespondBytes([]byte(code))
 }
 
@@ -77,7 +89,6 @@ func (aeroCtx *Context) RespondBytes(b []byte) {
 	ctx.Response.Header.Set(etagHeader, etag)
 
 	// Headers
-	ctx.Response.Header.Set(contentTypeHeader, contentType)
 	ctx.Response.Header.Set(serverHeader, server)
 
 	// If client cache is up to date, send 304 with no response body.
