@@ -13,19 +13,22 @@ import (
 )
 
 const (
-	gzipThreshold         = 1450
-	responseCacheDuration = 5 * time.Minute
-	responseCacheCleanup  = 1 * time.Minute
-	contentEncodingHeader = "Content-Encoding"
-	contentEncoding       = "gzip"
-	contentTypeHeader     = "Content-Type"
-	contentType           = "text/html;charset=utf-8"
-	contentTypeJSON       = "application/json"
-	contentTypePlainText  = "text/plain;charset=utf-8"
-	etagHeader            = "ETag"
-	serverHeader          = "Server"
-	server                = "Aero"
-	ifNoneMatchHeader     = "If-None-Match"
+	gzipThreshold              = 1450
+	responseCacheDuration      = 5 * time.Minute
+	responseCacheCleanup       = 1 * time.Minute
+	contentEncodingHeader      = "Content-Encoding"
+	contentEncodingGzip        = "gzip"
+	contentTypeHeader          = "Content-Type"
+	contentType                = "text/html;charset=utf-8"
+	contentTypeJSON            = "application/json"
+	contentTypePlainText       = "text/plain;charset=utf-8"
+	etagHeader                 = "ETag"
+	cacheControlHeader         = "Cache-Control"
+	cacheControlAlwaysValidate = "no-cache"
+	responseTimeHeader         = "X-Response-Time"
+	serverHeader               = "Server"
+	server                     = "Aero"
+	ifNoneMatchHeader          = "If-None-Match"
 )
 
 var ifNoneMatchHeaderBytes []byte
@@ -46,78 +49,91 @@ type Context struct {
 
 	// Parameters used in this request.
 	Params fasthttprouter.Params
+
+	// Start time
+	start time.Time
 }
 
 // Handle ...
 type Handle func(*Context)
 
 // JSON encodes the object to a JSON strings and responds.
-func (aeroCtx *Context) JSON(value interface{}) {
+func (ctx *Context) JSON(value interface{}) {
 	bytes, _ := json.Marshal(value)
 
-	aeroCtx.requestCtx.Response.Header.Set(contentTypeHeader, contentTypeJSON)
-	aeroCtx.RespondBytes(bytes)
+	ctx.requestCtx.Response.Header.Set(contentTypeHeader, contentTypeJSON)
+	ctx.RespondBytes(bytes)
 }
 
 // HTML sends a HTML string.
-func (aeroCtx *Context) HTML(html string) {
-	aeroCtx.requestCtx.Response.Header.Set(contentTypeHeader, contentType)
-	aeroCtx.Respond(html)
+func (ctx *Context) HTML(html string) {
+	ctx.requestCtx.Response.Header.Set(contentTypeHeader, contentType)
+	ctx.Respond(html)
 }
 
 // Text sends a plain text string.
-func (aeroCtx *Context) Text(html string) {
-	aeroCtx.requestCtx.Response.Header.Set(contentTypeHeader, contentTypePlainText)
-	aeroCtx.Respond(html)
+func (ctx *Context) Text(html string) {
+	ctx.requestCtx.Response.Header.Set(contentTypeHeader, contentTypePlainText)
+	ctx.Respond(html)
+}
+
+// SetHeader sets header to value.
+func (ctx *Context) SetHeader(header string, value string) {
+	ctx.requestCtx.Response.Header.Set(header, value)
 }
 
 // Respond responds either with raw code or gzipped if the
 // code length is greater than the gzip threshold.
-func (aeroCtx *Context) Respond(code string) {
-	aeroCtx.RespondBytes([]byte(code))
+func (ctx *Context) Respond(code string) {
+	ctx.RespondBytes([]byte(code))
 }
 
 // RespondBytes responds either with raw code or gzipped if the
 // code length is greater than the gzip threshold. Requires a byte slice.
-func (aeroCtx *Context) RespondBytes(b []byte) {
-	ctx := aeroCtx.requestCtx
+func (ctx *Context) RespondBytes(b []byte) {
+	http := ctx.requestCtx
 
 	// ETag generation
 	h := xxhash.NewS64(0)
 	h.Write(b)
 	etag := strconv.FormatUint(h.Sum64(), 16)
-	ctx.Response.Header.Set(etagHeader, etag)
 
 	// Headers
-	ctx.Response.Header.Set(serverHeader, server)
+	http.Response.Header.Set(etagHeader, etag)
+	http.Response.Header.Set(cacheControlHeader, cacheControlAlwaysValidate)
+	http.Response.Header.Set(serverHeader, server)
+	http.Response.Header.Set(responseTimeHeader, strconv.FormatInt(time.Since(ctx.start).Nanoseconds()/1000, 10)+" us")
 
 	// If client cache is up to date, send 304 with no response body.
-	clientETag := ctx.Request.Header.Peek(ifNoneMatchHeader)
+	clientETag := http.Request.Header.Peek(ifNoneMatchHeader)
 
 	if etag == *(*string)(unsafe.Pointer(&clientETag)) {
-		ctx.SetStatusCode(304)
+		http.SetStatusCode(304)
 		return
 	}
 
 	// Body
-	if aeroCtx.App.Config.GZip && len(b) >= gzipThreshold {
-		ctx.Response.Header.Set(contentEncodingHeader, contentEncoding)
+	if ctx.App.Config.GZip && len(b) >= gzipThreshold {
+		http.Response.Header.Set(contentEncodingHeader, contentEncodingGzip)
 
-		if aeroCtx.App.Config.GZipCache {
+		if ctx.App.Config.GZipCache {
 			cachedResponse, found := etagToResponse.Get(etag)
 
 			if found {
-				ctx.Write(cachedResponse.([]byte))
+				http.Write(cachedResponse.([]byte))
 				return
 			}
 		}
 
-		fasthttp.WriteGzipLevel(ctx.Response.BodyWriter(), b, 1)
+		fasthttp.WriteGzipLevel(http.Response.BodyWriter(), b, 1)
 
-		if aeroCtx.App.Config.GZipCache {
-			etagToResponse.Set(etag, ctx.Response.Body(), cache.DefaultExpiration)
+		if ctx.App.Config.GZipCache {
+			body := http.Response.Body()
+			gzipped := make([]byte, len(body))
+			copy(gzipped, body)
+			etagToResponse.Set(etag, gzipped, cache.DefaultExpiration)
 		}
 	} else {
-		ctx.Write(b)
+		http.Write(b)
 	}
 }

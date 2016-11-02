@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"time"
 
 	"github.com/buaazp/fasthttprouter"
 	"github.com/fatih/color"
@@ -39,6 +40,7 @@ func (app *Application) Get(path string, handle Handle) {
 			App:        app,
 			Params:     params,
 			requestCtx: fasthttpContext,
+			start:      time.Now(),
 		}
 
 		handle(&ctx)
