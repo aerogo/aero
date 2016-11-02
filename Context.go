@@ -1,7 +1,6 @@
 package aero
 
 import (
-	"reflect"
 	"strconv"
 	"time"
 	"unsafe"
@@ -52,9 +51,18 @@ type Handle func(*Context)
 // Respond responds either with raw code or gzipped if the
 // code length is greater than the gzip threshold.
 func (aeroCtx *Context) Respond(code string) {
-	// Convert string to byte slice
-	stringHeader := (*reflect.StringHeader)(unsafe.Pointer(&code))
-	aeroCtx.RespondBytes((*[0x7fffffff]byte)(unsafe.Pointer(stringHeader.Data))[:len(code):len(code)])
+	// // Convert string to byte slice
+	// stringHeader := (*reflect.StringHeader)(unsafe.Pointer(&code))
+
+	// if stringHeader != nil {
+	// 	converted := (*[0x7fffffff]byte)(unsafe.Pointer(stringHeader.Data))[:len(code):len(code)]
+	// 	if converted != nil {
+	// 		aeroCtx.RespondBytes(converted)
+	// 		return
+	// 	}
+	// }
+
+	aeroCtx.RespondBytes([]byte(code))
 }
 
 // RespondBytes responds either with raw code or gzipped if the
@@ -94,7 +102,10 @@ func (aeroCtx *Context) RespondBytes(b []byte) {
 		}
 
 		fasthttp.WriteGzipLevel(ctx.Response.BodyWriter(), b, 1)
-		etagToResponse.Set(etag, ctx.Response.Body(), cache.DefaultExpiration)
+
+		if aeroCtx.App.Config.GZipCache {
+			etagToResponse.Set(etag, ctx.Response.Body(), cache.DefaultExpiration)
+		}
 	} else {
 		ctx.Write(b)
 	}
