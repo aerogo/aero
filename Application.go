@@ -107,13 +107,15 @@ func (app *Application) Load() {
 
 // Listen starts the server.
 func (app *Application) Listen() {
-	fmt.Println("Server running on:", color.GreenString("http://localhost:"+strconv.Itoa(app.Config.Ports.HTTP)))
-
 	if app.Security.Key != nil && app.Security.Certificate != nil {
 		go func() {
 			httpsListener := app.listen(app.Config.Ports.HTTPS)
 			app.serveHTTPS(httpsListener)
 		}()
+
+		fmt.Println("Server running on:", color.GreenString("https://localhost:"+strconv.Itoa(app.Config.Ports.HTTPS)))
+	} else {
+		fmt.Println("Server running on:", color.GreenString("http://localhost:"+strconv.Itoa(app.Config.Ports.HTTP)))
 	}
 
 	httpListener := app.listen(app.Config.Ports.HTTP)

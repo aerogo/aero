@@ -99,9 +99,12 @@ func (ctx *Context) RespondBytes(b []byte) {
 	http.Response.Header.Set(cacheControlHeader, cacheControlAlwaysValidate)
 	http.Response.Header.Set(serverHeader, server)
 	http.Response.Header.Set(responseTimeHeader, strconv.FormatInt(time.Since(ctx.start).Nanoseconds()/1000, 10)+" us")
-	http.Response.Header.Set("Content-Security-Policy", "default-src https:; script-src 'self'; style-src 'sha256-"+ctx.App.cssHash+"'; connect-src https: wss:")
 	http.Response.Header.Set("X-Content-Type-Options", "nosniff")
 	http.Response.Header.Set("X-XSS-Protection", "1; mode=block")
+
+	if ctx.App.Security.Certificate != nil {
+		http.Response.Header.Set("Content-Security-Policy", "default-src https:; script-src 'self'; style-src 'sha256-"+ctx.App.cssHash+"'; connect-src https: wss:")
+	}
 
 	// If client cache is up to date, send 304 with no response body.
 	clientETag := http.Request.Header.Peek(ifNoneMatchHeader)
