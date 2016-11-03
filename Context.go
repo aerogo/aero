@@ -99,7 +99,7 @@ func (ctx *Context) RespondBytes(b []byte) {
 	http.Response.Header.Set(cacheControlHeader, cacheControlAlwaysValidate)
 	http.Response.Header.Set(serverHeader, server)
 	http.Response.Header.Set(responseTimeHeader, strconv.FormatInt(time.Since(ctx.start).Nanoseconds()/1000, 10)+" us")
-	http.Response.Header.Set("Content-Security-Policy", "default-src *; script-src 'self'; style-src 'sha256-"+ctx.App.cssHash+"'")
+	http.Response.Header.Set("Content-Security-Policy", "default-src https:; script-src 'self'; style-src 'sha256-"+ctx.App.cssHash+"'; connect-src https: wss:")
 	http.Response.Header.Set("X-Content-Type-Options", "nosniff")
 	http.Response.Header.Set("X-XSS-Protection", "1; mode=block")
 

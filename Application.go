@@ -109,13 +109,20 @@ func (app *Application) Load() {
 func (app *Application) Listen() {
 	fmt.Println("Server running on:", color.GreenString("http://localhost:"+strconv.Itoa(app.Config.Ports.HTTP)))
 
-	listener := app.listen()
-	app.serve(listener)
+	if app.Security.Key != nil && app.Security.Certificate != nil {
+		go func() {
+			httpsListener := app.listen(app.Config.Ports.HTTPS)
+			app.serveHTTPS(httpsListener)
+		}()
+	}
+
+	httpListener := app.listen(app.Config.Ports.HTTP)
+	app.serveHTTP(httpListener)
 }
 
 // listen listens on the specified host and port.
-func (app *Application) listen() net.Listener {
-	address := ":" + strconv.Itoa(app.Config.Ports.HTTP)
+func (app *Application) listen(port int) net.Listener {
+	address := ":" + strconv.Itoa(port)
 
 	listener, bindError := net.Listen("tcp", address)
 
@@ -126,21 +133,26 @@ func (app *Application) listen() net.Listener {
 	return listener
 }
 
-// serve serves requests from the given listener.
-func (app *Application) serve(listener net.Listener) {
+// serveHTTP serves requests from the given listener.
+func (app *Application) serveHTTP(listener net.Listener) {
 	server := &fasthttp.Server{
 		Handler: app.router.Handler,
 	}
 
-	if app.Security.Key != nil && app.Security.Certificate != nil {
-		serveError := server.ServeTLSEmbed(listener, app.Security.Certificate, app.Security.Key)
+	serveError := server.Serve(listener)
 
-		if serveError != nil {
-			panic(serveError)
-		}
+	if serveError != nil {
+		panic(serveError)
+	}
+}
+
+// serveHTTPS serves requests from the given listener.
+func (app *Application) serveHTTPS(listener net.Listener) {
+	server := &fasthttp.Server{
+		Handler: app.router.Handler,
 	}
 
-	serveError := server.Serve(listener)
+	serveError := server.ServeTLSEmbed(listener, app.Security.Certificate, app.Security.Key)
 
 	if serveError != nil {
 		panic(serveError)
