@@ -4,8 +4,13 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"strings"
 	"sync/atomic"
 	"time"
+
+	"crypto/sha256"
+
+	"encoding/base64"
 
 	"github.com/buaazp/fasthttprouter"
 	"github.com/fatih/color"
@@ -27,11 +32,14 @@ type Application struct {
 		Certificate []byte
 	}
 
-	root         string
-	router       *fasthttprouter.Router
-	gzipCache    *cache.Cache
-	start        time.Time
-	requestCount uint64
+	css            string
+	cssHash        string
+	cssReplacement string
+	root           string
+	router         *fasthttprouter.Router
+	gzipCache      *cache.Cache
+	start          time.Time
+	requestCount   uint64
 }
 
 // New creates a new application.
@@ -71,9 +79,19 @@ func (app *Application) Get(path string, handle Handle) {
 func (app *Application) Register(path string, handle Handle) {
 	app.Get("/_"+path, handle)
 	app.Get(path, func(ctx *Context) string {
-		response := handle(ctx)
-		return app.Layout(ctx, response)
+		page := handle(ctx)
+		html := app.Layout(ctx, page)
+		return strings.Replace(html, "</head><body", app.cssReplacement, 1)
 	})
+}
+
+// SetStyle ...
+func (app *Application) SetStyle(css string) {
+	app.css = css
+
+	hash := sha256.Sum256([]byte(css))
+	app.cssHash = base64.StdEncoding.EncodeToString(hash[:])
+	app.cssReplacement = "<style>" + app.css + "</style></head><body"
 }
 
 // Run calls app.Load() and app.Listen().

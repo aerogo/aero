@@ -17,9 +17,9 @@ const (
 	contentEncodingHeader      = "Content-Encoding"
 	contentEncodingGzip        = "gzip"
 	contentTypeHeader          = "Content-Type"
-	contentType                = "text/html;charset=utf-8"
+	contentType                = "text/html; charset=utf-8"
 	contentTypeJSON            = "application/json"
-	contentTypePlainText       = "text/plain;charset=utf-8"
+	contentTypePlainText       = "text/plain; charset=utf-8"
 	etagHeader                 = "ETag"
 	cacheControlHeader         = "Cache-Control"
 	cacheControlAlwaysValidate = "no-cache"
@@ -99,6 +99,9 @@ func (ctx *Context) RespondBytes(b []byte) {
 	http.Response.Header.Set(cacheControlHeader, cacheControlAlwaysValidate)
 	http.Response.Header.Set(serverHeader, server)
 	http.Response.Header.Set(responseTimeHeader, strconv.FormatInt(time.Since(ctx.start).Nanoseconds()/1000, 10)+" us")
+	http.Response.Header.Set("Content-Security-Policy", "default-src *; script-src 'self'; style-src 'sha256-"+ctx.App.cssHash+"'")
+	http.Response.Header.Set("X-Content-Type-Options", "nosniff")
+	http.Response.Header.Set("X-XSS-Protection", "1; mode=block")
 
 	// If client cache is up to date, send 304 with no response body.
 	clientETag := http.Request.Header.Peek(ifNoneMatchHeader)
