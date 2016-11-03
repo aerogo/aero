@@ -14,8 +14,6 @@ import (
 
 const (
 	gzipThreshold              = 1450
-	responseCacheDuration      = 5 * time.Minute
-	responseCacheCleanup       = 1 * time.Minute
 	contentEncodingHeader      = "Content-Encoding"
 	contentEncodingGzip        = "gzip"
 	contentTypeHeader          = "Content-Type"
@@ -32,11 +30,9 @@ const (
 )
 
 var ifNoneMatchHeaderBytes []byte
-var etagToResponse *cache.Cache
 
 func init() {
 	ifNoneMatchHeaderBytes = []byte(ifNoneMatchHeader)
-	etagToResponse = cache.New(responseCacheDuration, responseCacheCleanup)
 }
 
 // Context ...
@@ -55,26 +51,26 @@ type Context struct {
 }
 
 // Handle ...
-type Handle func(*Context)
+type Handle func(*Context) string
 
 // JSON encodes the object to a JSON strings and responds.
-func (ctx *Context) JSON(value interface{}) {
+func (ctx *Context) JSON(value interface{}) string {
 	bytes, _ := json.Marshal(value)
 
 	ctx.requestCtx.Response.Header.Set(contentTypeHeader, contentTypeJSON)
-	ctx.RespondBytes(bytes)
+	return string(bytes)
 }
 
 // HTML sends a HTML string.
-func (ctx *Context) HTML(html string) {
+func (ctx *Context) HTML(html string) string {
 	ctx.requestCtx.Response.Header.Set(contentTypeHeader, contentType)
-	ctx.Respond(html)
+	return html
 }
 
 // Text sends a plain text string.
-func (ctx *Context) Text(html string) {
+func (ctx *Context) Text(text string) string {
 	ctx.requestCtx.Response.Header.Set(contentTypeHeader, contentTypePlainText)
-	ctx.Respond(html)
+	return text
 }
 
 // SetHeader sets header to value.
@@ -117,7 +113,7 @@ func (ctx *Context) RespondBytes(b []byte) {
 		http.Response.Header.Set(contentEncodingHeader, contentEncodingGzip)
 
 		if ctx.App.Config.GZipCache {
-			cachedResponse, found := etagToResponse.Get(etag)
+			cachedResponse, found := ctx.App.gzipCache.Get(etag)
 
 			if found {
 				http.Write(cachedResponse.([]byte))
@@ -131,7 +127,7 @@ func (ctx *Context) RespondBytes(b []byte) {
 			body := http.Response.Body()
 			gzipped := make([]byte, len(body))
 			copy(gzipped, body)
-			etagToResponse.Set(etag, gzipped, cache.DefaultExpiration)
+			ctx.App.gzipCache.Set(etag, gzipped, cache.DefaultExpiration)
 		}
 	} else {
 		http.Write(b)

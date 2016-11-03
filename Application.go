@@ -4,23 +4,34 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"sync/atomic"
 	"time"
 
 	"github.com/buaazp/fasthttprouter"
 	"github.com/fatih/color"
+	cache "github.com/patrickmn/go-cache"
 	"github.com/valyala/fasthttp"
+)
+
+const (
+	gzipCacheDuration = 5 * time.Minute
+	gzipCacheCleanup  = 1 * time.Minute
 )
 
 // Application represents a single web service.
 type Application struct {
 	Config   Configuration
+	Layout   func(*Context, string) string
 	Security struct {
 		Key         []byte
 		Certificate []byte
 	}
 
-	root   string
-	router *fasthttprouter.Router
+	root         string
+	router       *fasthttprouter.Router
+	gzipCache    *cache.Cache
+	start        time.Time
+	requestCount uint64
 }
 
 // New creates a new application.
@@ -28,6 +39,12 @@ func New() *Application {
 	app := new(Application)
 	app.root = ""
 	app.router = fasthttprouter.New()
+	app.gzipCache = cache.New(gzipCacheDuration, gzipCacheCleanup)
+	app.start = time.Now()
+	app.showStatistics("/__/")
+	app.Layout = func(ctx *Context, content string) string {
+		return content
+	}
 	app.Config.Reset()
 
 	return app
@@ -43,7 +60,19 @@ func (app *Application) Get(path string, handle Handle) {
 			start:      time.Now(),
 		}
 
-		handle(&ctx)
+		response := handle(&ctx)
+		ctx.Respond(response)
+
+		atomic.AddUint64(&app.requestCount, 1)
+	})
+}
+
+// Register calls app.Get for both /route and /_/route
+func (app *Application) Register(path string, handle Handle) {
+	app.Get("/_"+path, handle)
+	app.Get(path, func(ctx *Context) string {
+		response := handle(ctx)
+		return app.Layout(ctx, response)
 	})
 }
 
