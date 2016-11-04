@@ -7,7 +7,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/buaazp/fasthttprouter"
 	sigar "github.com/cloudfoundry/gosigar"
 	humanize "github.com/dustin/go-humanize"
 	"github.com/valyala/fasthttp"
@@ -15,7 +14,7 @@ import (
 
 func (app *Application) showStatistics(path string) {
 	// Statistics route
-	app.router.GET(path, func(fasthttpContext *fasthttp.RequestCtx, params fasthttprouter.Params) {
+	app.router.GET(path, func(fasthttpContext *fasthttp.RequestCtx) {
 		var memStats runtime.MemStats
 		runtime.ReadMemStats(&memStats)
 

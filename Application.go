@@ -60,10 +60,9 @@ func New() *Application {
 
 // Get registers your function to be called when a certain path has been requested.
 func (app *Application) Get(path string, handle Handle) {
-	app.router.GET(path, func(fasthttpContext *fasthttp.RequestCtx, params fasthttprouter.Params) {
+	app.router.GET(path, func(fasthttpContext *fasthttp.RequestCtx) {
 		ctx := Context{
 			App:        app,
-			Params:     params,
 			requestCtx: fasthttpContext,
 			start:      time.Now(),
 		}

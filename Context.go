@@ -2,12 +2,12 @@ package aero
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"time"
 	"unsafe"
 
 	"github.com/OneOfOne/xxhash"
-	"github.com/buaazp/fasthttprouter"
 	cache "github.com/patrickmn/go-cache"
 	"github.com/valyala/fasthttp"
 )
@@ -43,9 +43,6 @@ type Context struct {
 	// A pointer to the application this request occured on.
 	App *Application
 
-	// Parameters used in this request.
-	Params fasthttprouter.Params
-
 	// Start time
 	start time.Time
 }
@@ -76,6 +73,11 @@ func (ctx *Context) Text(text string) string {
 // SetHeader sets header to value.
 func (ctx *Context) SetHeader(header string, value string) {
 	ctx.requestCtx.Response.Header.Set(header, value)
+}
+
+// Get retrieves an URL parameter.
+func (ctx *Context) Get(param string) string {
+	return fmt.Sprint(ctx.requestCtx.UserValue(param))
 }
 
 // Respond responds either with raw code or gzipped if the
