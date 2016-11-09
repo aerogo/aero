@@ -59,16 +59,7 @@ func New() *Application {
 	}
 	app.Config = new(Configuration)
 	app.Config.Reset()
-
-	config, readError := ioutil.ReadFile("config.json")
-
-	if readError == nil {
-		jsonDecodeError := json.Unmarshal(config, app.Config)
-
-		if jsonDecodeError != nil {
-			color.Red(jsonDecodeError.Error())
-		}
-	}
+	app.Load()
 
 	return app
 }
@@ -110,24 +101,41 @@ func (app *Application) SetStyle(css string) {
 	app.cssReplacement = "<style>" + app.css + "</style></head><body"
 }
 
-// Run calls app.Load() and app.Listen().
+// Test tests your application's routes.
+func (app *Application) Test() {
+	go func() {
+		for _, route := range app.routes {
+			if strings.HasPrefix(route, "/_") {
+				continue
+			}
+
+			body, _ := Get("http://localhost:" + strconv.Itoa(app.Config.Ports.HTTP) + route).Send()
+			faint := color.New(color.Faint).SprintFunc()
+			fmt.Println(color.BlueString(route), len(body)/1024, faint("KB"))
+		}
+
+		// json, _ := Post("https://html5.validator.nu/?out=json").Header("Content-Type", "text/html; charset=utf-8").Header("Content-Encoding", "gzip").Body(body).Send()
+		// fmt.Println(json)
+	}()
+}
+
+// Run starts your application.
 func (app *Application) Run() {
-	app.Load()
-
-	// go func() {
-	// 	body, _ := Get("http://localhost:" + strconv.Itoa(app.Config.Ports.HTTP) + "/")
-
-	// 	// buffer := new(bytes.Buffer)
-	// 	// fasthttp.WriteGunzip(buffer, []byte(body))
-	// 	// fmt.Println(buffer.String())
-	// }()
-
+	app.Test()
 	app.Listen()
 }
 
 // Load loads the application data from the file system.
 func (app *Application) Load() {
-	// TODO: ...
+	config, readError := ioutil.ReadFile("config.json")
+
+	if readError == nil {
+		jsonDecodeError := json.Unmarshal(config, app.Config)
+
+		if jsonDecodeError != nil {
+			color.Red(jsonDecodeError.Error())
+		}
+	}
 }
 
 // Listen starts the server.

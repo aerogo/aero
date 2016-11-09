@@ -80,6 +80,11 @@ func (ctx *Context) Get(param string) string {
 	return fmt.Sprint(ctx.requestCtx.UserValue(param))
 }
 
+// GetInt retrieves an URL parameter as an integer.
+func (ctx *Context) GetInt(param string) (int, error) {
+	return strconv.Atoi(ctx.Get(param))
+}
+
 // Respond responds either with raw code or gzipped if the
 // code length is greater than the gzip threshold.
 func (ctx *Context) Respond(code string) {
