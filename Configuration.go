@@ -2,12 +2,21 @@ package aero
 
 // Configuration ...
 type Configuration struct {
-	GZip      bool
-	GZipCache bool
-	Ports     struct {
-		HTTP  int
-		HTTPS int
-	}
+	Domain    string   `json:"domain"`
+	Title     string   `json:"title"`
+	Fonts     []string `json:"fonts"`
+	Icons     []string `json:"icons"`
+	Static    []string `json:"static"`
+	Styles    []string `json:"styles"`
+	GZip      bool     `json:"gzip"`
+	GZipCache bool     `json:"gzipCache"`
+	Manifest  struct {
+		GCMSenderID string `json:"gcm_sender_id"`
+	} `json:"manifest"`
+	Ports struct {
+		HTTP  int `json:"http"`
+		HTTPS int `json:"https"`
+	} `json:"ports"`
 }
 
 // Reset resets all fields to the default configuration.

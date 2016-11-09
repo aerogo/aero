@@ -44,7 +44,7 @@ func (app *Application) showStatistics(path string) {
 			Uptime   string
 			Requests uint64
 			Memory   AppMemoryStats
-			Config   Configuration
+			Config   *Configuration
 		}
 
 		type SystemStats struct {

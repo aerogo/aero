@@ -11,6 +11,9 @@ import (
 	"crypto/sha256"
 
 	"encoding/base64"
+	"encoding/json"
+
+	"io/ioutil"
 
 	"github.com/buaazp/fasthttprouter"
 	"github.com/fatih/color"
@@ -25,7 +28,7 @@ const (
 
 // Application represents a single web service.
 type Application struct {
-	Config   Configuration
+	Config   *Configuration
 	Layout   func(*Context, string) string
 	Security struct {
 		Key         []byte
@@ -37,6 +40,7 @@ type Application struct {
 	cssReplacement string
 	root           string
 	router         *fasthttprouter.Router
+	routes         []string
 	gzipCache      *cache.Cache
 	start          time.Time
 	requestCount   uint64
@@ -53,7 +57,18 @@ func New() *Application {
 	app.Layout = func(ctx *Context, content string) string {
 		return content
 	}
+	app.Config = new(Configuration)
 	app.Config.Reset()
+
+	config, readError := ioutil.ReadFile("config.json")
+
+	if readError == nil {
+		jsonDecodeError := json.Unmarshal(config, app.Config)
+
+		if jsonDecodeError != nil {
+			color.Red(jsonDecodeError.Error())
+		}
+	}
 
 	return app
 }
@@ -72,10 +87,12 @@ func (app *Application) Get(path string, handle Handle) {
 
 		atomic.AddUint64(&app.requestCount, 1)
 	})
+
+	app.routes = append(app.routes, path)
 }
 
-// Register calls app.Get for both /route and /_/route
-func (app *Application) Register(path string, handle Handle) {
+// Ajax calls app.Get for both /route and /_/route
+func (app *Application) Ajax(path string, handle Handle) {
 	app.Get("/_"+path, handle)
 	app.Get(path, func(ctx *Context) string {
 		page := handle(ctx)
@@ -96,6 +113,15 @@ func (app *Application) SetStyle(css string) {
 // Run calls app.Load() and app.Listen().
 func (app *Application) Run() {
 	app.Load()
+
+	// go func() {
+	// 	body, _ := Get("http://localhost:" + strconv.Itoa(app.Config.Ports.HTTP) + "/")
+
+	// 	// buffer := new(bytes.Buffer)
+	// 	// fasthttp.WriteGunzip(buffer, []byte(body))
+	// 	// fmt.Println(buffer.String())
+	// }()
+
 	app.Listen()
 }
 
