@@ -13,20 +13,27 @@ import (
 )
 
 const (
-	gzipThreshold              = 1450
-	contentEncodingHeader      = "Content-Encoding"
-	contentEncodingGzip        = "gzip"
-	contentTypeHeader          = "Content-Type"
-	contentType                = "text/html; charset=utf-8"
-	contentTypeJSON            = "application/json"
-	contentTypePlainText       = "text/plain; charset=utf-8"
-	etagHeader                 = "ETag"
-	cacheControlHeader         = "Cache-Control"
-	cacheControlAlwaysValidate = "no-cache"
-	responseTimeHeader         = "X-Response-Time"
-	serverHeader               = "Server"
-	server                     = "Aero"
-	ifNoneMatchHeader          = "If-None-Match"
+	gzipThreshold = 1450
+)
+
+var (
+	serverHeader               = []byte("Server")
+	server                     = []byte("Aero")
+	cacheControlHeader         = []byte("Cache-Control")
+	cacheControlAlwaysValidate = []byte("no-cache")
+	contentTypeOptionsHeader   = []byte("X-Content-Type-Options")
+	contentTypeOptions         = []byte("nosniff")
+	xssProtectionHeader        = []byte("X-XSS-Protection")
+	xssProtection              = []byte("1; mode=block")
+	etagHeader                 = []byte("ETag")
+	contentTypeHeader          = []byte("Content-Type")
+	contentTypeHTML            = []byte("text/html; charset=utf-8")
+	contentTypeJSON            = []byte("application/json")
+	contentTypePlainText       = []byte("text/plain; charset=utf-8")
+	contentEncodingHeader      = []byte("Content-Encoding")
+	contentEncodingGzip        = []byte("gzip")
+	responseTimeHeader         = []byte("X-Response-Time")
+	ifNoneMatchHeader          = []byte("If-None-Match")
 )
 
 var ifNoneMatchHeaderBytes []byte
@@ -54,19 +61,19 @@ type Handle func(*Context) string
 func (ctx *Context) JSON(value interface{}) string {
 	bytes, _ := json.Marshal(value)
 
-	ctx.requestCtx.Response.Header.Set(contentTypeHeader, contentTypeJSON)
+	ctx.requestCtx.Response.Header.SetBytesKV(contentTypeHeader, contentTypeJSON)
 	return string(bytes)
 }
 
 // HTML sends a HTML string.
 func (ctx *Context) HTML(html string) string {
-	ctx.requestCtx.Response.Header.Set(contentTypeHeader, contentType)
+	ctx.requestCtx.Response.Header.SetBytesKV(contentTypeHeader, contentTypeHTML)
 	return html
 }
 
 // Text sends a plain text string.
 func (ctx *Context) Text(text string) string {
-	ctx.requestCtx.Response.Header.Set(contentTypeHeader, contentTypePlainText)
+	ctx.requestCtx.Response.Header.SetBytesKV(contentTypeHeader, contentTypePlainText)
 	return text
 }
 
@@ -88,7 +95,7 @@ func (ctx *Context) GetInt(param string) (int, error) {
 // Respond responds either with raw code or gzipped if the
 // code length is greater than the gzip threshold.
 func (ctx *Context) Respond(code string) {
-	ctx.RespondBytes([]byte(code))
+	ctx.RespondBytes(StringToBytes(code))
 }
 
 // RespondBytes responds either with raw code or gzipped if the
@@ -96,34 +103,36 @@ func (ctx *Context) Respond(code string) {
 func (ctx *Context) RespondBytes(b []byte) {
 	http := ctx.requestCtx
 
-	// ETag generation
-	h := xxhash.NewS64(0)
-	h.Write(b)
-	etag := strconv.FormatUint(h.Sum64(), 16)
-
 	// Headers
-	http.Response.Header.Set(etagHeader, etag)
-	http.Response.Header.Set(cacheControlHeader, cacheControlAlwaysValidate)
-	http.Response.Header.Set(serverHeader, server)
-	http.Response.Header.Set(responseTimeHeader, strconv.FormatInt(time.Since(ctx.start).Nanoseconds()/1000, 10)+" us")
-	http.Response.Header.Set("X-Content-Type-Options", "nosniff")
-	http.Response.Header.Set("X-XSS-Protection", "1; mode=block")
+	http.Response.Header.SetBytesKV(cacheControlHeader, cacheControlAlwaysValidate)
+	http.Response.Header.SetBytesKV(serverHeader, server)
+	http.Response.Header.SetBytesKV(contentTypeOptionsHeader, contentTypeOptions)
+	http.Response.Header.SetBytesKV(xssProtectionHeader, xssProtection)
+	// http.Response.Header.Set(responseTimeHeader, strconv.FormatInt(time.Since(ctx.start).Nanoseconds()/1000, 10)+" us")
 
 	if ctx.App.Security.Certificate != nil {
 		http.Response.Header.Set("Content-Security-Policy", "default-src https:; script-src 'self'; style-src 'sha256-"+ctx.App.cssHash+"'; connect-src https: wss:")
 	}
 
-	// If client cache is up to date, send 304 with no response body.
-	clientETag := http.Request.Header.Peek(ifNoneMatchHeader)
-
-	if etag == *(*string)(unsafe.Pointer(&clientETag)) {
-		http.SetStatusCode(304)
-		return
-	}
-
 	// Body
 	if ctx.App.Config.GZip && len(b) >= gzipThreshold {
-		http.Response.Header.Set(contentEncodingHeader, contentEncodingGzip)
+		http.Response.Header.SetBytesKV(contentEncodingHeader, contentEncodingGzip)
+
+		// ETag generation
+		h := xxhash.NewS64(0)
+		h.Write(b)
+		etag := strconv.FormatUint(h.Sum64(), 16)
+
+		// If client cache is up to date, send 304 with no response body.
+		clientETag := http.Request.Header.PeekBytes(ifNoneMatchHeader)
+
+		if etag == *(*string)(unsafe.Pointer(&clientETag)) {
+			http.SetStatusCode(304)
+			return
+		}
+
+		// Set ETag
+		http.Response.Header.SetBytesK(etagHeader, etag)
 
 		if ctx.App.Config.GZipCache {
 			cachedResponse, found := ctx.App.gzipCache.Get(etag)
