@@ -5,8 +5,8 @@ import (
 	"unsafe"
 )
 
-// BytesToString ...
-func BytesToString(b []byte) string {
+// BytesToStringUnsafe ...
+func BytesToStringUnsafe(b []byte) string {
 	bytesHeader := (*reflect.SliceHeader)(unsafe.Pointer(&b))
 	strHeader := reflect.StringHeader{
 		Data: bytesHeader.Data,
@@ -15,8 +15,8 @@ func BytesToString(b []byte) string {
 	return *(*string)(unsafe.Pointer(&strHeader))
 }
 
-// StringToBytes ...
-func StringToBytes(s string) []byte {
+// StringToBytesUnsafe ...
+func StringToBytesUnsafe(s string) []byte {
 	strHeader := (*reflect.StringHeader)(unsafe.Pointer(&s))
 	bytesHeader := reflect.SliceHeader{
 		Data: strHeader.Data,

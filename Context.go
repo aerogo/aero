@@ -95,7 +95,7 @@ func (ctx *Context) GetInt(param string) (int, error) {
 // Respond responds either with raw code or gzipped if the
 // code length is greater than the gzip threshold.
 func (ctx *Context) Respond(code string) {
-	ctx.RespondBytes(StringToBytes(code))
+	ctx.RespondBytes(StringToBytesUnsafe(code))
 }
 
 // RespondBytes responds either with raw code or gzipped if the

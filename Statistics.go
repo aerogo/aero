@@ -18,10 +18,10 @@ func (app *Application) showStatistics(path string) {
 		var memStats runtime.MemStats
 		runtime.ReadMemStats(&memStats)
 
-		monitor := sigar.ConcreteSigar{}
+		avg := sigar.LoadAverage{}
 		uptime := sigar.Uptime{}
 
-		avg, _ := monitor.GetLoadAverage()
+		avg.Get()
 		uptime.Get()
 
 		mem := sigar.Mem{}
