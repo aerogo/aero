@@ -3,6 +3,7 @@ package aero
 import (
 	"fmt"
 	"net"
+	"sort"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -104,14 +105,17 @@ func (app *Application) SetStyle(css string) {
 // Test tests your application's routes.
 func (app *Application) Test() {
 	go func() {
+		sort.Strings(app.routes)
+
 		for _, route := range app.routes {
 			if strings.HasPrefix(route, "/_") {
 				continue
 			}
 
+			start := time.Now()
 			body, _ := Get("http://localhost:" + strconv.Itoa(app.Config.Ports.HTTP) + route).Send()
 			faint := color.New(color.Faint).SprintFunc()
-			fmt.Println(color.BlueString(route), len(body)/1024, faint("KB"))
+			fmt.Println(color.BlueString(route), len(body)/1024, faint("KB"), time.Since(start).Nanoseconds()/1000, faint("μs"))
 		}
 
 		// json, _ := Post("https://html5.validator.nu/?out=json").Header("Content-Type", "text/html; charset=utf-8").Header("Content-Encoding", "gzip").Body(body).Send()
