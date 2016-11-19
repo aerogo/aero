@@ -114,8 +114,34 @@ func (app *Application) Test() {
 
 			start := time.Now()
 			body, _ := Get("http://localhost:" + strconv.Itoa(app.Config.Ports.HTTP) + route).Send()
+			responseTime := time.Since(start).Nanoseconds() / 1000
+			responseSize := float64(len(body)) / 1024
+
 			faint := color.New(color.Faint).SprintFunc()
-			fmt.Println(color.BlueString(route), len(body)/1024, faint("KB"), time.Since(start).Nanoseconds()/1000, faint("μs"))
+
+			// Response size color
+			var responseSizeColor func(a ...interface{}) string
+
+			if responseSize < 15 {
+				responseSizeColor = color.New(color.FgGreen).SprintFunc()
+			} else if responseSize < 100 {
+				responseSizeColor = color.New(color.FgYellow).SprintFunc()
+			} else {
+				responseSizeColor = color.New(color.FgRed).SprintFunc()
+			}
+
+			// Response time color
+			var responseTimeColor func(a ...interface{}) string
+
+			if responseTime < 5000 {
+				responseTimeColor = color.New(color.FgGreen).SprintFunc()
+			} else if responseTime < 100000 {
+				responseTimeColor = color.New(color.FgYellow).SprintFunc()
+			} else {
+				responseTimeColor = color.New(color.FgRed).SprintFunc()
+			}
+
+			fmt.Printf("%-67s %s %s %s %s\n", color.BlueString(route), responseSizeColor(fmt.Sprintf("%6.1f", responseSize)), faint("KB"), responseTimeColor(fmt.Sprintf("%7d", responseTime)), faint("μs"))
 		}
 
 		// json, _ := Post("https://html5.validator.nu/?out=json").Header("Content-Type", "text/html; charset=utf-8").Header("Content-Encoding", "gzip").Body(body).Send()

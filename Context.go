@@ -12,9 +12,13 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-const (
-	gzipThreshold = 1450
-)
+// This should be close to the MTU size of a TCP packet.
+// Regarding performance it makes no sense to compress smaller files.
+// Bandwidth can be saved however the savings are minimal for small files
+// and the overhead of compressing can lead up to a 75% reduction
+// in server speed under high load. Therefore in this case
+// we're trying to optimize for performance, not bandwidth.
+const gzipThreshold = 1450
 
 var (
 	serverHeader               = []byte("Server")
