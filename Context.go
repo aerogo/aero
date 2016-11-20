@@ -81,6 +81,18 @@ func (ctx *Context) Text(text string) string {
 	return text
 }
 
+// Error should be used for sending HTML error messages to the user.
+func (ctx *Context) Error(statusCode int, html string) string {
+	ctx.SetStatusCode(statusCode)
+	ctx.requestCtx.Response.Header.SetBytesKV(contentTypeHeader, contentTypeHTML)
+	return html
+}
+
+// SetStatusCode sets the status code of the request.
+func (ctx *Context) SetStatusCode(status int) {
+	ctx.requestCtx.SetStatusCode(status)
+}
+
 // SetHeader sets header to value.
 func (ctx *Context) SetHeader(header string, value string) {
 	ctx.requestCtx.Response.Header.Set(header, value)
