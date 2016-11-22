@@ -46,7 +46,7 @@ type Application struct {
 	start          time.Time
 	requestCount   uint64
 
-	rewrite func(*fasthttp.RequestCtx)
+	rewrite func(*RewriteContext)
 }
 
 // New creates a new application.
@@ -203,7 +203,7 @@ func (app *Application) listen(port int) net.Listener {
 }
 
 // Rewrite sets the URL rewrite function.
-func (app *Application) Rewrite(rewrite func(*fasthttp.RequestCtx)) {
+func (app *Application) Rewrite(rewrite func(*RewriteContext)) {
 	app.rewrite = rewrite
 }
 
@@ -214,7 +214,7 @@ func (app *Application) Handler() func(*fasthttp.RequestCtx) {
 
 	if rewrite != nil {
 		return func(ctx *fasthttp.RequestCtx) {
-			rewrite(ctx)
+			rewrite(&RewriteContext{ctx})
 			router(ctx)
 		}
 	}
