@@ -1,0 +1,17 @@
+package: github.com/aerogo/aero
+import:
+- package: github.com/OneOfOne/xxhash
+  version: ^1.2.0
+- package: github.com/buaazp/fasthttprouter
+  version: ^0.1.0
+- package: github.com/cloudfoundry/gosigar
+- package: github.com/dustin/go-humanize
+- package: github.com/fatih/color
+  version: ^1.1.0
+- package: github.com/microcosm-cc/bluemonday
+- package: github.com/patrickmn/go-cache
+  version: ^2.0.0
+- package: github.com/russross/blackfriday
+  version: ^1.4.0
+- package: github.com/valyala/fasthttp
+  version: ^20160617.0.0

@@ -1,0 +1,49 @@
+hash: b1fa60b8f526166687fab231bee1a42d6bb9390a1eacde637b5157807e73e264
+updated: 2016-11-23T00:08:15.732309385+09:00
+imports:
+- name: github.com/buaazp/fasthttprouter
+  version: 5396e5b544db47fab9bce89929cd4c05df3b3de0
+- name: github.com/cloudfoundry/gosigar
+  version: c32d31af94b0e9d3b2877e49c1a581ad5a793343
+- name: github.com/dustin/go-humanize
+  version: bd88f87ad3a420f7bcf05e90566fd1ceb351fa7f
+- name: github.com/fatih/color
+  version: dea9d3a26a087187530244679c1cfb3a42937794
+- name: github.com/klauspost/compress
+  version: e3b7981a12dd3cab49afa1d3a50e715846f23732
+  subpackages:
+  - flate
+  - gzip
+  - zlib
+- name: github.com/klauspost/cpuid
+  version: 09cded8978dc9e80714c4d85b0322337b0a1e5e0
+- name: github.com/klauspost/crc32
+  version: cb6bfca970f6908083f26f39a79009d608efd5cd
+- name: github.com/mattn/go-colorable
+  version: d228849504861217f796da67fae4f6e347643f15
+- name: github.com/mattn/go-isatty
+  version: 66b8e73f3f5cda9f96b69efd03dd3d7fc4a5cdb8
+- name: github.com/microcosm-cc/bluemonday
+  version: f77f16ffc87a6a58814e64ae72d55f9c41374e6d
+- name: github.com/OneOfOne/xxhash
+  version: 8e3f99d9489277dae933ed6f2daae376a6c7b011
+- name: github.com/patrickmn/go-cache
+  version: 1881a9bccb818787f68c52bfba648c6cf34c34fa
+- name: github.com/russross/blackfriday
+  version: 0b647d0506a698cca42caca173e55559b12a69f2
+- name: github.com/shurcooL/sanitized_anchor_name
+  version: 1dba4b3954bc059efc3991ec364f9f9a35f597d2
+- name: github.com/valyala/fasthttp
+  version: d42167fd04f636e20b005e9934159e95454233c7
+  subpackages:
+  - fasthttputil
+- name: golang.org/x/net
+  version: 4971afdc2f162e82d185353533d3cf16188a9f4e
+  subpackages:
+  - html
+  - html/atom
+- name: golang.org/x/sys
+  version: b699b7032584f0953262cb2788a0ca19bb494703
+  subpackages:
+  - unix
+testImports: []
