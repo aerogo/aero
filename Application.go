@@ -27,10 +27,13 @@ const (
 	gzipCacheCleanup  = 1 * time.Minute
 )
 
+var sidBytes = []byte("sid")
+
 // Application represents a single web service.
 type Application struct {
 	Config   *Configuration
 	Layout   func(*Context, string) string
+	Sessions SessionManager
 	Security struct {
 		Key         []byte
 		Certificate []byte
@@ -40,13 +43,13 @@ type Application struct {
 	cssHash        string
 	cssReplacement string
 	root           string
-	router         *fasthttprouter.Router
-	routes         []string
-	gzipCache      *cache.Cache
-	start          time.Time
-	requestCount   uint64
 
-	rewrite func(*RewriteContext)
+	router          *fasthttprouter.Router
+	routes          []string
+	gzipCache       *cache.Cache
+	start           time.Time
+	rewrite         func(*RewriteContext)
+	routeStatistics map[string]*RouteStatistics
 }
 
 // New creates a new application.
@@ -56,6 +59,7 @@ func New() *Application {
 	app.router = fasthttprouter.New()
 	app.gzipCache = cache.New(gzipCacheDuration, gzipCacheCleanup)
 	app.start = time.Now()
+	app.routeStatistics = make(map[string]*RouteStatistics)
 	app.showStatistics("/__/")
 	app.Layout = func(ctx *Context, content string) string {
 		return content
@@ -64,11 +68,16 @@ func New() *Application {
 	app.Config.Reset()
 	app.Load()
 
+	// app.Sessions.Store = NewMemoryStore()
+
 	return app
 }
 
 // Get registers your function to be called when a certain path has been requested.
 func (app *Application) Get(path string, handle Handle) {
+	statistics := new(RouteStatistics)
+	app.routeStatistics[path] = statistics
+
 	app.router.GET(path, func(fasthttpContext *fasthttp.RequestCtx) {
 		ctx := Context{
 			App:        app,
@@ -76,10 +85,35 @@ func (app *Application) Get(path string, handle Handle) {
 			start:      time.Now(),
 		}
 
+		// Session cookie
+		if app.Sessions.Store != nil {
+			sid := fasthttpContext.Request.Header.CookieBytes(sidBytes)
+
+			if sid != nil {
+				ctx.Session = app.Sessions.Store.Get(BytesToStringUnsafe(sid))
+			}
+
+			if app.Sessions.AutoCreate && ctx.Session == nil {
+				ctx.Session = app.Sessions.NewSession()
+
+				sessionCookie := fasthttp.AcquireCookie()
+				sessionCookie.SetKeyBytes(sidBytes)
+				sessionCookie.SetValueBytes(ctx.Session.id)
+				sessionCookie.SetHTTPOnly(true)
+				sessionCookie.SetSecure(true)
+
+				fasthttpContext.Response.Header.SetCookie(sessionCookie)
+			}
+		}
+
+		// Response
 		response := handle(&ctx)
 		ctx.Respond(response)
 
-		atomic.AddUint64(&app.requestCount, 1)
+		// Statistics
+		responseTime := uint64(time.Since(ctx.start).Nanoseconds() / 1000000)
+		atomic.AddUint64(&statistics.requestCount, 1)
+		atomic.AddUint64(&statistics.responseTime, responseTime)
 	})
 
 	app.routes = append(app.routes, path)
@@ -102,6 +136,17 @@ func (app *Application) SetStyle(css string) {
 	hash := sha256.Sum256([]byte(css))
 	app.cssHash = base64.StdEncoding.EncodeToString(hash[:])
 	app.cssReplacement = "<style>" + app.css + "</style></head><body"
+}
+
+// RequestCount calculates the total number of requests made to the application.
+func (app *Application) RequestCount() uint64 {
+	total := uint64(0)
+
+	for _, stats := range app.routeStatistics {
+		total += atomic.LoadUint64(&stats.requestCount)
+	}
+
+	return total
 }
 
 // Test tests your application's routes.

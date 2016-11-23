@@ -56,6 +56,9 @@ type Context struct {
 
 	// Start time
 	start time.Time
+
+	// User session
+	Session *Session
 }
 
 // Handle ...
@@ -81,11 +84,18 @@ func (ctx *Context) Text(text string) string {
 	return text
 }
 
-// Error should be used for sending HTML error messages to the user.
-func (ctx *Context) Error(statusCode int, html string) string {
+// Error should be used for sending error messages to the user.
+func (ctx *Context) Error(statusCode int, explanation string, err error) string {
 	ctx.SetStatusCode(statusCode)
 	ctx.requestCtx.Response.Header.SetBytesKV(contentTypeHeader, contentTypeHTML)
-	return html
+
+	// fmt.Println("{")
+	// color.Blue("\t" + ctx.requestCtx.Request.URI().String())
+	// color.Yellow("\t" + explanation)
+	// color.Red("\t" + err.Error())
+	// fmt.Println("}")
+
+	return explanation
 }
 
 // SetStatusCode sets the status code of the request.

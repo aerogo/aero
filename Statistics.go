@@ -3,6 +3,7 @@ package aero
 import (
 	"encoding/json"
 	"runtime"
+	"sort"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -12,6 +13,44 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
+// Route statistics
+type Route struct {
+	Route        string
+	Requests     uint64
+	ResponseTime uint64
+}
+
+// byResponseTime ...
+type byResponseTime []*Route
+
+func (c byResponseTime) Len() int {
+	return len(c)
+}
+
+func (c byResponseTime) Swap(i, j int) {
+	c[i], c[j] = c[j], c[i]
+}
+
+func (c byResponseTime) Less(i, j int) bool {
+	return c[i].ResponseTime > c[j].ResponseTime
+}
+
+// byRequests ...
+type byRequests []*Route
+
+func (c byRequests) Len() int {
+	return len(c)
+}
+
+func (c byRequests) Swap(i, j int) {
+	c[i], c[j] = c[j], c[i]
+}
+
+func (c byRequests) Less(i, j int) bool {
+	return c[i].Requests > c[j].Requests
+}
+
+// showStatistics ...
 func (app *Application) showStatistics(path string) {
 	// Statistics route
 	app.router.GET(path, func(fasthttpContext *fasthttp.RequestCtx) {
@@ -54,9 +93,36 @@ func (app *Application) showStatistics(path string) {
 			Memory      SystemMemoryStats
 		}
 
+		type RouteSummary struct {
+			Slow    []*Route
+			Popular []*Route
+		}
+
+		routeSummary := RouteSummary{}
+
+		for path, stats := range app.routeStatistics {
+			route := &Route{
+				Route:        path,
+				Requests:     atomic.LoadUint64(&stats.requestCount),
+				ResponseTime: uint64(stats.AverageResponseTime()),
+			}
+
+			if route.ResponseTime >= 10 {
+				routeSummary.Slow = append(routeSummary.Slow, route)
+			}
+
+			if route.Requests >= 1 {
+				routeSummary.Popular = append(routeSummary.Popular, route)
+			}
+		}
+
+		sort.Sort(byResponseTime(routeSummary.Slow))
+		sort.Sort(byRequests(routeSummary.Popular))
+
 		stats := struct {
 			System SystemStats
 			App    AppStats
+			Routes RouteSummary
 		}{
 			System: SystemStats{
 				Uptime:      strings.TrimSpace(uptime.Format()),
@@ -71,7 +137,7 @@ func (app *Application) showStatistics(path string) {
 			App: AppStats{
 				Go:       strings.Replace(runtime.Version(), "go", "", 1),
 				Uptime:   strings.TrimSpace(humanize.RelTime(app.start, time.Now(), "", "")),
-				Requests: atomic.LoadUint64(&app.requestCount),
+				Requests: app.RequestCount(),
 				Memory: AppMemoryStats{
 					Allocated:   humanize.Bytes(memStats.HeapAlloc),
 					GCThreshold: humanize.Bytes(memStats.NextGC),
@@ -79,6 +145,7 @@ func (app *Application) showStatistics(path string) {
 				},
 				Config: app.Config,
 			},
+			Routes: routeSummary,
 		}
 
 		// numCPU :=

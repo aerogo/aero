@@ -1,5 +1,5 @@
-hash: b1fa60b8f526166687fab231bee1a42d6bb9390a1eacde637b5157807e73e264
-updated: 2016-11-23T00:08:15.732309385+09:00
+hash: cfd73590494bd6134b8c7d65236403bef1e3959fb0d05a27251b4559ee9ed852
+updated: 2016-11-23T15:35:13.331589433+09:00
 imports:
 - name: github.com/buaazp/fasthttprouter
   version: 5396e5b544db47fab9bce89929cd4c05df3b3de0
@@ -43,7 +43,7 @@ imports:
   - html
   - html/atom
 - name: golang.org/x/sys
-  version: b699b7032584f0953262cb2788a0ca19bb494703
+  version: 30237cf4eefd639b184d1f2cb77a581ea0be8947
   subpackages:
   - unix
 testImports: []
