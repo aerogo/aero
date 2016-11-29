@@ -68,7 +68,7 @@ func New() *Application {
 	app.Config.Reset()
 	app.Load()
 
-	// app.Sessions.Store = NewMemoryStore()
+	app.Sessions.Store = NewMemoryStore()
 
 	return app
 }
@@ -83,27 +83,6 @@ func (app *Application) Get(path string, handle Handle) {
 			App:        app,
 			requestCtx: fasthttpContext,
 			start:      time.Now(),
-		}
-
-		// Session cookie
-		if app.Sessions.Store != nil {
-			sid := fasthttpContext.Request.Header.CookieBytes(sidBytes)
-
-			if sid != nil {
-				ctx.Session = app.Sessions.Store.Get(BytesToStringUnsafe(sid))
-			}
-
-			if app.Sessions.AutoCreate && ctx.Session == nil {
-				ctx.Session = app.Sessions.NewSession()
-
-				sessionCookie := fasthttp.AcquireCookie()
-				sessionCookie.SetKeyBytes(sidBytes)
-				sessionCookie.SetValueBytes(ctx.Session.id)
-				sessionCookie.SetHTTPOnly(true)
-				sessionCookie.SetSecure(true)
-
-				fasthttpContext.Response.Header.SetCookie(sessionCookie)
-			}
 		}
 
 		// Response

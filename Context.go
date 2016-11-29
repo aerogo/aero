@@ -58,11 +58,43 @@ type Context struct {
 	start time.Time
 
 	// User session
-	Session *Session
+	session *Session
 }
 
 // Handle ...
 type Handle func(*Context) string
+
+// Session returns the session of the context or creates and caches a new session.
+func (ctx *Context) Session() *Session {
+	// Return cached session if available.
+	if ctx.session != nil {
+		return ctx.session
+	}
+
+	// Check if the client has a session cookie already.
+	sid := ctx.requestCtx.Request.Header.CookieBytes(sidBytes)
+
+	if sid != nil {
+		ctx.session = ctx.App.Sessions.Store.Get(BytesToStringUnsafe(sid))
+
+		if ctx.session != nil {
+			return ctx.session
+		}
+	}
+
+	// Create a new session
+	ctx.session = ctx.App.Sessions.New()
+
+	sessionCookie := fasthttp.AcquireCookie()
+	sessionCookie.SetKeyBytes(sidBytes)
+	sessionCookie.SetValueBytes(ctx.session.id)
+	sessionCookie.SetHTTPOnly(true)
+	sessionCookie.SetSecure(true)
+
+	ctx.requestCtx.Response.Header.SetCookie(sessionCookie)
+
+	return ctx.session
+}
 
 // JSON encodes the object to a JSON strings and responds.
 func (ctx *Context) JSON(value interface{}) string {
