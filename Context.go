@@ -169,8 +169,11 @@ func (ctx *Context) RespondBytes(b []byte) {
 	// http.Response.Header.Set(responseTimeHeader, strconv.FormatInt(time.Since(ctx.start).Nanoseconds()/1000, 10)+" us")
 
 	if ctx.App.Security.Certificate != nil {
-		http.Response.Header.Set("Content-Security-Policy", "default-src https:; script-src 'self'; style-src 'sha256-"+ctx.App.cssHash+"'; connect-src https: wss:")
+		http.Response.Header.Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
+		http.Response.Header.Set("Content-Security-Policy", "default-src 'none'; img-src https:; script-src 'self'; style-src 'sha256-"+ctx.App.cssHash+"'; font-src https:; frame-src https:; connect-src https: wss:")
 	}
+
+	http.Response.Header.Set("X-Frame-Options", "SAMEORIGIN")
 
 	// Body
 	if ctx.App.Config.GZip && len(b) >= gzipThreshold {
