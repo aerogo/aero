@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-	"unsafe"
 
 	"github.com/OneOfOne/xxhash"
 	"github.com/julienschmidt/httprouter"
@@ -27,7 +26,7 @@ const (
 	serverHeader               = "Server"
 	server                     = "Aero"
 	cacheControlHeader         = "Cache-Control"
-	cacheControlAlwaysValidate = "no-cache"
+	cacheControlAlwaysValidate = "must-revalidate"
 	contentTypeOptionsHeader   = "X-Content-Type-Options"
 	contentTypeOptions         = "nosniff"
 	xssProtectionHeader        = "X-XSS-Protection"
@@ -143,7 +142,7 @@ func (ctx *Context) Error(statusCode int, explanation string, err error) string 
 
 // SetStatusCode sets the status code of the request.
 func (ctx *Context) SetStatusCode(status int) {
-	// ctx.requestCtx.SetStatusCode(status)
+	ctx.response.WriteHeader(status)
 }
 
 // SetHeader sets header to value.
@@ -198,7 +197,7 @@ func (ctx *Context) RespondBytes(b []byte) {
 		// If client cache is up to date, send 304 with no response body.
 		clientETag := ctx.request.Header.Get(ifNoneMatchHeader)
 
-		if etag == *(*string)(unsafe.Pointer(&clientETag)) {
+		if etag == clientETag {
 			ctx.SetStatusCode(304)
 			return
 		}
