@@ -2,6 +2,7 @@ package aero
 
 import (
 	"encoding/json"
+	"net/http"
 	"runtime"
 	"sort"
 	"strings"
@@ -10,7 +11,7 @@ import (
 
 	sigar "github.com/cloudfoundry/gosigar"
 	humanize "github.com/dustin/go-humanize"
-	"github.com/valyala/fasthttp"
+	"github.com/julienschmidt/httprouter"
 )
 
 // Route statistics
@@ -53,7 +54,7 @@ func (c byRequests) Less(i, j int) bool {
 // showStatistics ...
 func (app *Application) showStatistics(path string) {
 	// Statistics route
-	app.router.GET(path, func(fasthttpContext *fasthttp.RequestCtx) {
+	app.router.GET(path, func(response http.ResponseWriter, request *http.Request, params httprouter.Params) {
 		var memStats runtime.MemStats
 		runtime.ReadMemStats(&memStats)
 
@@ -158,12 +159,12 @@ func (app *Application) showStatistics(path string) {
 		// b.WriteString("\nCPUs: ")
 		// b.WriteString(strconv.Itoa(numCPU))
 
-		fasthttpContext.Response.Header.Set("Content-Type", "application/json")
+		response.Header().Set("Content-Type", "application/json")
 		bytes, err := json.Marshal(stats)
 		if err != nil {
-			fasthttpContext.WriteString("Error serializing to JSON")
+			response.Write(StringToBytesUnsafe("Error serializing to JSON"))
 			return
 		}
-		fasthttpContext.Write(bytes)
+		response.Write(bytes)
 	})
 }

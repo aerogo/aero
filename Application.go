@@ -2,7 +2,7 @@ package aero
 
 import (
 	"fmt"
-	"net"
+	"net/http"
 	"sort"
 	"strconv"
 	"strings"
@@ -16,10 +16,9 @@ import (
 
 	"io/ioutil"
 
-	"github.com/buaazp/fasthttprouter"
 	"github.com/fatih/color"
+	"github.com/julienschmidt/httprouter"
 	cache "github.com/patrickmn/go-cache"
-	"github.com/valyala/fasthttp"
 )
 
 const (
@@ -27,16 +26,14 @@ const (
 	gzipCacheCleanup  = 1 * time.Minute
 )
 
-var sidBytes = []byte("sid")
-
 // Application represents a single web service.
 type Application struct {
 	Config   *Configuration
 	Layout   func(*Context, string) string
 	Sessions SessionManager
 	Security struct {
-		Key         []byte
-		Certificate []byte
+		Key         string
+		Certificate string
 	}
 
 	css            string
@@ -44,7 +41,7 @@ type Application struct {
 	cssReplacement string
 	root           string
 
-	router          *fasthttprouter.Router
+	router          *httprouter.Router
 	routes          []string
 	gzipCache       *cache.Cache
 	start           time.Time
@@ -56,7 +53,7 @@ type Application struct {
 func New() *Application {
 	app := new(Application)
 	app.root = ""
-	app.router = fasthttprouter.New()
+	app.router = httprouter.New()
 	app.gzipCache = cache.New(gzipCacheDuration, gzipCacheCleanup)
 	app.start = time.Now()
 	app.routeStatistics = make(map[string]*RouteStatistics)
@@ -78,16 +75,18 @@ func (app *Application) Get(path string, handle Handle) {
 	statistics := new(RouteStatistics)
 	app.routeStatistics[path] = statistics
 
-	app.router.GET(path, func(fasthttpContext *fasthttp.RequestCtx) {
+	app.router.GET(path, func(response http.ResponseWriter, request *http.Request, params httprouter.Params) {
 		ctx := Context{
-			App:        app,
-			requestCtx: fasthttpContext,
-			start:      time.Now(),
+			App:      app,
+			request:  request,
+			response: response,
+			params:   params,
+			start:    time.Now(),
 		}
 
 		// Response
-		response := handle(&ctx)
-		ctx.Respond(response)
+		data := handle(&ctx)
+		ctx.Respond(data)
 
 		// Statistics
 		responseTime := uint64(time.Since(ctx.start).Nanoseconds() / 1000000)
@@ -198,10 +197,9 @@ func (app *Application) Load() {
 
 // Listen starts the server.
 func (app *Application) Listen() {
-	if app.Security.Key != nil && app.Security.Certificate != nil {
+	if app.Security.Key != "" && app.Security.Certificate != "" {
 		go func() {
-			httpsListener := app.listen(app.Config.Ports.HTTPS)
-			app.serveHTTPS(httpsListener)
+			app.serveHTTPS(":" + strconv.Itoa(app.Config.Ports.HTTPS))
 		}()
 
 		fmt.Println("Server running on:", color.GreenString("https://localhost:"+strconv.Itoa(app.Config.Ports.HTTPS)))
@@ -209,22 +207,21 @@ func (app *Application) Listen() {
 		fmt.Println("Server running on:", color.GreenString("http://localhost:"+strconv.Itoa(app.Config.Ports.HTTP)))
 	}
 
-	httpListener := app.listen(app.Config.Ports.HTTP)
-	app.serveHTTP(httpListener)
+	app.serveHTTP(":" + strconv.Itoa(app.Config.Ports.HTTP))
 }
 
-// listen listens on the specified host and port.
-func (app *Application) listen(port int) net.Listener {
-	address := ":" + strconv.Itoa(port)
+// // listen listens on the specified host and port.
+// func (app *Application) listen(port int) net.Listener {
+// 	address := ":" + strconv.Itoa(port)
 
-	listener, bindError := net.Listen("tcp", address)
+// 	listener, bindError := net.Listen("tcp", address)
 
-	if bindError != nil {
-		panic(bindError)
-	}
+// 	if bindError != nil {
+// 		panic(bindError)
+// 	}
 
-	return listener
-}
+// 	return listener
+// }
 
 // Rewrite sets the URL rewrite function.
 func (app *Application) Rewrite(rewrite func(*RewriteContext)) {
@@ -232,27 +229,35 @@ func (app *Application) Rewrite(rewrite func(*RewriteContext)) {
 }
 
 // Handler returns the request handler.
-func (app *Application) Handler() func(*fasthttp.RequestCtx) {
-	router := app.router.Handler
+func (app *Application) Handler() http.Handler {
+	router := app.router
 	rewrite := app.rewrite
 
 	if rewrite != nil {
-		return func(ctx *fasthttp.RequestCtx) {
-			rewrite(&RewriteContext{ctx})
-			router(ctx)
+		return &rewriteHandler{
+			rewrite: rewrite,
+			router:  router,
 		}
 	}
 
 	return router
 }
 
-// serveHTTP serves requests from the given listener.
-func (app *Application) serveHTTP(listener net.Listener) {
-	server := &fasthttp.Server{
-		Handler: app.Handler(),
-	}
+type rewriteHandler struct {
+	rewrite func(*RewriteContext)
+	router  http.Handler
+}
 
-	serveError := server.Serve(listener)
+func (r *rewriteHandler) ServeHTTP(response http.ResponseWriter, request *http.Request) {
+	r.rewrite(&RewriteContext{
+		request: request,
+	})
+	r.router.ServeHTTP(response, request)
+}
+
+// serveHTTP serves requests from the given listener.
+func (app *Application) serveHTTP(address string) {
+	serveError := http.ListenAndServe(address, app.Handler())
 
 	if serveError != nil {
 		panic(serveError)
@@ -260,12 +265,8 @@ func (app *Application) serveHTTP(listener net.Listener) {
 }
 
 // serveHTTPS serves requests from the given listener.
-func (app *Application) serveHTTPS(listener net.Listener) {
-	server := &fasthttp.Server{
-		Handler: app.Handler(),
-	}
-
-	serveError := server.ServeTLSEmbed(listener, app.Security.Certificate, app.Security.Key)
+func (app *Application) serveHTTPS(address string) {
+	serveError := http.ListenAndServeTLS(address, app.Security.Certificate, app.Security.Key, app.Handler())
 
 	if serveError != nil {
 		panic(serveError)
