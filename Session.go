@@ -4,7 +4,7 @@ import "sync"
 
 // Session ...
 type Session struct {
-	id   []byte
+	id   string
 	data map[string]interface{}
 	lock sync.RWMutex
 }

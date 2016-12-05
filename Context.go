@@ -40,13 +40,9 @@ const (
 	contentEncodingGzip        = "gzip"
 	responseTimeHeader         = "X-Response-Time"
 	ifNoneMatchHeader          = "If-None-Match"
+	xFrameOptionsHeader        = "X-Frame-Options"
+	xFrameOptions              = "SAMEORIGIN"
 )
-
-var ifNoneMatchHeaderBytes []byte
-
-func init() {
-	ifNoneMatchHeaderBytes = []byte(ifNoneMatchHeader)
-}
 
 // Context ...
 type Context struct {
@@ -96,7 +92,7 @@ func (ctx *Context) Session() *Session {
 
 	sessionCookie := http.Cookie{
 		Name:     "sid",
-		Value:    BytesToStringUnsafe(ctx.session.id),
+		Value:    ctx.session.id,
 		HttpOnly: true,
 		Secure:   true,
 	}
@@ -176,14 +172,13 @@ func (ctx *Context) RespondBytes(b []byte) {
 	response.Header().Set(serverHeader, server)
 	response.Header().Set(contentTypeOptionsHeader, contentTypeOptions)
 	response.Header().Set(xssProtectionHeader, xssProtection)
+	response.Header().Set(xFrameOptionsHeader, xFrameOptions)
 	// response.Header().Set(responseTimeHeader, strconv.FormatInt(time.Since(ctx.start).Nanoseconds()/1000, 10)+" us")
 
 	if ctx.App.Security.Certificate != "" {
 		response.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
 		response.Header().Set("Content-Security-Policy", "default-src 'none'; img-src https:; script-src 'self'; style-src 'sha256-"+ctx.App.cssHash+"'; font-src https:; frame-src https:; connect-src https: wss:")
 	}
-
-	response.Header().Set("X-Frame-Options", "SAMEORIGIN")
 
 	// Body
 	if ctx.App.Config.GZip && len(b) >= gzipThreshold {
@@ -216,11 +211,13 @@ func (ctx *Context) RespondBytes(b []byte) {
 
 		var buffer bytes.Buffer
 		writer := bufio.NewWriter(&buffer)
-		fasthttp.WriteGzipLevel(writer, b, 1)
+		fasthttp.WriteGzipLevel(writer, b, 9)
+		writer.Flush()
+		gzippedBytes := buffer.Bytes()
+		response.Write(gzippedBytes)
 
 		if ctx.App.Config.GZipCache {
-			writer.Flush()
-			ctx.App.gzipCache.Set(etag, buffer.Bytes(), cache.DefaultExpiration)
+			ctx.App.gzipCache.Set(etag, gzippedBytes, cache.DefaultExpiration)
 		}
 	} else {
 		response.Write(b)
