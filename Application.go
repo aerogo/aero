@@ -34,10 +34,7 @@ type Application struct {
 	Config   *Configuration
 	Layout   func(*Context, string) string
 	Sessions SessionManager
-	Security struct {
-		Key         []byte
-		Certificate []byte
-	}
+	Security ApplicationSecurity
 
 	css            string
 	cssHash        string
@@ -50,6 +47,12 @@ type Application struct {
 	start           time.Time
 	rewrite         func(*RewriteContext)
 	routeStatistics map[string]*RouteStatistics
+}
+
+// ApplicationSecurity stores the certificate data.
+type ApplicationSecurity struct {
+	Key         []byte
+	Certificate []byte
 }
 
 // New creates a new application.
@@ -115,6 +118,12 @@ func (app *Application) SetStyle(css string) {
 	hash := sha256.Sum256([]byte(css))
 	app.cssHash = base64.StdEncoding.EncodeToString(hash[:])
 	app.cssReplacement = "<style>" + app.css + "</style></head><body"
+}
+
+// Load ...
+func (security *ApplicationSecurity) Load(certificate string, key string) {
+	security.Certificate, _ = ioutil.ReadFile(certificate)
+	security.Key, _ = ioutil.ReadFile(key)
 }
 
 // RequestCount calculates the total number of requests made to the application.

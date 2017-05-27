@@ -170,7 +170,7 @@ func (ctx *Context) RespondBytes(b []byte) {
 
 	if ctx.App.Security.Certificate != nil {
 		http.Response.Header.Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
-		http.Response.Header.Set("Content-Security-Policy", "default-src 'none'; img-src https:; script-src 'self'; style-src 'sha256-"+ctx.App.cssHash+"'; font-src https:; frame-src https:; connect-src https: wss:")
+		http.Response.Header.Set("Content-Security-Policy", "default-src 'none'; img-src https:; script-src 'self'; style-src 'sha256-"+ctx.App.cssHash+"'; font-src https:; child-src https:; connect-src https: wss:")
 	}
 
 	http.Response.Header.Set("X-Frame-Options", "SAMEORIGIN")
@@ -204,7 +204,7 @@ func (ctx *Context) RespondBytes(b []byte) {
 			}
 		}
 
-		fasthttp.WriteGzipLevel(http.Response.BodyWriter(), b, 1)
+		fasthttp.WriteGzipLevel(http.Response.BodyWriter(), b, 9)
 
 		if ctx.App.Config.GZipCache {
 			body := http.Response.Body()
