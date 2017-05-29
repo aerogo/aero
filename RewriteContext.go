@@ -1,18 +1,18 @@
 package aero
 
-import "github.com/valyala/fasthttp"
+import "net/http"
 
 // RewriteContext is used for the URI rewrite ability.
 type RewriteContext struct {
-	requestCtx *fasthttp.RequestCtx
+	request *http.Request
 }
 
-// URIBytes returns the relative path, e.g. /blog/post/123 as a byte slice.
-func (ctx *RewriteContext) URIBytes() []byte {
-	return ctx.requestCtx.RequestURI()
+// URI returns the relative path, e.g. /blog/post/123.
+func (ctx *RewriteContext) URI() string {
+	return ctx.request.RequestURI
 }
 
-// SetURIBytes returns the relative path, e.g. /blog/post/123 as a byte slice.
-func (ctx *RewriteContext) SetURIBytes(b []byte) {
-	ctx.requestCtx.Request.SetRequestURIBytes(b)
+// SetURI sets the relative path, e.g. /blog/post/123.
+func (ctx *RewriteContext) SetURI(b string) {
+	ctx.request.RequestURI = b
 }
