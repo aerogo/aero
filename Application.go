@@ -31,10 +31,7 @@ type Application struct {
 	Config   *Configuration
 	Layout   func(*Context, string) string
 	Sessions SessionManager
-	Security struct {
-		Key         string
-		Certificate string
-	}
+	Security ApplicationSecurity
 
 	css            string
 	cssHash        string
