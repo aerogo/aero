@@ -109,6 +109,11 @@ func (app *Application) SetStyle(css string) {
 	app.cssReplacement = "<style>" + app.css + "</style></head><body"
 }
 
+// StartTime ...
+func (app *Application) StartTime() time.Time {
+	return app.start
+}
+
 // Test tests your application's routes.
 func (app *Application) Test() {
 	fmt.Println(strings.Repeat("-", 80))
