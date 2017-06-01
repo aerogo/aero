@@ -6,7 +6,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync/atomic"
 	"time"
 
 	"crypto/sha256"
@@ -28,32 +27,30 @@ const (
 
 // Application represents a single web service.
 type Application struct {
+	root string
+
 	Config   *Configuration
 	Layout   func(*Context, string) string
 	Sessions SessionManager
 	Security ApplicationSecurity
 
+	router    *httprouter.Router
+	routes    []string
+	gzipCache *cache.Cache
+	start     time.Time
+	rewrite   func(*RewriteContext)
+
 	css            string
 	cssHash        string
 	cssReplacement string
-	root           string
-
-	router          *httprouter.Router
-	routes          []string
-	gzipCache       *cache.Cache
-	start           time.Time
-	rewrite         func(*RewriteContext)
-	routeStatistics map[string]*RouteStatistics
 }
 
 // New creates a new application.
 func New() *Application {
 	app := new(Application)
+	app.start = time.Now()
 	app.router = httprouter.New()
 	app.gzipCache = cache.New(gzipCacheDuration, gzipCacheCleanup)
-	app.start = time.Now()
-	app.routeStatistics = make(map[string]*RouteStatistics)
-	app.showStatistics("/__/")
 	app.Layout = func(ctx *Context, content string) string {
 		return content
 	}
@@ -68,8 +65,8 @@ func New() *Application {
 
 // Get registers your function to be called when a certain path has been requested.
 func (app *Application) Get(path string, handle Handle) {
-	statistics := new(RouteStatistics)
-	app.routeStatistics[path] = statistics
+	// statistics := new(RouteStatistics)
+	// app.routeStatistics[path] = statistics
 
 	app.router.GET(path, func(response http.ResponseWriter, request *http.Request, params httprouter.Params) {
 		ctx := Context{
@@ -85,9 +82,9 @@ func (app *Application) Get(path string, handle Handle) {
 		ctx.Respond(data)
 
 		// Statistics
-		responseTime := uint64(time.Since(ctx.start).Nanoseconds() / 1000000)
-		atomic.AddUint64(&statistics.requestCount, 1)
-		atomic.AddUint64(&statistics.responseTime, responseTime)
+		// responseTime := uint64(time.Since(ctx.start).Nanoseconds() / 1000000)
+		// atomic.AddUint64(&statistics.requestCount, 1)
+		// atomic.AddUint64(&statistics.responseTime, responseTime)
 	})
 
 	app.routes = append(app.routes, path)
@@ -110,17 +107,6 @@ func (app *Application) SetStyle(css string) {
 	hash := sha256.Sum256([]byte(css))
 	app.cssHash = base64.StdEncoding.EncodeToString(hash[:])
 	app.cssReplacement = "<style>" + app.css + "</style></head><body"
-}
-
-// RequestCount calculates the total number of requests made to the application.
-func (app *Application) RequestCount() uint64 {
-	total := uint64(0)
-
-	for _, stats := range app.routeStatistics {
-		total += atomic.LoadUint64(&stats.requestCount)
-	}
-
-	return total
 }
 
 // Test tests your application's routes.
