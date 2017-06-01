@@ -117,6 +117,9 @@ func (app *Application) Load() {
 			color.Red(jsonDecodeError.Error())
 		}
 	}
+
+	app.Config.Manifest.Name = app.Config.Title
+	app.Config.Manifest.ShortName = app.Config.Title
 }
 
 // Listen starts the server.

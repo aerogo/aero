@@ -42,6 +42,8 @@ const (
 	ifNoneMatchHeader          = "If-None-Match"
 	xFrameOptionsHeader        = "X-Frame-Options"
 	xFrameOptions              = "SAMEORIGIN"
+	referrerPolicyHeader       = "Referrer-Policy"
+	referrerPolicySameOrigin   = "no-referrer"
 )
 
 // Context ...
@@ -173,6 +175,7 @@ func (ctx *Context) RespondBytes(b []byte) {
 	response.Header().Set(contentTypeOptionsHeader, contentTypeOptions)
 	response.Header().Set(xssProtectionHeader, xssProtection)
 	response.Header().Set(xFrameOptionsHeader, xFrameOptions)
+	response.Header().Set(referrerPolicyHeader, referrerPolicySameOrigin)
 	response.Header().Set(responseTimeHeader, strconv.FormatInt(time.Since(ctx.start).Nanoseconds()/1000, 10)+" us")
 
 	if ctx.App.Security.Certificate != "" {

@@ -37,4 +37,8 @@ func (config *Configuration) Reset() {
 	config.GZipCache = true
 	config.Ports.HTTP = 4000
 	config.Ports.HTTPS = 4001
+	config.Title = "Untitled site"
+	config.Manifest.Lang = "en"
+	config.Manifest.Display = "standalone"
+	config.Manifest.StartURL = "/"
 }
