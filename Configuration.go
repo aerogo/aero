@@ -22,6 +22,7 @@ type Manifest struct {
 	StartURL    string   `json:"start_url"`
 	Display     string   `json:"display"`
 	Lang        string   `json:"lang"`
+	ThemeColor  string   `json:"theme_color"`
 	GCMSenderID string   `json:"gcm_sender_id"`
 }
 
