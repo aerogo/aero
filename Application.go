@@ -100,69 +100,6 @@ func (app *Application) Ajax(path string, handle Handle) {
 	})
 }
 
-// SetStyle ...
-func (app *Application) SetStyle(css string) {
-	app.css = css
-
-	hash := sha256.Sum256([]byte(css))
-	app.cssHash = base64.StdEncoding.EncodeToString(hash[:])
-	app.cssReplacement = "<style>" + app.css + "</style></head><body"
-}
-
-// StartTime ...
-func (app *Application) StartTime() time.Time {
-	return app.start
-}
-
-// Test tests your application's routes.
-func (app *Application) Test() {
-	fmt.Println(strings.Repeat("-", 80))
-
-	go func() {
-		sort.Strings(app.routes)
-
-		for _, route := range app.routes {
-			if strings.HasPrefix(route, "/_") {
-				continue
-			}
-
-			start := time.Now()
-			body, _ := Get("http://localhost:" + strconv.Itoa(app.Config.Ports.HTTP) + route).Send()
-			responseTime := time.Since(start).Nanoseconds() / 1000000
-			responseSize := float64(len(body)) / 1024
-
-			faint := color.New(color.Faint).SprintFunc()
-
-			// Response size color
-			var responseSizeColor func(a ...interface{}) string
-
-			if responseSize < 15 {
-				responseSizeColor = color.New(color.FgGreen).SprintFunc()
-			} else if responseSize < 100 {
-				responseSizeColor = color.New(color.FgYellow).SprintFunc()
-			} else {
-				responseSizeColor = color.New(color.FgRed).SprintFunc()
-			}
-
-			// Response time color
-			var responseTimeColor func(a ...interface{}) string
-
-			if responseTime < 10 {
-				responseTimeColor = color.New(color.FgGreen).SprintFunc()
-			} else if responseTime < 100 {
-				responseTimeColor = color.New(color.FgYellow).SprintFunc()
-			} else {
-				responseTimeColor = color.New(color.FgRed).SprintFunc()
-			}
-
-			fmt.Printf("%-67s %s %s %s %s\n", color.BlueString(route), responseSizeColor(fmt.Sprintf("%6.0f", responseSize)), faint("KB"), responseTimeColor(fmt.Sprintf("%7d", responseTime)), faint("ms"))
-		}
-
-		// json, _ := Post("https://html5.validator.nu/?out=json").Header("Content-Type", "text/html; charset=utf-8").Header("Content-Encoding", "gzip").Body(body).Send()
-		// fmt.Println(json)
-	}()
-}
-
 // Run starts your application.
 func (app *Application) Run() {
 	app.Test()
@@ -215,6 +152,20 @@ func (app *Application) Rewrite(rewrite func(*RewriteContext)) {
 	app.rewrite = rewrite
 }
 
+// SetStyle ...
+func (app *Application) SetStyle(css string) {
+	app.css = css
+
+	hash := sha256.Sum256([]byte(css))
+	app.cssHash = base64.StdEncoding.EncodeToString(hash[:])
+	app.cssReplacement = "<style>" + app.css + "</style></head><body"
+}
+
+// StartTime ...
+func (app *Application) StartTime() time.Time {
+	return app.start
+}
+
 // Handler returns the request handler.
 func (app *Application) Handler() http.Handler {
 	router := app.router
@@ -228,18 +179,6 @@ func (app *Application) Handler() http.Handler {
 	}
 
 	return router
-}
-
-type rewriteHandler struct {
-	rewrite func(*RewriteContext)
-	router  http.Handler
-}
-
-func (r *rewriteHandler) ServeHTTP(response http.ResponseWriter, request *http.Request) {
-	r.rewrite(&RewriteContext{
-		request: request,
-	})
-	r.router.ServeHTTP(response, request)
 }
 
 // serveHTTP serves requests from the given listener.
@@ -258,4 +197,53 @@ func (app *Application) serveHTTPS(address string) {
 	if serveError != nil {
 		panic(serveError)
 	}
+}
+
+// Test tests your application's routes.
+func (app *Application) Test() {
+	fmt.Println(strings.Repeat("-", 80))
+
+	go func() {
+		sort.Strings(app.routes)
+
+		for _, route := range app.routes {
+			if strings.HasPrefix(route, "/_") {
+				continue
+			}
+
+			start := time.Now()
+			body, _ := Get("http://localhost:" + strconv.Itoa(app.Config.Ports.HTTP) + route).Send()
+			responseTime := time.Since(start).Nanoseconds() / 1000000
+			responseSize := float64(len(body)) / 1024
+
+			faint := color.New(color.Faint).SprintFunc()
+
+			// Response size color
+			var responseSizeColor func(a ...interface{}) string
+
+			if responseSize < 15 {
+				responseSizeColor = color.New(color.FgGreen).SprintFunc()
+			} else if responseSize < 100 {
+				responseSizeColor = color.New(color.FgYellow).SprintFunc()
+			} else {
+				responseSizeColor = color.New(color.FgRed).SprintFunc()
+			}
+
+			// Response time color
+			var responseTimeColor func(a ...interface{}) string
+
+			if responseTime < 10 {
+				responseTimeColor = color.New(color.FgGreen).SprintFunc()
+			} else if responseTime < 100 {
+				responseTimeColor = color.New(color.FgYellow).SprintFunc()
+			} else {
+				responseTimeColor = color.New(color.FgRed).SprintFunc()
+			}
+
+			fmt.Printf("%-67s %s %s %s %s\n", color.BlueString(route), responseSizeColor(fmt.Sprintf("%6.0f", responseSize)), faint("KB"), responseTimeColor(fmt.Sprintf("%7d", responseTime)), faint("ms"))
+		}
+
+		// json, _ := Post("https://html5.validator.nu/?out=json").Header("Content-Type", "text/html; charset=utf-8").Header("Content-Encoding", "gzip").Body(body).Send()
+		// fmt.Println(json)
+	}()
 }
