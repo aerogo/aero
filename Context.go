@@ -12,7 +12,6 @@ import (
 	"github.com/OneOfOne/xxhash"
 	"github.com/fatih/color"
 	"github.com/julienschmidt/httprouter"
-	"github.com/mssola/user_agent"
 	cache "github.com/patrickmn/go-cache"
 	"github.com/tomasen/realip"
 	"github.com/valyala/fasthttp"
@@ -171,9 +170,9 @@ func (ctx *Context) RealIP() string {
 	return realip.RealIP(ctx.request)
 }
 
-// UserAgent retrieves user agent data for the given request.
-func (ctx *Context) UserAgent() *user_agent.UserAgent {
-	return user_agent.New(ctx.request.UserAgent())
+// UserAgent retrieves the user agent for the given request.
+func (ctx *Context) UserAgent() string {
+	return ctx.request.UserAgent()
 }
 
 // Respond responds either with raw code or gzipped if the
