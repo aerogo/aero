@@ -2,10 +2,11 @@
 This project is work in progress.
 
 ## Goals
+Websites made with Aero should...
 
-- [x] Reach 100/100 [Google PageSpeed](https://developers.google.com/speed/pagespeed/insights/) score
-- [x] Reach 100/100 [Mozilla Observatory](https://observatory.mozilla.org/) score
-- [ ] Reach 100/100 [Google Lighthouse](https://developers.google.com/web/tools/lighthouse/) score
+- [x] ...reach 100/100 [Google PageSpeed](https://developers.google.com/speed/pagespeed/insights/) score
+- [x] ...reach 100/100 [Mozilla Observatory](https://observatory.mozilla.org/) score
+- [ ] ...reach 100/100 [Google Lighthouse](https://developers.google.com/web/tools/lighthouse/) score
 
 ## Benchmark
 Simple routing test using `Hello World` as output (data payload too small for gzip):
