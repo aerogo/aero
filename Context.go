@@ -4,13 +4,17 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/OneOfOne/xxhash"
+	"github.com/fatih/color"
 	"github.com/julienschmidt/httprouter"
+	"github.com/mssola/user_agent"
 	cache "github.com/patrickmn/go-cache"
+	"github.com/tomasen/realip"
 	"github.com/valyala/fasthttp"
 )
 
@@ -23,27 +27,30 @@ import (
 const gzipThreshold = 1450
 
 const (
-	serverHeader               = "Server"
-	server                     = "Aero"
-	cacheControlHeader         = "Cache-Control"
-	cacheControlAlwaysValidate = "must-revalidate"
-	contentTypeOptionsHeader   = "X-Content-Type-Options"
-	contentTypeOptions         = "nosniff"
-	xssProtectionHeader        = "X-XSS-Protection"
-	xssProtection              = "1; mode=block"
-	etagHeader                 = "ETag"
-	contentTypeHeader          = "Content-Type"
-	contentTypeHTML            = "text/html; charset=utf-8"
-	contentTypeJSON            = "application/json"
-	contentTypePlainText       = "text/plain; charset=utf-8"
-	contentEncodingHeader      = "Content-Encoding"
-	contentEncodingGzip        = "gzip"
-	responseTimeHeader         = "X-Response-Time"
-	ifNoneMatchHeader          = "If-None-Match"
-	xFrameOptionsHeader        = "X-Frame-Options"
-	xFrameOptions              = "SAMEORIGIN"
-	referrerPolicyHeader       = "Referrer-Policy"
-	referrerPolicySameOrigin   = "no-referrer"
+	serverHeader                  = "Server"
+	server                        = "Aero"
+	cacheControlHeader            = "Cache-Control"
+	cacheControlAlwaysValidate    = "must-revalidate"
+	contentTypeOptionsHeader      = "X-Content-Type-Options"
+	contentTypeOptions            = "nosniff"
+	xssProtectionHeader           = "X-XSS-Protection"
+	xssProtection                 = "1; mode=block"
+	etagHeader                    = "ETag"
+	contentTypeHeader             = "Content-Type"
+	contentTypeHTML               = "text/html; charset=utf-8"
+	contentTypeJSON               = "application/json"
+	contentTypePlainText          = "text/plain; charset=utf-8"
+	contentEncodingHeader         = "Content-Encoding"
+	contentEncodingGzip           = "gzip"
+	responseTimeHeader            = "X-Response-Time"
+	ifNoneMatchHeader             = "If-None-Match"
+	xFrameOptionsHeader           = "X-Frame-Options"
+	xFrameOptions                 = "SAMEORIGIN"
+	referrerPolicyHeader          = "Referrer-Policy"
+	referrerPolicySameOrigin      = "no-referrer"
+	strictTransportSecurityHeader = "Strict-Transport-Security"
+	strictTransportSecurity       = "max-age=31536000; includeSubDomains; preload"
+	contentSecurityPolicyHeader   = "Content-Security-Policy"
 )
 
 // Context ...
@@ -108,32 +115,33 @@ func (ctx *Context) Session() *Session {
 func (ctx *Context) JSON(value interface{}) string {
 	bytes, _ := json.Marshal(value)
 
-	ctx.response.Header().Set(contentTypeHeader, contentTypeJSON)
+	ctx.SetHeader(contentTypeHeader, contentTypeJSON)
 	return string(bytes)
 }
 
 // HTML sends a HTML string.
 func (ctx *Context) HTML(html string) string {
-	ctx.response.Header().Set(contentTypeHeader, contentTypeHTML)
+	ctx.SetHeader(contentTypeHeader, contentTypeHTML)
 	return html
 }
 
 // Text sends a plain text string.
 func (ctx *Context) Text(text string) string {
-	ctx.response.Header().Set(contentTypeHeader, contentTypePlainText)
+	ctx.SetHeader(contentTypeHeader, contentTypePlainText)
 	return text
 }
 
 // Error should be used for sending error messages to the user.
 func (ctx *Context) Error(statusCode int, explanation string, err error) string {
 	ctx.SetStatusCode(statusCode)
-	ctx.response.Header().Set(contentTypeHeader, contentTypeHTML)
+	ctx.SetHeader(contentTypeHeader, contentTypeHTML)
 
-	// fmt.Println("{")
-	// color.Blue("\t" + ctx.requestCtx.Request.URI().String())
-	// color.Yellow("\t" + explanation)
-	// color.Red("\t" + err.Error())
-	// fmt.Println("}")
+	// Debug
+	fmt.Println("{")
+	color.Blue("\t" + ctx.request.RequestURI)
+	color.Yellow("\t" + explanation)
+	color.Red("\t" + err.Error())
+	fmt.Println("}")
 
 	return explanation
 }
@@ -158,6 +166,16 @@ func (ctx *Context) GetInt(param string) (int, error) {
 	return strconv.Atoi(ctx.Get(param))
 }
 
+// RealIP tries to determine the real IP address of the request.
+func (ctx *Context) RealIP() string {
+	return realip.RealIP(ctx.request)
+}
+
+// UserAgent retrieves user agent data for the given request.
+func (ctx *Context) UserAgent() *user_agent.UserAgent {
+	return user_agent.New(ctx.request.UserAgent())
+}
+
 // Respond responds either with raw code or gzipped if the
 // code length is greater than the gzip threshold.
 func (ctx *Context) Respond(code string) {
@@ -168,24 +186,25 @@ func (ctx *Context) Respond(code string) {
 // code length is greater than the gzip threshold. Requires a byte slice.
 func (ctx *Context) RespondBytes(b []byte) {
 	response := ctx.response
+	header := response.Header()
 
 	// Headers
-	response.Header().Set(cacheControlHeader, cacheControlAlwaysValidate)
-	response.Header().Set(serverHeader, server)
-	response.Header().Set(contentTypeOptionsHeader, contentTypeOptions)
-	response.Header().Set(xssProtectionHeader, xssProtection)
-	response.Header().Set(xFrameOptionsHeader, xFrameOptions)
-	response.Header().Set(referrerPolicyHeader, referrerPolicySameOrigin)
-	response.Header().Set(responseTimeHeader, strconv.FormatInt(time.Since(ctx.start).Nanoseconds()/1000, 10)+" us")
+	header.Set(cacheControlHeader, cacheControlAlwaysValidate)
+	header.Set(serverHeader, server)
+	header.Set(contentTypeOptionsHeader, contentTypeOptions)
+	header.Set(xssProtectionHeader, xssProtection)
+	header.Set(xFrameOptionsHeader, xFrameOptions)
+	header.Set(referrerPolicyHeader, referrerPolicySameOrigin)
+	header.Set(responseTimeHeader, strconv.FormatInt(time.Since(ctx.start).Nanoseconds()/1000, 10)+" us")
 
 	if ctx.App.Security.Certificate != "" {
-		response.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
-		response.Header().Set("Content-Security-Policy", "default-src 'none'; img-src https:; script-src 'self'; style-src 'sha256-"+ctx.App.cssHash+"'; font-src https:; child-src https:; connect-src https: wss:")
+		header.Set(strictTransportSecurityHeader, strictTransportSecurity)
+		header.Set(contentSecurityPolicyHeader, ctx.App.contentSecurityPolicy)
 	}
 
 	// Body
 	if ctx.App.Config.GZip && len(b) >= gzipThreshold {
-		response.Header().Set(contentEncodingHeader, contentEncodingGzip)
+		header.Set(contentEncodingHeader, contentEncodingGzip)
 
 		// ETag generation
 		h := xxhash.NewS64(0)
@@ -201,7 +220,7 @@ func (ctx *Context) RespondBytes(b []byte) {
 		}
 
 		// Set ETag
-		response.Header().Set(etagHeader, etag)
+		header.Set(etagHeader, etag)
 
 		if ctx.App.Config.GZipCache {
 			cachedResponse, found := ctx.App.gzipCache.Get(etag)

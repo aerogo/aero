@@ -43,6 +43,8 @@ type Application struct {
 	css            string
 	cssHash        string
 	cssReplacement string
+
+	contentSecurityPolicy string
 }
 
 // New creates a new application.
@@ -162,6 +164,7 @@ func (app *Application) SetStyle(css string) {
 	hash := sha256.Sum256([]byte(css))
 	app.cssHash = base64.StdEncoding.EncodeToString(hash[:])
 	app.cssReplacement = "<style>" + app.css + "</style></head><body"
+	app.contentSecurityPolicy = "default-src 'none'; img-src https:; script-src 'self'; style-src 'sha256-" + app.cssHash + "'; font-src https:; child-src https:; connect-src https: wss:"
 }
 
 // StartTime ...
