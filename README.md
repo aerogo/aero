@@ -13,8 +13,6 @@ Simple routing test using `Hello World` as output (data payload too small for gz
 
 *TODO: Post benchmark with ~50 KB of data (performance difference is crazy).*
 
-In a real-world example AeroGo delivers about 8-10 times more requests than AeroJS.
-
 AeroJS (node.js 8.0):
 ```
 Running 2s test @ http://localhost:4000/hello
