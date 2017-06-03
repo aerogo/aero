@@ -17,8 +17,6 @@ In a real-world example AeroGo delivers about 8-10 times more requests than Aero
 
 AeroJS (node.js 8.0):
 ```
-# AeroJS HTTP (local)
-~ λ b http://localhost:4000/hello
 Running 2s test @ http://localhost:4000/hello
   8 threads and 400 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
@@ -31,8 +29,6 @@ Transfer/sec:      3.38MB
 
 AeroGo (go 1.8.3):
 ```
-# AeroGo HTTP (local)
-~ λ b http://dev.local.host/hello
 Running 2s test @ http://dev.local.host/hello
   8 threads and 400 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
@@ -45,8 +41,6 @@ Transfer/sec:     71.97MB
 
 AeroGo using an SSL certificate (go 1.8.3)
 ```
-# AeroGo HTTPS (local)
-~ λ b https://dev.local.host/hello
 Running 2s test @ https://dev.local.host/hello
   8 threads and 400 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
