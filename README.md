@@ -5,7 +5,7 @@ This project is work in progress.
 Websites made with Aero should...
 
 - [x] ...reach 100/100 [Google PageSpeed](https://developers.google.com/speed/pagespeed/insights/) score
-- [x] ...reach 100/100 [Mozilla Observatory](https://observatory.mozilla.org/) score
+- [x] ...reach 120/100 [Mozilla Observatory](https://observatory.mozilla.org/) score (A+)
 - [ ] ...reach 100/100 [Google Lighthouse](https://developers.google.com/web/tools/lighthouse/) score
 
 ## Benchmark
