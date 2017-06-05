@@ -2,11 +2,14 @@
 This project is work in progress.
 
 ## Goals
-Websites made with Aero should...
 
-- [x] ...reach 100/100 [Google PageSpeed](https://developers.google.com/speed/pagespeed/insights/) score
-- [x] ...reach 120/100 [Mozilla Observatory](https://observatory.mozilla.org/) score (A+)
-- [ ] ...reach 100/100 [Google Lighthouse](https://developers.google.com/web/tools/lighthouse/) score
+- [x] Reach 100/100 [Google PageSpeed](https://developers.google.com/speed/pagespeed/insights/) score
+- [x] Reach 120/100 [Mozilla Observatory](https://observatory.mozilla.org/) score (A+)
+- [ ] Reach 100/100 [Google Lighthouse](https://developers.google.com/web/tools/lighthouse/) score
+
+## Documentation
+* [Application](docs/Application.md)
+* [API](docs/API.md)
 
 ## Benchmark
 Simple routing test using `Hello World` as output (data payload too small for gzip):
@@ -48,6 +51,3 @@ Running 2s test @ https://dev.local.host/hello
 Requests/sec: 105528.83
 Transfer/sec:     19.83MB
 ```
-
-## Documentation
-* [Application](docs/Application.md)
