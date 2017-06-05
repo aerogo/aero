@@ -30,11 +30,11 @@ AeroGo (go 1.8.3):
 Running 2s test @ http://dev.local.host/hello
   8 threads and 400 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     3.11ms    2.25ms  24.34ms   73.38%
-    Req/Sec    16.19k     5.08k   63.64k    91.98%
-  261763 requests in 2.08s, 149.78MB read
-Requests/sec: 125768.69
-Transfer/sec:     71.97MB
+    Latency     2.36ms    1.73ms  22.67ms   75.86%
+    Req/Sec    22.12k     3.34k   35.27k    73.12%
+  353303 requests in 2.05s, 66.38MB read
+Requests/sec: 172496.91
+Transfer/sec:     32.41MB
 ```
 
 AeroGo using an SSL certificate (go 1.8.3)
@@ -42,11 +42,11 @@ AeroGo using an SSL certificate (go 1.8.3)
 Running 2s test @ https://dev.local.host/hello
   8 threads and 400 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     3.94ms    2.49ms  27.84ms   72.75%
-    Req/Sec    11.93k     2.84k   20.00k    86.76%
-  168982 requests in 2.05s, 96.69MB read
-Requests/sec:  82567.22
-Transfer/sec:     47.25MB
+    Latency     3.14ms    2.22ms  22.43ms   73.05%
+    Req/Sec    15.15k     3.91k   25.09k    82.35%
+  215143 requests in 2.04s, 40.42MB read
+Requests/sec: 105528.83
+Transfer/sec:     19.83MB
 ```
 
 ## Documentation
