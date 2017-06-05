@@ -25,6 +25,9 @@ const (
 	gzipCacheCleanup  = 1 * time.Minute
 )
 
+// Middleware ...
+type Middleware func(*Context, func())
+
 // Application represents a single web service.
 type Application struct {
 	root string
@@ -39,6 +42,8 @@ type Application struct {
 	gzipCache *cache.Cache
 	start     time.Time
 	rewrite   func(*RewriteContext)
+
+	middleware []Middleware
 
 	css            string
 	cssHash        string
@@ -67,29 +72,42 @@ func New() *Application {
 
 // Get registers your function to be called when a certain path has been requested.
 func (app *Application) Get(path string, handle Handle) {
-	// statistics := new(RouteStatistics)
-	// app.routeStatistics[path] = statistics
+	app.routes = append(app.routes, path)
 
 	app.router.GET(path, func(response http.ResponseWriter, request *http.Request, params httprouter.Params) {
+		// Create context.
 		ctx := Context{
-			App:      app,
-			request:  request,
-			response: response,
-			params:   params,
-			start:    time.Now(),
+			App:        app,
+			StatusCode: 200,
+			request:    request,
+			response:   response,
+			params:     params,
+			start:      time.Now(),
 		}
 
-		// Response
-		data := handle(&ctx)
-		ctx.Respond(data)
+		// The last part of the call chain will send the actual response.
+		lastPartOfCallChain := func() {
+			data := handle(&ctx)
+			ctx.Respond(data)
+		}
 
-		// Statistics
-		// responseTime := uint64(time.Since(ctx.start).Nanoseconds() / 1000000)
-		// atomic.AddUint64(&statistics.requestCount, 1)
-		// atomic.AddUint64(&statistics.responseTime, responseTime)
+		// Declare the type of generateNext so that we can define it recursively in the next part.
+		var generateNext func(index int) func()
+
+		// Create a function that returns a bound function next()
+		// which can be used as the 2nd parameter in the call chain.
+		generateNext = func(index int) func() {
+			if index == len(app.middleware) {
+				return lastPartOfCallChain
+			}
+
+			return func() {
+				app.middleware[index](&ctx, generateNext(index+1))
+			}
+		}
+
+		generateNext(0)()
 	})
-
-	app.routes = append(app.routes, path)
 }
 
 // Ajax calls app.Get for both /route and /_/route
@@ -106,6 +124,11 @@ func (app *Application) Ajax(path string, handle Handle) {
 func (app *Application) Run() {
 	app.Test()
 	app.Listen()
+}
+
+// Use adds middleware to your middleware chain.
+func (app *Application) Use(middlewares ...Middleware) {
+	app.middleware = append(app.middleware, middlewares...)
 }
 
 // Load loads the application data from the file system.

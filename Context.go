@@ -4,13 +4,11 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/OneOfOne/xxhash"
-	"github.com/fatih/color"
 	"github.com/julienschmidt/httprouter"
 	cache "github.com/patrickmn/go-cache"
 	"github.com/tomasen/realip"
@@ -61,6 +59,9 @@ type Context struct {
 
 	// A pointer to the application this request occured on.
 	App *Application
+
+	// Status code
+	StatusCode int
 
 	// Start time
 	start time.Time
@@ -121,6 +122,16 @@ func (ctx *Context) JSON(value interface{}) string {
 // HTML sends a HTML string.
 func (ctx *Context) HTML(html string) string {
 	ctx.SetHeader(contentTypeHeader, contentTypeHTML)
+	ctx.SetHeader(contentTypeOptionsHeader, contentTypeOptions)
+	ctx.SetHeader(xssProtectionHeader, xssProtection)
+	ctx.SetHeader(xFrameOptionsHeader, xFrameOptions)
+	ctx.SetHeader(referrerPolicyHeader, referrerPolicySameOrigin)
+
+	if ctx.App.Security.Certificate != "" {
+		ctx.SetHeader(strictTransportSecurityHeader, strictTransportSecurity)
+		ctx.SetHeader(contentSecurityPolicyHeader, ctx.App.contentSecurityPolicy)
+	}
+
 	return html
 }
 
@@ -134,20 +145,17 @@ func (ctx *Context) Text(text string) string {
 func (ctx *Context) Error(statusCode int, explanation string, err error) string {
 	ctx.SetStatusCode(statusCode)
 	ctx.SetHeader(contentTypeHeader, contentTypeHTML)
-
-	// Debug
-	fmt.Println("{")
-	color.Blue("\t" + ctx.request.RequestURI)
-	color.Yellow("\t" + explanation)
-	color.Red("\t" + err.Error())
-	fmt.Println("}")
-
+	// ctx.App.Logger.Error(
+	// 	color.RedString(explanation),
+	// 	zap.String("error", err.Error()),
+	// 	zap.String("url", ctx.request.RequestURI),
+	// )
 	return explanation
 }
 
-// SetStatusCode sets the status code of the request.
+// SetStatusCode sets the status code of the response.
 func (ctx *Context) SetStatusCode(status int) {
-	ctx.response.WriteHeader(status)
+	ctx.StatusCode = status
 }
 
 // SetHeader sets header to value.
@@ -188,18 +196,9 @@ func (ctx *Context) RespondBytes(b []byte) {
 	header := response.Header()
 
 	// Headers
-	header.Set(cacheControlHeader, cacheControlAlwaysValidate)
 	header.Set(serverHeader, server)
-	header.Set(contentTypeOptionsHeader, contentTypeOptions)
-	header.Set(xssProtectionHeader, xssProtection)
-	header.Set(xFrameOptionsHeader, xFrameOptions)
-	header.Set(referrerPolicyHeader, referrerPolicySameOrigin)
 	header.Set(responseTimeHeader, strconv.FormatInt(time.Since(ctx.start).Nanoseconds()/1000, 10)+" us")
-
-	if ctx.App.Security.Certificate != "" {
-		header.Set(strictTransportSecurityHeader, strictTransportSecurity)
-		header.Set(contentSecurityPolicyHeader, ctx.App.contentSecurityPolicy)
-	}
+	header.Set(cacheControlHeader, cacheControlAlwaysValidate)
 
 	// Body
 	if ctx.App.Config.GZip && len(b) >= gzipThreshold {
@@ -214,7 +213,7 @@ func (ctx *Context) RespondBytes(b []byte) {
 		clientETag := ctx.request.Header.Get(ifNoneMatchHeader)
 
 		if etag == clientETag {
-			ctx.SetStatusCode(304)
+			response.WriteHeader(304)
 			return
 		}
 
@@ -225,6 +224,7 @@ func (ctx *Context) RespondBytes(b []byte) {
 			cachedResponse, found := ctx.App.gzipCache.Get(etag)
 
 			if found {
+				response.WriteHeader(ctx.StatusCode)
 				response.Write(cachedResponse.([]byte))
 				return
 			}
@@ -235,12 +235,15 @@ func (ctx *Context) RespondBytes(b []byte) {
 		fasthttp.WriteGzipLevel(writer, b, 9)
 		writer.Flush()
 		gzippedBytes := buffer.Bytes()
+
+		response.WriteHeader(ctx.StatusCode)
 		response.Write(gzippedBytes)
 
 		if ctx.App.Config.GZipCache {
 			ctx.App.gzipCache.Set(etag, gzippedBytes, cache.DefaultExpiration)
 		}
 	} else {
+		response.WriteHeader(ctx.StatusCode)
 		response.Write(b)
 	}
 }
