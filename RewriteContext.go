@@ -9,7 +9,6 @@ type RewriteContext struct {
 
 // URI returns the relative path, e.g. /blog/post/123.
 func (ctx *RewriteContext) URI() string {
-	// return ctx.request.RequestURI
 	return ctx.request.URL.Path
 }
 

@@ -143,7 +143,7 @@ func (ctx *Context) Text(text string) string {
 
 // Error should be used for sending error messages to the user.
 func (ctx *Context) Error(statusCode int, explanation string, err error) string {
-	ctx.SetStatusCode(statusCode)
+	ctx.StatusCode = statusCode
 	ctx.SetHeader(contentTypeHeader, contentTypeHTML)
 	// ctx.App.Logger.Error(
 	// 	color.RedString(explanation),
@@ -153,14 +153,19 @@ func (ctx *Context) Error(statusCode int, explanation string, err error) string 
 	return explanation
 }
 
-// SetStatusCode sets the status code of the response.
-func (ctx *Context) SetStatusCode(status int) {
-	ctx.StatusCode = status
-}
-
 // SetHeader sets header to value.
 func (ctx *Context) SetHeader(header string, value string) {
 	ctx.response.Header().Set(header, value)
+}
+
+// URI returns the relative path, e.g. /blog/post/123.
+func (ctx *Context) URI() string {
+	return ctx.request.URL.Path
+}
+
+// SetURI sets the relative path, e.g. /blog/post/123.
+func (ctx *Context) SetURI(b string) {
+	ctx.request.URL.Path = b
 }
 
 // Get retrieves an URL parameter.
