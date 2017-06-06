@@ -78,7 +78,7 @@ func (app *Application) Get(path string, handle Handle) {
 		// Create context.
 		ctx := Context{
 			App:        app,
-			StatusCode: 200,
+			StatusCode: http.StatusOK,
 			request:    request,
 			response:   response,
 			params:     params,
