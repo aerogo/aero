@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/OneOfOne/xxhash"
+	"github.com/fatih/color"
 	"github.com/julienschmidt/httprouter"
 	cache "github.com/patrickmn/go-cache"
 	"github.com/tomasen/realip"
@@ -167,6 +168,7 @@ func (ctx *Context) Error(statusCode int, explanation string, err error) string 
 	// 	zap.String("error", err.Error()),
 	// 	zap.String("url", ctx.request.RequestURI),
 	// )
+	color.Red(err.Error())
 	return explanation
 }
 
