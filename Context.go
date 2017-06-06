@@ -118,21 +118,21 @@ func (ctx *Context) Session() *Session {
 func (ctx *Context) JSON(value interface{}) string {
 	bytes, _ := json.Marshal(value)
 
-	ctx.SetHeader(contentTypeHeader, contentTypeJSON)
+	ctx.SetResponseHeader(contentTypeHeader, contentTypeJSON)
 	return string(bytes)
 }
 
 // HTML sends a HTML string.
 func (ctx *Context) HTML(html string) string {
-	ctx.SetHeader(contentTypeHeader, contentTypeHTML)
-	ctx.SetHeader(contentTypeOptionsHeader, contentTypeOptions)
-	ctx.SetHeader(xssProtectionHeader, xssProtection)
-	ctx.SetHeader(xFrameOptionsHeader, xFrameOptions)
-	ctx.SetHeader(referrerPolicyHeader, referrerPolicySameOrigin)
+	ctx.SetResponseHeader(contentTypeHeader, contentTypeHTML)
+	ctx.SetResponseHeader(contentTypeOptionsHeader, contentTypeOptions)
+	ctx.SetResponseHeader(xssProtectionHeader, xssProtection)
+	ctx.SetResponseHeader(xFrameOptionsHeader, xFrameOptions)
+	ctx.SetResponseHeader(referrerPolicyHeader, referrerPolicySameOrigin)
 
 	if ctx.App.Security.Certificate != "" {
-		ctx.SetHeader(strictTransportSecurityHeader, strictTransportSecurity)
-		ctx.SetHeader(contentSecurityPolicyHeader, ctx.App.contentSecurityPolicy)
+		ctx.SetResponseHeader(strictTransportSecurityHeader, strictTransportSecurity)
+		ctx.SetResponseHeader(contentSecurityPolicyHeader, ctx.App.contentSecurityPolicy)
 	}
 
 	return html
@@ -140,22 +140,28 @@ func (ctx *Context) HTML(html string) string {
 
 // Text sends a plain text string.
 func (ctx *Context) Text(text string) string {
-	ctx.SetHeader(contentTypeHeader, contentTypePlainText)
+	ctx.SetResponseHeader(contentTypeHeader, contentTypePlainText)
 	return text
 }
 
 // File sends the contents of a local file and determines its mime type by extension.
 func (ctx *Context) File(file string) string {
-	mimeType := mime.TypeByExtension(filepath.Ext(file))
-	ctx.SetHeader(contentTypeHeader, mimeType)
+	extension := filepath.Ext(file)
+	mimeType := mime.TypeByExtension(extension)
 	data, _ := ioutil.ReadFile(file)
+
+	if mimeType == "" {
+		mimeType = http.DetectContentType(data)
+	}
+
+	ctx.SetResponseHeader(contentTypeHeader, mimeType)
 	return string(data)
 }
 
 // Error should be used for sending error messages to the user.
 func (ctx *Context) Error(statusCode int, explanation string, err error) string {
 	ctx.StatusCode = statusCode
-	ctx.SetHeader(contentTypeHeader, contentTypeHTML)
+	ctx.SetResponseHeader(contentTypeHeader, contentTypeHTML)
 	// ctx.App.Logger.Error(
 	// 	color.RedString(explanation),
 	// 	zap.String("error", err.Error()),
@@ -164,8 +170,13 @@ func (ctx *Context) Error(statusCode int, explanation string, err error) string 
 	return explanation
 }
 
-// SetHeader sets header to value.
-func (ctx *Context) SetHeader(header string, value string) {
+// GetRequestHeader retrieves the value for the request header.
+func (ctx *Context) GetRequestHeader(header string) string {
+	return ctx.request.Header.Get(header)
+}
+
+// SetResponseHeader sets response header to value.
+func (ctx *Context) SetResponseHeader(header string, value string) {
 	ctx.response.Header().Set(header, value)
 }
 
