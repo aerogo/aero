@@ -4,7 +4,10 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"io/ioutil"
+	"mime"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -139,6 +142,14 @@ func (ctx *Context) HTML(html string) string {
 func (ctx *Context) Text(text string) string {
 	ctx.SetHeader(contentTypeHeader, contentTypePlainText)
 	return text
+}
+
+// File sends the contents of a local file and determines its mime type by extension.
+func (ctx *Context) File(file string) string {
+	mimeType := mime.TypeByExtension(filepath.Ext(file))
+	ctx.SetHeader(contentTypeHeader, mimeType)
+	data, _ := ioutil.ReadFile(file)
+	return string(data)
 }
 
 // Error should be used for sending error messages to the user.
