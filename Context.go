@@ -40,7 +40,7 @@ const (
 	etagHeader                    = "ETag"
 	contentTypeHeader             = "Content-Type"
 	contentTypeHTML               = "text/html; charset=utf-8"
-	contentTypeJSON               = "application/json"
+	contentTypeJSON               = "application/json; charset=utf-8"
 	contentTypePlainText          = "text/plain; charset=utf-8"
 	contentEncodingHeader         = "Content-Encoding"
 	contentEncodingGzip           = "gzip"
