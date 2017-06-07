@@ -116,7 +116,9 @@ func (app *Application) Ajax(path string, handle Handle) {
 	app.Get(path, func(ctx *Context) string {
 		page := handle(ctx)
 		html := app.Layout(ctx, page)
-		return strings.Replace(html, "</head><body", app.cssReplacement, 1)
+		html = strings.Replace(html, "</head><body", app.cssReplacement, 1)
+		html = strings.Replace(html, "<html", "<!DOCTYPE html><html", 1)
+		return html
 	})
 }
 
