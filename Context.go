@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/OneOfOne/xxhash"
@@ -209,7 +210,34 @@ func (ctx *Context) RealIP() string {
 
 // UserAgent retrieves the user agent for the given request.
 func (ctx *Context) UserAgent() string {
+	ctx.request.URL.Query()
 	return ctx.request.UserAgent()
+}
+
+// Query retrieves the value for the given URL query parameter.
+func (ctx *Context) Query(param string) string {
+	return ctx.request.URL.Query().Get(param)
+}
+
+// Redirect redirects to the given URL using status code 302.
+func (ctx *Context) Redirect(url string) {
+	http.Redirect(ctx.response, ctx.request, url, http.StatusFound)
+}
+
+// RedirectPermanently redirects to the given URL and indicates that this is a permanent change using status code 301.
+func (ctx *Context) RedirectPermanently(url string) {
+	http.Redirect(ctx.response, ctx.request, url, http.StatusPermanentRedirect)
+}
+
+// CanUseWebP checks the Accept header to find out if WebP is supported by the client's browser.
+func (ctx *Context) CanUseWebP() bool {
+	accept := ctx.GetRequestHeader("Accept")
+
+	if strings.Index(accept, "image/webp") != -1 {
+		return true
+	}
+
+	return false
 }
 
 // Respond responds either with raw code or gzipped if the

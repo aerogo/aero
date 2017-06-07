@@ -122,7 +122,8 @@ func (app *Application) Ajax(path string, handle Handle) {
 
 // Run starts your application.
 func (app *Application) Run() {
-	app.Test()
+	app.TestManifest()
+	app.TestRoutes()
 	app.Listen()
 }
 
@@ -143,8 +144,25 @@ func (app *Application) Load() {
 		}
 	}
 
-	app.Config.Manifest.Name = app.Config.Title
-	app.Config.Manifest.ShortName = app.Config.Title
+	if app.Config.Manifest.Name == "" {
+		app.Config.Manifest.Name = app.Config.Title
+	}
+
+	if app.Config.Manifest.ShortName == "" {
+		app.Config.Manifest.ShortName = app.Config.Title
+	}
+
+	if app.Config.Manifest.Lang == "" {
+		app.Config.Manifest.Lang = "en"
+	}
+
+	if app.Config.Manifest.Display == "" {
+		app.Config.Manifest.Display = "standalone"
+	}
+
+	if app.Config.Manifest.StartURL == "" {
+		app.Config.Manifest.StartURL = "/"
+	}
 }
 
 // Listen starts the server.
@@ -187,7 +205,7 @@ func (app *Application) SetStyle(css string) {
 	hash := sha256.Sum256([]byte(css))
 	app.cssHash = base64.StdEncoding.EncodeToString(hash[:])
 	app.cssReplacement = "<style>" + app.css + "</style></head><body"
-	app.contentSecurityPolicy = "default-src 'none'; img-src https:; script-src 'self'; style-src 'sha256-" + app.cssHash + "'; font-src https:; child-src https:; connect-src https: wss:"
+	app.contentSecurityPolicy = "default-src 'none'; img-src https:; script-src 'self'; style-src 'sha256-" + app.cssHash + "'; font-src https:; manifest-src 'self'; child-src https:; connect-src https: wss:"
 }
 
 // StartTime ...
@@ -228,8 +246,17 @@ func (app *Application) serveHTTPS(address string) {
 	}
 }
 
-// Test tests your application's routes.
-func (app *Application) Test() {
+// TestManifest tests your application's manifest.
+func (app *Application) TestManifest() {
+	manifest := app.Config.Manifest
+
+	if len(manifest.ShortName) >= 12 {
+		color.Yellow("The short name of your application should have less than 12 characters")
+	}
+}
+
+// TestRoutes tests your application's routes.
+func (app *Application) TestRoutes() {
 	fmt.Println(strings.Repeat("-", 80))
 
 	go func() {

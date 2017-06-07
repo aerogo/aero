@@ -9,6 +9,11 @@ type Session struct {
 	lock sync.RWMutex
 }
 
+// ID returns the session ID.
+func (session *Session) ID() string {
+	return session.id
+}
+
 // Get returns the value for the key in this session.
 func (session *Session) Get(key string) interface{} {
 	session.lock.RLock()

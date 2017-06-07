@@ -8,7 +8,7 @@ type SessionManager struct {
 // New creates a new session.
 func (manager *SessionManager) New() *Session {
 	session := &Session{
-		id:   string(RandomBytes(32)),
+		id:   GenerateUUID(),
 		data: make(map[string]interface{}),
 	}
 
