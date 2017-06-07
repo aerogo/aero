@@ -221,12 +221,14 @@ func (ctx *Context) Query(param string) string {
 
 // Redirect redirects to the given URL using status code 302.
 func (ctx *Context) Redirect(url string) {
-	http.Redirect(ctx.response, ctx.request, url, http.StatusFound)
+	ctx.StatusCode = http.StatusFound
+	ctx.SetResponseHeader("Location", url)
 }
 
 // RedirectPermanently redirects to the given URL and indicates that this is a permanent change using status code 301.
 func (ctx *Context) RedirectPermanently(url string) {
-	http.Redirect(ctx.response, ctx.request, url, http.StatusPermanentRedirect)
+	ctx.StatusCode = http.StatusPermanentRedirect
+	ctx.SetResponseHeader("Location", url)
 }
 
 // CanUseWebP checks the Accept header to find out if WebP is supported by the client's browser.
