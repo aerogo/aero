@@ -37,8 +37,11 @@ type Application struct {
 	Sessions SessionManager
 	Security ApplicationSecurity
 
-	router    *httprouter.Router
-	routes    []string
+	router *httprouter.Router
+	routes struct {
+		GET  []string
+		POST []string
+	}
 	gzipCache *cache.Cache
 	start     time.Time
 	rewrite   func(*RewriteContext)
@@ -70,11 +73,21 @@ func New() *Application {
 	return app
 }
 
-// Get registers your function to be called when a certain path has been requested.
+// Get registers your function to be called when a certain GET path has been requested.
 func (app *Application) Get(path string, handle Handle) {
-	app.routes = append(app.routes, path)
+	app.routes.GET = append(app.routes.GET, path)
+	app.router.GET(path, app.createRouteHandler(path, handle))
+}
 
-	app.router.GET(path, func(response http.ResponseWriter, request *http.Request, params httprouter.Params) {
+// Post registers your function to be called when a certain POST path has been requested.
+func (app *Application) Post(path string, handle Handle) {
+	app.routes.POST = append(app.routes.POST, path)
+	app.router.POST(path, app.createRouteHandler(path, handle))
+}
+
+// createRouteHandler creates a handler function for httprouter.
+func (app *Application) createRouteHandler(path string, handle Handle) httprouter.Handle {
+	return func(response http.ResponseWriter, request *http.Request, params httprouter.Params) {
 		// Create context.
 		ctx := Context{
 			App:        app,
@@ -107,7 +120,7 @@ func (app *Application) Get(path string, handle Handle) {
 		}
 
 		generateNext(0)()
-	})
+	}
 }
 
 // Ajax calls app.Get for both /route and /_/route
@@ -262,9 +275,9 @@ func (app *Application) TestRoutes() {
 	fmt.Println(strings.Repeat("-", 80))
 
 	go func() {
-		sort.Strings(app.routes)
+		sort.Strings(app.routes.GET)
 
-		for _, route := range app.routes {
+		for _, route := range app.routes.GET {
 			if strings.HasPrefix(route, "/_") {
 				continue
 			}

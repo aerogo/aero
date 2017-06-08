@@ -9,6 +9,14 @@ type Session struct {
 	lock sync.RWMutex
 }
 
+// NewSession creates a new session with the given ID and data.
+func NewSession(sid string, baseData map[string]interface{}) *Session {
+	return &Session{
+		id:   sid,
+		data: baseData,
+	}
+}
+
 // ID returns the session ID.
 func (session *Session) ID() string {
 	return session.id
@@ -44,4 +52,9 @@ func (session *Session) Set(key string, value interface{}) {
 	session.lock.Lock()
 	session.data[key] = value
 	session.lock.Unlock()
+}
+
+// Data returns the underlying session date. Not thread-safe.
+func (session *Session) Data() map[string]interface{} {
+	return session.data
 }
