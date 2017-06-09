@@ -115,6 +115,11 @@ func (ctx *Context) Session() *Session {
 	return ctx.session
 }
 
+// HasSession indicates whether a session has been constructed for this context or not.
+func (ctx *Context) HasSession() bool {
+	return ctx.session != nil
+}
+
 // JSON encodes the object to a JSON string and responds.
 func (ctx *Context) JSON(value interface{}) string {
 	bytes, _ := json.Marshal(value)

@@ -7,12 +7,15 @@ type SessionManager struct {
 
 // New creates a new session.
 func (manager *SessionManager) New() *Session {
-	session := &Session{
-		id:   GenerateUUID(),
-		data: make(map[string]interface{}),
+	sessionID := GenerateUUID()
+
+	// Session data is not allowed to be empty.
+	// Therefore we are adding the session ID as dummy data.
+	sessionData := map[string]interface{}{
+		"sid": sessionID,
 	}
 
+	session := NewSession(sessionID, sessionData)
 	manager.Store.Set(session.id, session)
-
 	return session
 }

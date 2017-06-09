@@ -4,9 +4,10 @@ import "sync"
 
 // Session ...
 type Session struct {
-	id   string
-	data map[string]interface{}
-	lock sync.RWMutex
+	id       string
+	data     map[string]interface{}
+	lock     sync.RWMutex
+	modified bool
 }
 
 // NewSession creates a new session with the given ID and data.
@@ -52,9 +53,18 @@ func (session *Session) Set(key string, value interface{}) {
 	session.lock.Lock()
 	session.data[key] = value
 	session.lock.Unlock()
+
+	session.modified = true
 }
 
-// Data returns the underlying session date. Not thread-safe.
+// Modified indicates whether the session has been modified since it's been retrieved.
+func (session *Session) Modified() bool {
+	return session.modified
+}
+
+// Data returns the underlying session data.
+// READING OR WRITING DATA IS NOT THREAD-SAFE.
+// Use Set() and Get() to modify data safely.
 func (session *Session) Data() map[string]interface{} {
 	return session.data
 }
