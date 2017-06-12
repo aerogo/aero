@@ -2,8 +2,8 @@ package aero
 
 import "sync"
 
-// Async starts all functions asynchronously as goroutines and waits until they are completed.
-func Async(funcs ...func()) {
+// Parallel starts all functions asynchronously as goroutines and waits until they are completed.
+func Parallel(funcs ...func()) {
 	wg := sync.WaitGroup{}
 	wg.Add(len(funcs))
 
