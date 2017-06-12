@@ -33,6 +33,7 @@ const (
 	server                        = "Aero"
 	cacheControlHeader            = "Cache-Control"
 	cacheControlAlwaysValidate    = "must-revalidate"
+	cacheControlMedia             = "max-age=864000"
 	contentTypeOptionsHeader      = "X-Content-Type-Options"
 	contentTypeOptions            = "nosniff"
 	xssProtectionHeader           = "X-XSS-Protection"
@@ -264,7 +265,7 @@ func (ctx *Context) RespondBytes(b []byte) {
 
 	// Headers
 	if isMedia {
-		header.Set(cacheControlHeader, "max-age=86400")
+		header.Set(cacheControlHeader, cacheControlMedia)
 	} else {
 		header.Set(cacheControlHeader, cacheControlAlwaysValidate)
 		header.Set(serverHeader, server)
