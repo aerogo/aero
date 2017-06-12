@@ -259,56 +259,71 @@ func (ctx *Context) Respond(code string) {
 func (ctx *Context) RespondBytes(b []byte) {
 	response := ctx.response
 	header := response.Header()
+	contentType := ctx.response.Header().Get(contentTypeHeader)
+	isMedia := strings.HasPrefix(contentType, "image/") || strings.HasPrefix(contentType, "video/")
 
 	// Headers
-	header.Set(serverHeader, server)
-	header.Set(responseTimeHeader, strconv.FormatInt(time.Since(ctx.start).Nanoseconds()/1000, 10)+" us")
-	header.Set(cacheControlHeader, cacheControlAlwaysValidate)
-
-	// Body
-	if ctx.App.Config.GZip && len(b) >= gzipThreshold {
-		header.Set(contentEncodingHeader, contentEncodingGzip)
-
-		// ETag generation
-		h := xxhash.NewS64(0)
-		h.Write(b)
-		etag := strconv.FormatUint(h.Sum64(), 16)
-
-		// If client cache is up to date, send 304 with no response body.
-		clientETag := ctx.request.Header.Get(ifNoneMatchHeader)
-
-		if etag == clientETag {
-			response.WriteHeader(304)
-			return
-		}
-
-		// Set ETag
-		header.Set(etagHeader, etag)
-
-		if ctx.App.Config.GZipCache {
-			cachedResponse, found := ctx.App.gzipCache.Get(etag)
-
-			if found {
-				response.WriteHeader(ctx.StatusCode)
-				response.Write(cachedResponse.([]byte))
-				return
-			}
-		}
-
-		var buffer bytes.Buffer
-		writer := bufio.NewWriter(&buffer)
-		fasthttp.WriteGzipLevel(writer, b, 9)
-		writer.Flush()
-		gzippedBytes := buffer.Bytes()
-
-		response.WriteHeader(ctx.StatusCode)
-		response.Write(gzippedBytes)
-
-		if ctx.App.Config.GZipCache {
-			ctx.App.gzipCache.Set(etag, gzippedBytes, cache.DefaultExpiration)
-		}
+	if isMedia {
+		header.Set(cacheControlHeader, "max-age=86400")
 	} else {
+		header.Set(cacheControlHeader, cacheControlAlwaysValidate)
+		header.Set(serverHeader, server)
+		header.Set(responseTimeHeader, strconv.FormatInt(time.Since(ctx.start).Nanoseconds()/1000, 10)+" us")
+	}
+
+	// Small response
+	if len(b) < gzipThreshold {
 		response.WriteHeader(ctx.StatusCode)
 		response.Write(b)
+		return
+	}
+
+	// ETag generation
+	h := xxhash.NewS64(0)
+	h.Write(b)
+	etag := strconv.FormatUint(h.Sum64(), 16)
+
+	// If client cache is up to date, send 304 with no response body.
+	clientETag := ctx.request.Header.Get(ifNoneMatchHeader)
+
+	if etag == clientETag {
+		response.WriteHeader(304)
+		return
+	}
+
+	// Set ETag
+	header.Set(etagHeader, etag)
+
+	// No GZip?
+	if !ctx.App.Config.GZip || isMedia {
+		response.WriteHeader(ctx.StatusCode)
+		response.Write(b)
+		return
+	}
+
+	// GZip
+	header.Set(contentEncodingHeader, contentEncodingGzip)
+
+	if ctx.App.Config.GZipCache {
+		cachedResponse, found := ctx.App.gzipCache.Get(etag)
+
+		if found {
+			response.WriteHeader(ctx.StatusCode)
+			response.Write(cachedResponse.([]byte))
+			return
+		}
+	}
+
+	var buffer bytes.Buffer
+	writer := bufio.NewWriter(&buffer)
+	fasthttp.WriteGzipLevel(writer, b, 9)
+	writer.Flush()
+	gzippedBytes := buffer.Bytes()
+
+	response.WriteHeader(ctx.StatusCode)
+	response.Write(gzippedBytes)
+
+	if ctx.App.Config.GZipCache {
+		ctx.App.gzipCache.Set(etag, gzippedBytes, cache.DefaultExpiration)
 	}
 }
