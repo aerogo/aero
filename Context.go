@@ -45,6 +45,7 @@ const (
 	contentTypePlainText          = "text/plain; charset=utf-8"
 	contentEncodingHeader         = "Content-Encoding"
 	contentEncodingGzip           = "gzip"
+	contentLengthHeader           = "Content-Length"
 	responseTimeHeader            = "X-Response-Time"
 	ifNoneMatchHeader             = "If-None-Match"
 	xFrameOptionsHeader           = "X-Frame-Options"
@@ -274,6 +275,7 @@ func (ctx *Context) RespondBytes(b []byte) {
 
 	// Small response
 	if len(b) < gzipThreshold {
+		header.Set(contentLengthHeader, strconv.Itoa(len(b)))
 		response.WriteHeader(ctx.StatusCode)
 		response.Write(b)
 		return
@@ -297,6 +299,7 @@ func (ctx *Context) RespondBytes(b []byte) {
 
 	// No GZip?
 	if !ctx.App.Config.GZip || isMedia {
+		header.Set(contentLengthHeader, strconv.Itoa(len(b)))
 		response.WriteHeader(ctx.StatusCode)
 		response.Write(b)
 		return
@@ -309,8 +312,10 @@ func (ctx *Context) RespondBytes(b []byte) {
 		cachedResponse, found := ctx.App.gzipCache.Get(etag)
 
 		if found {
+			cachedResponseBytes := cachedResponse.([]byte)
+			header.Set(contentLengthHeader, strconv.Itoa(len(cachedResponseBytes)))
 			response.WriteHeader(ctx.StatusCode)
-			response.Write(cachedResponse.([]byte))
+			response.Write(cachedResponseBytes)
 			return
 		}
 	}
@@ -321,6 +326,7 @@ func (ctx *Context) RespondBytes(b []byte) {
 	writer.Flush()
 	gzippedBytes := buffer.Bytes()
 
+	header.Set(contentLengthHeader, strconv.Itoa(len(gzippedBytes)))
 	response.WriteHeader(ctx.StatusCode)
 	response.Write(gzippedBytes)
 
