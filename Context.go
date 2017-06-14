@@ -209,6 +209,17 @@ func (ctx *Context) GetInt(param string) (int, error) {
 	return strconv.Atoi(ctx.Get(param))
 }
 
+// RequestBody returns the request body as a string.
+func (ctx *Context) RequestBody() []byte {
+	body, err := ioutil.ReadAll(ctx.request.Body)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return body
+}
+
 // RealIP tries to determine the real IP address of the request.
 func (ctx *Context) RealIP() string {
 	return realip.RealIP(ctx.request)
