@@ -42,9 +42,10 @@ type Application struct {
 		GET  []string
 		POST []string
 	}
-	gzipCache *cache.Cache
-	start     time.Time
-	rewrite   func(*RewriteContext)
+	routeTests map[string][]string
+	gzipCache  *cache.Cache
+	start      time.Time
+	rewrite    func(*RewriteContext)
 
 	middleware []Middleware
 
@@ -60,6 +61,7 @@ func New() *Application {
 	app := new(Application)
 	app.start = time.Now()
 	app.router = httprouter.New()
+	app.routeTests = make(map[string][]string)
 	app.gzipCache = cache.New(gzipCacheDuration, gzipCacheCleanup)
 	app.Layout = func(ctx *Context, content string) string {
 		return content
@@ -261,6 +263,11 @@ func (app *Application) serveHTTPS(address string) {
 	}
 }
 
+// Test tests the given URI paths when the application starts.
+func (app *Application) Test(route string, paths []string) {
+	app.routeTests[route] = paths
+}
+
 // TestManifest tests your application's manifest.
 func (app *Application) TestManifest() {
 	manifest := app.Config.Manifest
@@ -278,43 +285,67 @@ func (app *Application) TestRoutes() {
 		sort.Strings(app.routes.GET)
 
 		for _, route := range app.routes.GET {
+			// Ajax routes
 			if strings.HasPrefix(route, "/_") {
 				continue
 			}
 
-			start := time.Now()
-			body, _ := Get("http://localhost:" + strconv.Itoa(app.Config.Ports.HTTP) + route).Send()
-			responseTime := time.Since(start).Nanoseconds() / 1000000
-			responseSize := float64(len(body)) / 1024
+			testRoutes, exists := app.routeTests[route]
 
-			faint := color.New(color.Faint).SprintFunc()
+			if exists {
+				for _, testRoute := range testRoutes {
+					app.TestRoute(testRoute)
+				}
 
-			// Response size color
-			var responseSizeColor func(a ...interface{}) string
-
-			if responseSize < 15 {
-				responseSizeColor = color.New(color.FgGreen).SprintFunc()
-			} else if responseSize < 100 {
-				responseSizeColor = color.New(color.FgYellow).SprintFunc()
-			} else {
-				responseSizeColor = color.New(color.FgRed).SprintFunc()
+				continue
 			}
 
-			// Response time color
-			var responseTimeColor func(a ...interface{}) string
-
-			if responseTime < 10 {
-				responseTimeColor = color.New(color.FgGreen).SprintFunc()
-			} else if responseTime < 100 {
-				responseTimeColor = color.New(color.FgYellow).SprintFunc()
-			} else {
-				responseTimeColor = color.New(color.FgRed).SprintFunc()
+			// Routes with parameters
+			if strings.Contains(route, ":") {
+				color.Yellow(route)
+				continue
 			}
 
-			fmt.Printf("%-67s %s %s %s %s\n", color.BlueString(route), responseSizeColor(fmt.Sprintf("%6.0f", responseSize)), faint("KB"), responseTimeColor(fmt.Sprintf("%7d", responseTime)), faint("ms"))
+			app.TestRoute(route)
 		}
 
 		// json, _ := Post("https://html5.validator.nu/?out=json").Header("Content-Type", "text/html; charset=utf-8").Header("Content-Encoding", "gzip").Body(body).Send()
 		// fmt.Println(json)
 	}()
+}
+
+// TestRoute tests the given route.
+func (app *Application) TestRoute(route string) {
+	start := time.Now()
+	body, _ := Get("http://localhost:" + strconv.Itoa(app.Config.Ports.HTTP) + route).Send()
+	responseTime := time.Since(start).Nanoseconds() / 1000000
+	responseSize := float64(len(body)) / 1024
+
+	faint := color.New(color.Faint).SprintFunc()
+
+	// Response size color
+	var responseSizeColor func(a ...interface{}) string
+
+	switch {
+	case responseSize < 15:
+		responseSizeColor = color.New(color.FgGreen).SprintFunc()
+	case responseSize < 100:
+		responseSizeColor = color.New(color.FgYellow).SprintFunc()
+	default:
+		responseSizeColor = color.New(color.FgRed).SprintFunc()
+	}
+
+	// Response time color
+	var responseTimeColor func(a ...interface{}) string
+
+	switch {
+	case responseTime < 10:
+		responseTimeColor = color.New(color.FgGreen).SprintFunc()
+	case responseTime < 100:
+		responseTimeColor = color.New(color.FgYellow).SprintFunc()
+	default:
+		responseTimeColor = color.New(color.FgRed).SprintFunc()
+	}
+
+	fmt.Printf("%-67s %s %s %s %s\n", color.BlueString(route), responseSizeColor(fmt.Sprintf("%6.0f", responseSize)), faint("KB"), responseTimeColor(fmt.Sprintf("%7d", responseTime)), faint("ms"))
 }
