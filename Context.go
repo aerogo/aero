@@ -167,6 +167,15 @@ func (ctx *Context) File(file string) string {
 	return string(data)
 }
 
+// Image tries to serve a WebP image but will fall back to the specified extension if needed.
+func (ctx *Context) Image(path string, extension string) string {
+	if ctx.CanUseWebP() {
+		extension = ".webp"
+	}
+
+	return ctx.File(path + extension)
+}
+
 // Error should be used for sending error messages to the user.
 func (ctx *Context) Error(statusCode int, explanation string, err error) string {
 	ctx.StatusCode = statusCode
