@@ -174,7 +174,7 @@ func (app *Application) Load() {
 	}
 
 	if app.Config.Manifest.Display == "" {
-		app.Config.Manifest.Display = "standalone"
+		app.Config.Manifest.Display = "fullscreen"
 	}
 
 	if app.Config.Manifest.StartURL == "" {
