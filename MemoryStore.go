@@ -1,6 +1,8 @@
 package aero
 
-import "sync"
+import (
+	"sync"
+)
 
 // MemoryStore is the default session store.
 // You should use it for prototyping, not for production.
