@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"mime"
 	"net/http"
@@ -175,8 +176,9 @@ func (ctx *Context) Error(statusCode int, explanation string, err error) string 
 	// 	zap.String("error", err.Error()),
 	// 	zap.String("url", ctx.request.RequestURI),
 	// )
-	color.Red(err.Error())
-	return explanation
+	detailed := err.Error()
+	color.Red(detailed)
+	return fmt.Sprintf("%s (%s)", explanation, detailed)
 }
 
 // GetRequestHeader retrieves the value for the request header.
