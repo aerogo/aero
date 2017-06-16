@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/OneOfOne/xxhash"
+	"github.com/aerogo/session"
 	"github.com/fatih/color"
 	"github.com/julienschmidt/httprouter"
 	cache "github.com/patrickmn/go-cache"
@@ -75,14 +76,14 @@ type Context struct {
 	start time.Time
 
 	// User session
-	session *Session
+	session *session.Session
 }
 
 // Handle ...
 type Handle func(*Context) string
 
 // Session returns the session of the context or creates and caches a new session.
-func (ctx *Context) Session() *Session {
+func (ctx *Context) Session() *session.Session {
 	// Return cached session if available.
 	if ctx.session != nil {
 		return ctx.session
@@ -108,7 +109,7 @@ func (ctx *Context) Session() *Session {
 
 	sessionCookie := http.Cookie{
 		Name:     "sid",
-		Value:    ctx.session.id,
+		Value:    ctx.session.ID(),
 		HttpOnly: true,
 		Secure:   true,
 	}

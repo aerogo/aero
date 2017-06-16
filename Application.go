@@ -15,6 +15,8 @@ import (
 
 	"io/ioutil"
 
+	"github.com/aerogo/session"
+	memstore "github.com/aerogo/session-store-memory"
 	"github.com/fatih/color"
 	"github.com/julienschmidt/httprouter"
 	cache "github.com/patrickmn/go-cache"
@@ -34,7 +36,7 @@ type Application struct {
 
 	Config   *Configuration
 	Layout   func(*Context, string) string
-	Sessions SessionManager
+	Sessions session.Manager
 	Security ApplicationSecurity
 
 	router *httprouter.Router
@@ -70,7 +72,7 @@ func New() *Application {
 	app.Config.Reset()
 	app.Load()
 
-	app.Sessions.Store = NewMemoryStore()
+	app.Sessions.Store = memstore.New()
 
 	return app
 }
