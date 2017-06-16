@@ -134,7 +134,6 @@ func (app *Application) Ajax(path string, handle Handle) {
 		page := handle(ctx)
 		html := app.Layout(ctx, page)
 		html = strings.Replace(html, "</head><body", app.cssReplacement, 1)
-		html = strings.Replace(html, "<html", "<!DOCTYPE html><html", 1)
 		return html
 	})
 }
