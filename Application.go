@@ -72,6 +72,7 @@ func New() *Application {
 	app.Config.Reset()
 	app.Load()
 
+	// Default session store: Memory
 	app.Sessions.Store = memstore.New()
 
 	return app

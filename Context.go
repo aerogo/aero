@@ -95,8 +95,12 @@ func (ctx *Context) Session() *session.Session {
 	if err == nil {
 		sid := cookie.Value
 
-		if sid != "" {
-			ctx.session = ctx.App.Sessions.Store.Get(sid)
+		if session.IsValidID(sid) {
+			ctx.session, err = ctx.App.Sessions.Store.Get(sid)
+
+			if err != nil {
+				color.Red(err.Error())
+			}
 
 			if ctx.session != nil {
 				return ctx.session
@@ -107,20 +111,46 @@ func (ctx *Context) Session() *session.Session {
 	// Create a new session
 	ctx.session = ctx.App.Sessions.New()
 
+	// Create a session cookie in the client
+	ctx.createSessionCookie()
+
+	return ctx.session
+}
+
+// createSessionCookie creates a session cookie in the client.
+func (ctx *Context) createSessionCookie() {
 	sessionCookie := http.Cookie{
 		Name:     "sid",
 		Value:    ctx.session.ID(),
 		HttpOnly: true,
 		Secure:   true,
+		MaxAge:   ctx.App.Sessions.Duration,
+		Path:     "/",
 	}
 
 	http.SetCookie(ctx.response, &sessionCookie)
 
-	return ctx.session
+	// HACK: Add SameSite attribute
+	// Remove this once it's available inside http.Cookie
+	cookieData := ctx.response.Header().Get("Set-Cookie")
+	cookieData += "; SameSite=strict"
+	ctx.response.Header().Set("Set-Cookie", cookieData)
 }
 
-// HasSession indicates whether a session has been constructed for this context or not.
+// HasSession indicates whether the client has a valid session or not.
 func (ctx *Context) HasSession() bool {
+	if ctx.session != nil {
+		return true
+	}
+
+	cookie, err := ctx.request.Cookie("sid")
+
+	if err != nil || !session.IsValidID(cookie.Value) {
+		return false
+	}
+
+	ctx.session, _ = ctx.App.Sessions.Store.Get(cookie.Value)
+
 	return ctx.session != nil
 }
 
