@@ -133,7 +133,7 @@ func (ctx *Context) createSessionCookie() {
 	// HACK: Add SameSite attribute
 	// Remove this once it's available inside http.Cookie
 	cookieData := ctx.response.Header().Get("Set-Cookie")
-	cookieData += "; SameSite"
+	cookieData += "; SameSite=lax"
 	ctx.response.Header().Set("Set-Cookie", cookieData)
 }
 
