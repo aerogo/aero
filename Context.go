@@ -35,7 +35,7 @@ const (
 	server                        = "Aero"
 	cacheControlHeader            = "Cache-Control"
 	cacheControlAlwaysValidate    = "must-revalidate"
-	cacheControlMedia             = "max-age=864000"
+	cacheControlMedia             = "public, max-age=864000"
 	contentTypeOptionsHeader      = "X-Content-Type-Options"
 	contentTypeOptions            = "nosniff"
 	xssProtectionHeader           = "X-XSS-Protection"
