@@ -16,15 +16,21 @@ type Configuration struct {
 
 // Manifest represents a web manifest
 type Manifest struct {
-	Name            string   `json:"name"`
-	ShortName       string   `json:"short_name"`
-	Icons           []string `json:"icons,omitempty"`
-	StartURL        string   `json:"start_url"`
-	Display         string   `json:"display"`
-	Lang            string   `json:"lang,omitempty"`
-	ThemeColor      string   `json:"theme_color,omitempty"`
-	BackgroundColor string   `json:"background_color,omitempty"`
-	GCMSenderID     string   `json:"gcm_sender_id,omitempty"`
+	Name            string         `json:"name"`
+	ShortName       string         `json:"short_name"`
+	Icons           []ManifestIcon `json:"icons,omitempty"`
+	StartURL        string         `json:"start_url"`
+	Display         string         `json:"display"`
+	Lang            string         `json:"lang,omitempty"`
+	ThemeColor      string         `json:"theme_color,omitempty"`
+	BackgroundColor string         `json:"background_color,omitempty"`
+	GCMSenderID     string         `json:"gcm_sender_id,omitempty"`
+}
+
+// ManifestIcon represents a single icon in the web manifest.
+type ManifestIcon struct {
+	Source string `json:"src"`
+	Sizes  string `json:"sizes"`
 }
 
 // PortConfiguration ...
