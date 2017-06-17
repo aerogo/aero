@@ -295,7 +295,7 @@ func (app *Application) TestRoutes() {
 
 			if exists {
 				for _, testRoute := range testRoutes {
-					app.TestRoute(testRoute)
+					app.TestRoute(route, testRoute)
 				}
 
 				continue
@@ -307,7 +307,7 @@ func (app *Application) TestRoutes() {
 				continue
 			}
 
-			app.TestRoute(route)
+			app.TestRoute(route, route)
 		}
 
 		// json, _ := Post("https://html5.validator.nu/?out=json").Header("Content-Type", "text/html; charset=utf-8").Header("Content-Encoding", "gzip").Body(body).Send()
@@ -316,7 +316,7 @@ func (app *Application) TestRoutes() {
 }
 
 // TestRoute tests the given route.
-func (app *Application) TestRoute(route string) {
+func (app *Application) TestRoute(label string, route string) {
 	start := time.Now()
 	body, _ := Get("http://localhost:" + strconv.Itoa(app.Config.Ports.HTTP) + route).Send()
 	responseTime := time.Since(start).Nanoseconds() / 1000000
@@ -348,5 +348,5 @@ func (app *Application) TestRoute(route string) {
 		responseTimeColor = color.New(color.FgRed).SprintFunc()
 	}
 
-	fmt.Printf("%-67s %s %s %s %s\n", color.BlueString(route), responseSizeColor(fmt.Sprintf("%6.0f", responseSize)), faint("KB"), responseTimeColor(fmt.Sprintf("%7d", responseTime)), faint("ms"))
+	fmt.Printf("%-67s %s %s %s %s\n", color.BlueString(label), responseSizeColor(fmt.Sprintf("%6.0f", responseSize)), faint("KB"), responseTimeColor(fmt.Sprintf("%7d", responseTime)), faint("ms"))
 }
