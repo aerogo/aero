@@ -2,16 +2,23 @@ package aero
 
 // Configuration ...
 type Configuration struct {
-	Domain    string            `json:"domain"`
-	Title     string            `json:"title"`
-	Fonts     []string          `json:"fonts"`
-	Icons     []string          `json:"icons"`
-	Static    []string          `json:"static"`
-	Styles    []string          `json:"styles"`
-	GZip      bool              `json:"gzip"`
-	GZipCache bool              `json:"gzipCache"`
-	Manifest  Manifest          `json:"manifest"`
-	Ports     PortConfiguration `json:"ports"`
+	Domain    string               `json:"domain"`
+	Title     string               `json:"title"`
+	Fonts     []string             `json:"fonts"`
+	Icons     []string             `json:"icons"`
+	Static    []string             `json:"static"`
+	Styles    []string             `json:"styles"`
+	Scripts   ScriptsConfiguration `json:"scripts"`
+	Manifest  Manifest             `json:"manifest"`
+	Ports     PortConfiguration    `json:"ports"`
+	GZip      bool                 `json:"gzip"`
+	GZipCache bool                 `json:"gzipCache"`
+}
+
+// ScriptsConfiguration ...
+type ScriptsConfiguration struct {
+	// Entry point for scripts
+	Main string `json:"main"`
 }
 
 // Manifest represents a web manifest
