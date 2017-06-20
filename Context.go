@@ -216,9 +216,13 @@ func (ctx *Context) Error(statusCode int, explanation string, err error) string 
 	// 	zap.String("error", err.Error()),
 	// 	zap.String("url", ctx.request.RequestURI),
 	// )
-	detailed := err.Error()
-	color.Red(detailed)
-	return fmt.Sprintf("%s (%s)", explanation, detailed)
+	if err != nil {
+		detailed := err.Error()
+		color.Red(detailed)
+		return fmt.Sprintf("%s (%s)", explanation, detailed)
+	}
+
+	return explanation
 }
 
 // GetRequestHeader retrieves the value for the request header.
