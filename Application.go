@@ -11,9 +11,6 @@ import (
 	"crypto/sha256"
 
 	"encoding/base64"
-	"encoding/json"
-
-	"io/ioutil"
 
 	"github.com/aerogo/session"
 	memstore "github.com/aerogo/session-store-memory"
@@ -151,36 +148,13 @@ func (app *Application) Use(middlewares ...Middleware) {
 	app.middleware = append(app.middleware, middlewares...)
 }
 
-// Load loads the application data from the file system.
+// Load loads the application configuration from config.json.
 func (app *Application) Load() {
-	config, readError := ioutil.ReadFile("config.json")
+	var err error
+	app.Config, err = LoadConfig("config.json")
 
-	if readError == nil {
-		jsonDecodeError := json.Unmarshal(config, app.Config)
-
-		if jsonDecodeError != nil {
-			color.Red(jsonDecodeError.Error())
-		}
-	}
-
-	if app.Config.Manifest.Name == "" {
-		app.Config.Manifest.Name = app.Config.Title
-	}
-
-	if app.Config.Manifest.ShortName == "" {
-		app.Config.Manifest.ShortName = app.Config.Title
-	}
-
-	if app.Config.Manifest.Lang == "" {
-		app.Config.Manifest.Lang = "en"
-	}
-
-	if app.Config.Manifest.Display == "" {
-		app.Config.Manifest.Display = "standalone"
-	}
-
-	if app.Config.Manifest.StartURL == "" {
-		app.Config.Manifest.StartURL = "/"
+	if err != nil {
+		color.Red(err.Error())
 	}
 }
 

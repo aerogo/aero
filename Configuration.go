@@ -1,5 +1,10 @@
 package aero
 
+import (
+	"encoding/json"
+	"io/ioutil"
+)
+
 // Configuration ...
 type Configuration struct {
 	Domain    string               `json:"domain"`
@@ -53,4 +58,44 @@ func (config *Configuration) Reset() {
 	config.Ports.HTTP = 4000
 	config.Ports.HTTPS = 4001
 	config.Title = "Untitled site"
+}
+
+// LoadConfig loads the application configuration from the file system.
+func LoadConfig(path string) (*Configuration, error) {
+	data, err := ioutil.ReadFile(path)
+
+	if err != nil {
+		return nil, err
+	}
+
+	config := new(Configuration)
+	config.Reset()
+
+	jsonDecodeError := json.Unmarshal(data, config)
+
+	if jsonDecodeError != nil {
+		return nil, jsonDecodeError
+	}
+
+	if config.Manifest.Name == "" {
+		config.Manifest.Name = config.Title
+	}
+
+	if config.Manifest.ShortName == "" {
+		config.Manifest.ShortName = config.Title
+	}
+
+	if config.Manifest.Lang == "" {
+		config.Manifest.Lang = "en"
+	}
+
+	if config.Manifest.Display == "" {
+		config.Manifest.Display = "standalone"
+	}
+
+	if config.Manifest.StartURL == "" {
+		config.Manifest.StartURL = "/"
+	}
+
+	return config, nil
 }
