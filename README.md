@@ -1,4 +1,7 @@
 # Aero
+
+![Aero Go Logo](docs/images/aero.go.png)
+
 [![Godoc reference](https://godoc.org/github.com/aerogo/aero?status.svg)](https://godoc.org/github.com/aerogo/aero)
 
 This project is work in progress.
