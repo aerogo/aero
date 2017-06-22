@@ -11,6 +11,7 @@ This project is work in progress.
 - [ ] Reach 100/100 [Google Lighthouse](https://developers.google.com/web/tools/lighthouse/) score
 
 ## Documentation
+
 * [Application](docs/Application.md)
 * [Benchmarks](docs/Benchmarks.md)
 * [API](docs/API.md)
