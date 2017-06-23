@@ -260,7 +260,7 @@ func (app *Application) serveHTTP(address string) {
 	// This will block the calling goroutine until the server shuts down.
 	serveError := server.ListenAndServe()
 
-	if serveError != nil {
+	if serveError != nil && strings.Index(serveError.Error(), "closed") == -1 {
 		panic(serveError)
 	}
 }
@@ -277,7 +277,7 @@ func (app *Application) serveHTTPS(address string) {
 	// This will block the calling goroutine until the server shuts down.
 	serveError := server.ListenAndServeTLS(app.Security.Certificate, app.Security.Key)
 
-	if serveError != nil {
+	if serveError != nil && strings.Index(serveError.Error(), "closed") == -1 {
 		panic(serveError)
 	}
 }
