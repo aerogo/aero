@@ -1,11 +1,15 @@
 package aero
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
 	"sort"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"crypto/sha256"
@@ -35,6 +39,7 @@ type Application struct {
 	Layout   func(*Context, string) string
 	Sessions session.Manager
 	Security ApplicationSecurity
+	Servers  [2]*http.Server
 
 	router *httprouter.Router
 	routes struct {
@@ -141,6 +146,8 @@ func (app *Application) Run() {
 	app.TestManifest()
 	app.TestRoutes()
 	app.Listen()
+	app.Wait()
+	app.Shutdown()
 }
 
 // Use adds middleware to your middleware chain.
@@ -170,7 +177,27 @@ func (app *Application) Listen() {
 		fmt.Println("Server running on:", color.GreenString("http://localhost:"+strconv.Itoa(app.Config.Ports.HTTP)))
 	}
 
-	app.serveHTTP(":" + strconv.Itoa(app.Config.Ports.HTTP))
+	go func() {
+		app.serveHTTP(":" + strconv.Itoa(app.Config.Ports.HTTP))
+	}()
+}
+
+// Wait will make the process wait until it is killed.
+func (app *Application) Wait() {
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+	<-stop
+}
+
+// Shutdown will gracefully shut down the server.
+func (app *Application) Shutdown() {
+	for _, server := range app.Servers {
+		if server == nil {
+			continue
+		}
+
+		server.Shutdown(context.Background())
+	}
 }
 
 // // listen listens on the specified host and port.
@@ -223,7 +250,15 @@ func (app *Application) Handler() http.Handler {
 
 // serveHTTP serves requests from the given listener.
 func (app *Application) serveHTTP(address string) {
-	serveError := http.ListenAndServe(address, app.Handler())
+	server := &http.Server{
+		Addr:    address,
+		Handler: app.Handler(),
+	}
+
+	app.Servers[0] = server
+
+	// This will block the calling goroutine until the server shuts down.
+	serveError := server.ListenAndServe()
 
 	if serveError != nil {
 		panic(serveError)
@@ -232,7 +267,15 @@ func (app *Application) serveHTTP(address string) {
 
 // serveHTTPS serves requests from the given listener.
 func (app *Application) serveHTTPS(address string) {
-	serveError := http.ListenAndServeTLS(address, app.Security.Certificate, app.Security.Key, app.Handler())
+	server := &http.Server{
+		Addr:    address,
+		Handler: app.Handler(),
+	}
+
+	app.Servers[1] = server
+
+	// This will block the calling goroutine until the server shuts down.
+	serveError := server.ListenAndServeTLS(app.Security.Certificate, app.Security.Key)
 
 	if serveError != nil {
 		panic(serveError)
