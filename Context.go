@@ -307,6 +307,12 @@ func (ctx *Context) CanUseWebP() bool {
 	return false
 }
 
+// IsMediaResponse returns whether the given context has already set its content type to a media type.
+func (ctx *Context) IsMediaResponse() bool {
+	contentType := ctx.response.Header().Get(contentTypeHeader)
+	return strings.HasPrefix(contentType, "image/") || strings.HasPrefix(contentType, "video/")
+}
+
 // Respond responds either with raw code or gzipped if the
 // code length is greater than the gzip threshold.
 func (ctx *Context) Respond(code string) {
@@ -318,8 +324,7 @@ func (ctx *Context) Respond(code string) {
 func (ctx *Context) RespondBytes(b []byte) {
 	response := ctx.response
 	header := response.Header()
-	contentType := ctx.response.Header().Get(contentTypeHeader)
-	isMedia := strings.HasPrefix(contentType, "image/") || strings.HasPrefix(contentType, "video/")
+	isMedia := ctx.IsMediaResponse()
 
 	// Headers
 	if isMedia {
