@@ -132,9 +132,9 @@ func (ctx *Context) createSessionCookie() {
 
 	// HACK: Add SameSite attribute
 	// Remove this once it's available inside http.Cookie
-	cookieData := ctx.response.Header().Get("Set-Cookie")
-	cookieData += "; SameSite=lax"
-	ctx.response.Header().Set("Set-Cookie", cookieData)
+	// cookieData := ctx.response.Header().Get("Set-Cookie")
+	// cookieData += "; SameSite=lax"
+	// ctx.response.Header().Set("Set-Cookie", cookieData)
 }
 
 // HasSession indicates whether the client has a valid session or not.
