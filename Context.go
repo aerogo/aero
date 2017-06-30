@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"mime"
@@ -264,6 +265,30 @@ func (ctx *Context) RequestBody() []byte {
 	}
 
 	return body
+}
+
+// RequestBodyJSON returns the JSON parsed request body as map[string]interface{} or []interface{}.
+func (ctx *Context) RequestBodyJSON() (interface{}, error) {
+	var data interface{}
+	err := json.Unmarshal(ctx.RequestBody(), &data)
+	return data, err
+}
+
+// RequestBodyJSONObject returns the JSON parsed request body as map[string]interface{}.
+func (ctx *Context) RequestBodyJSONObject() (map[string]interface{}, error) {
+	json, err := ctx.RequestBodyJSON()
+
+	if err != nil {
+		return nil, err
+	}
+
+	data, formatOK := json.(map[string]interface{})
+
+	if !formatOK {
+		return nil, errors.New("Invalid format: Expected JSON object")
+	}
+
+	return data, nil
 }
 
 // RealIP tries to determine the real IP address of the request.
