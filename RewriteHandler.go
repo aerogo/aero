@@ -9,7 +9,7 @@ type rewriteHandler struct {
 
 func (r *rewriteHandler) ServeHTTP(response http.ResponseWriter, request *http.Request) {
 	r.rewrite(&RewriteContext{
-		request: request,
+		Request: request,
 	})
 	r.router.ServeHTTP(response, request)
 }

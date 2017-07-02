@@ -63,8 +63,8 @@ const (
 // Context ...
 type Context struct {
 	// net/http
-	request  *http.Request
-	response http.ResponseWriter
+	Request  *http.Request
+	Response http.ResponseWriter
 	params   httprouter.Params
 
 	// A pointer to the application this request occured on.
@@ -91,7 +91,7 @@ func (ctx *Context) Session() *session.Session {
 	}
 
 	// Check if the client has a session cookie already.
-	cookie, err := ctx.request.Cookie("sid")
+	cookie, err := ctx.Request.Cookie("sid")
 
 	if err == nil {
 		sid := cookie.Value
@@ -129,7 +129,7 @@ func (ctx *Context) createSessionCookie() {
 		Path:     "/",
 	}
 
-	http.SetCookie(ctx.response, &sessionCookie)
+	http.SetCookie(ctx.Response, &sessionCookie)
 
 	// HACK: Add SameSite attribute
 	// Remove this once it's available inside http.Cookie
@@ -144,7 +144,7 @@ func (ctx *Context) HasSession() bool {
 		return true
 	}
 
-	cookie, err := ctx.request.Cookie("sid")
+	cookie, err := ctx.Request.Cookie("sid")
 
 	if err != nil || !session.IsValidID(cookie.Value) {
 		return false
@@ -228,22 +228,22 @@ func (ctx *Context) Error(statusCode int, explanation string, err error) string 
 
 // GetRequestHeader retrieves the value for the request header.
 func (ctx *Context) GetRequestHeader(header string) string {
-	return ctx.request.Header.Get(header)
+	return ctx.Request.Header.Get(header)
 }
 
 // SetResponseHeader sets response header to value.
 func (ctx *Context) SetResponseHeader(header string, value string) {
-	ctx.response.Header().Set(header, value)
+	ctx.Response.Header().Set(header, value)
 }
 
 // URI returns the relative path, e.g. /blog/post/123.
 func (ctx *Context) URI() string {
-	return ctx.request.URL.Path
+	return ctx.Request.URL.Path
 }
 
 // SetURI sets the relative path, e.g. /blog/post/123.
 func (ctx *Context) SetURI(b string) {
-	ctx.request.URL.Path = b
+	ctx.Request.URL.Path = b
 }
 
 // Get retrieves an URL parameter.
@@ -258,7 +258,7 @@ func (ctx *Context) GetInt(param string) (int, error) {
 
 // RequestBody returns the request body as a string.
 func (ctx *Context) RequestBody() []byte {
-	body, err := ioutil.ReadAll(ctx.request.Body)
+	body, err := ioutil.ReadAll(ctx.Request.Body)
 
 	if err != nil {
 		panic(err)
@@ -293,18 +293,18 @@ func (ctx *Context) RequestBodyJSONObject() (map[string]interface{}, error) {
 
 // RealIP tries to determine the real IP address of the request.
 func (ctx *Context) RealIP() string {
-	return realip.RealIP(ctx.request)
+	return realip.RealIP(ctx.Request)
 }
 
 // UserAgent retrieves the user agent for the given request.
 func (ctx *Context) UserAgent() string {
-	ctx.request.URL.Query()
-	return ctx.request.UserAgent()
+	ctx.Request.URL.Query()
+	return ctx.Request.UserAgent()
 }
 
 // Query retrieves the value for the given URL query parameter.
 func (ctx *Context) Query(param string) string {
-	return ctx.request.URL.Query().Get(param)
+	return ctx.Request.URL.Query().Get(param)
 }
 
 // Redirect redirects to the given URL using status code 302.
@@ -334,7 +334,7 @@ func (ctx *Context) CanUseWebP() bool {
 
 // IsMediaResponse returns whether the given context has already set its content type to a media type.
 func (ctx *Context) IsMediaResponse() bool {
-	contentType := ctx.response.Header().Get(contentTypeHeader)
+	contentType := ctx.Response.Header().Get(contentTypeHeader)
 	return strings.HasPrefix(contentType, "image/") || strings.HasPrefix(contentType, "video/")
 }
 
@@ -347,7 +347,7 @@ func (ctx *Context) Respond(code string) {
 // RespondBytes responds either with raw code or gzipped if the
 // code length is greater than the gzip threshold. Requires a byte slice.
 func (ctx *Context) RespondBytes(b []byte) {
-	response := ctx.response
+	response := ctx.Response
 	header := response.Header()
 	isMedia := ctx.IsMediaResponse()
 
@@ -374,7 +374,7 @@ func (ctx *Context) RespondBytes(b []byte) {
 	etag := strconv.FormatUint(h.Sum64(), 16)
 
 	// If client cache is up to date, send 304 with no response body.
-	clientETag := ctx.request.Header.Get(ifNoneMatchHeader)
+	clientETag := ctx.Request.Header.Get(ifNoneMatchHeader)
 
 	if etag == clientETag {
 		response.WriteHeader(304)
