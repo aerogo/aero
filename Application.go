@@ -108,7 +108,7 @@ func (app *Application) createRouteHandler(path string, handle Handle) httproute
 		// The last part of the call chain will send the actual response.
 		lastPartOfCallChain := func() {
 			data := handle(&ctx)
-			ctx.Respond(data)
+			ctx.respond(data)
 		}
 
 		// Declare the type of generateNext so that we can define it recursively in the next part.

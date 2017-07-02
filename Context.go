@@ -348,15 +348,15 @@ func (ctx *Context) IsMediaResponse() bool {
 	return strings.HasPrefix(contentType, "image/") || strings.HasPrefix(contentType, "video/")
 }
 
-// Respond responds either with raw code or gzipped if the
+// respond responds either with raw code or gzipped if the
 // code length is greater than the gzip threshold.
-func (ctx *Context) Respond(code string) {
-	ctx.RespondBytes(StringToBytesUnsafe(code))
+func (ctx *Context) respond(code string) {
+	ctx.respondBytes(StringToBytesUnsafe(code))
 }
 
-// RespondBytes responds either with raw code or gzipped if the
+// respondBytes responds either with raw code or gzipped if the
 // code length is greater than the gzip threshold. Requires a byte slice.
-func (ctx *Context) RespondBytes(b []byte) {
+func (ctx *Context) respondBytes(b []byte) {
 	response := ctx.response
 	header := response.Header()
 	isMedia := ctx.IsMediaResponse()
