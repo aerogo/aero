@@ -99,8 +99,8 @@ func (app *Application) createRouteHandler(path string, handle Handle) httproute
 		ctx := Context{
 			App:        app,
 			StatusCode: http.StatusOK,
-			Request:    request,
-			Response:   response,
+			request:    request,
+			response:   response,
 			params:     params,
 			start:      time.Now(),
 		}
