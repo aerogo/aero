@@ -225,7 +225,7 @@ func (app *Application) SetStyle(css string) {
 	hash := sha256.Sum256([]byte(css))
 	app.cssHash = base64.StdEncoding.EncodeToString(hash[:])
 	app.cssReplacement = "<style>" + app.css + "</style></head><body"
-	app.contentSecurityPolicy = "default-src 'none'; img-src https:; script-src 'self'; style-src 'sha256-" + app.cssHash + "'; font-src https:; manifest-src 'self'; child-src https:; connect-src https: wss:"
+	app.contentSecurityPolicy = "default-src 'none'; img-src https:; media-src https:; script-src 'self'; style-src 'sha256-" + app.cssHash + "'; font-src https:; manifest-src 'self'; child-src https:; connect-src https: wss:"
 }
 
 // StartTime ...
