@@ -41,7 +41,7 @@ type Application struct {
 	Security ApplicationSecurity
 	Servers  [2]*http.Server
 
-	router *httprouter.Router
+	Router *httprouter.Router
 	routes struct {
 		GET  []string
 		POST []string
@@ -64,7 +64,7 @@ type Application struct {
 func New() *Application {
 	app := new(Application)
 	app.start = time.Now()
-	app.router = httprouter.New()
+	app.Router = httprouter.New()
 	app.routeTests = make(map[string][]string)
 	app.gzipCache = cache.New(gzipCacheDuration, gzipCacheCleanup)
 	app.Layout = func(ctx *Context, content string) string {
@@ -83,13 +83,13 @@ func New() *Application {
 // Get registers your function to be called when a certain GET path has been requested.
 func (app *Application) Get(path string, handle Handle) {
 	app.routes.GET = append(app.routes.GET, path)
-	app.router.GET(path, app.createRouteHandler(path, handle))
+	app.Router.GET(path, app.createRouteHandler(path, handle))
 }
 
 // Post registers your function to be called when a certain POST path has been requested.
 func (app *Application) Post(path string, handle Handle) {
 	app.routes.POST = append(app.routes.POST, path)
-	app.router.POST(path, app.createRouteHandler(path, handle))
+	app.Router.POST(path, app.createRouteHandler(path, handle))
 }
 
 // createRouteHandler creates a handler function for httprouter.
@@ -235,7 +235,7 @@ func (app *Application) StartTime() time.Time {
 
 // Handler returns the request handler.
 func (app *Application) Handler() http.Handler {
-	router := app.router
+	router := app.Router
 	rewrite := app.rewrite
 
 	if rewrite != nil {
