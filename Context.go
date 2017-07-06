@@ -73,6 +73,9 @@ type Context struct {
 	// Status code
 	StatusCode int
 
+	// Custom data
+	Data interface{}
+
 	// Start time
 	start time.Time
 
