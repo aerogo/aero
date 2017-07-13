@@ -171,7 +171,7 @@ func (ctx *Context) HTML(html string) string {
 	ctx.SetResponseHeader(contentTypeHeader, contentTypeHTML)
 	ctx.SetResponseHeader(contentTypeOptionsHeader, contentTypeOptions)
 	ctx.SetResponseHeader(xssProtectionHeader, xssProtection)
-	ctx.SetResponseHeader(xFrameOptionsHeader, xFrameOptions)
+	// ctx.SetResponseHeader(xFrameOptionsHeader, xFrameOptions)
 	ctx.SetResponseHeader(referrerPolicyHeader, referrerPolicySameOrigin)
 
 	if ctx.App.Security.Certificate != "" {
