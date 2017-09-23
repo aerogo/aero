@@ -28,9 +28,6 @@ const (
 	gzipCacheCleanup  = 1 * time.Minute
 )
 
-// Middleware ...
-type Middleware func(*Context, func())
-
 // Application represents a single web service.
 type Application struct {
 	root string
@@ -200,40 +197,30 @@ func (app *Application) Shutdown() {
 	}
 }
 
-// // listen listens on the specified host and port.
-// func (app *Application) listen(port int) net.Listener {
-// 	address := ":" + strconv.Itoa(port)
-
-// 	listener, bindError := net.Listen("tcp", address)
-
-// 	if bindError != nil {
-// 		panic(bindError)
-// 	}
-
-// 	return listener
-// }
-
 // Rewrite sets the URL rewrite function.
 func (app *Application) Rewrite(rewrite func(*RewriteContext)) {
 	app.rewrite = rewrite
 }
 
-// SetStyle ...
+// SetStyle applies the given CSS code to the application.
 func (app *Application) SetStyle(css string) {
 	app.css = css
 
+	// Generate a hash
 	hash := sha256.Sum256([]byte(css))
 	app.cssHash = base64.StdEncoding.EncodeToString(hash[:])
-	app.cssReplacement = "<style>" + app.css + "</style></head><body"
 	app.contentSecurityPolicy = "default-src 'none'; img-src https:; media-src https:; script-src 'self'; style-src 'sha256-" + app.cssHash + "'; font-src https:; manifest-src 'self'; child-src https:; connect-src https: wss:"
+
+	// This will be used in the final response later on to inject the CSS code
+	app.cssReplacement = "<style>" + app.css + "</style></head><body"
 }
 
-// StartTime ...
+// StartTime returns the time the application started.
 func (app *Application) StartTime() time.Time {
 	return app.start
 }
 
-// Handler returns the request handler.
+// Handler returns the request handler used by the application.
 func (app *Application) Handler() http.Handler {
 	router := app.Router
 	rewrite := app.rewrite
@@ -291,6 +278,8 @@ func (app *Application) Test(route string, paths []string) {
 func (app *Application) TestManifest() {
 	manifest := app.Config.Manifest
 
+	// Warn about short name length (Google Lighthouse)
+	// https://developer.chrome.com/apps/manifest/name#short_name
 	if len(manifest.ShortName) >= 12 {
 		color.Yellow("The short name of your application should have less than 12 characters")
 	}
@@ -304,11 +293,12 @@ func (app *Application) TestRoutes() {
 		sort.Strings(app.routes.GET)
 
 		for _, route := range app.routes.GET {
-			// Ajax routes
+			// Skip ajax routes
 			if strings.HasPrefix(route, "/_") {
 				continue
 			}
 
+			// Check if the user defined test routes for the given route
 			testRoutes, exists := app.routeTests[route]
 
 			if exists {
@@ -319,12 +309,13 @@ func (app *Application) TestRoutes() {
 				continue
 			}
 
-			// Routes with parameters
+			// Skip routes with parameters and display a warning to indicate it needs a test route
 			if strings.Contains(route, ":") {
 				color.Yellow(route)
 				continue
 			}
 
+			// Test the static route without parameters
 			app.TestRoute(route, route)
 		}
 
@@ -335,11 +326,18 @@ func (app *Application) TestRoutes() {
 
 // TestRoute tests the given route.
 func (app *Application) TestRoute(label string, route string) {
+	// Measure response time and size
 	start := time.Now()
 	body, _ := Get("http://localhost:" + strconv.Itoa(app.Config.Ports.HTTP) + route).Send()
 	responseTime := time.Since(start).Nanoseconds() / 1000000
 	responseSize := float64(len(body)) / 1024
 
+	// Show results on terminal
+	PrintTestResult(label, responseTime, responseSize)
+}
+
+// PrintTestResult shows the test result for a route on the terminal.
+func PrintTestResult(label string, responseTime int64, responseSize float64) {
 	faint := color.New(color.Faint).SprintFunc()
 
 	// Response size color
@@ -366,5 +364,6 @@ func (app *Application) TestRoute(label string, route string) {
 		responseTimeColor = color.New(color.FgRed).SprintFunc()
 	}
 
+	// Output
 	fmt.Printf("%-67s %s %s %s %s\n", color.BlueString(label), responseSizeColor(fmt.Sprintf("%6.0f", responseSize)), faint("KB"), responseTimeColor(fmt.Sprintf("%7d", responseTime)), faint("ms"))
 }

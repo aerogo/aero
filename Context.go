@@ -83,9 +83,6 @@ type Context struct {
 	session *session.Session
 }
 
-// Handle ...
-type Handle func(*Context) string
-
 // Session returns the session of the context or creates and caches a new session.
 func (ctx *Context) Session() *session.Session {
 	// Return cached session if available.
