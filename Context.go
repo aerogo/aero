@@ -44,6 +44,7 @@ const (
 	etagHeader                    = "ETag"
 	contentTypeHeader             = "Content-Type"
 	contentTypeHTML               = "text/html; charset=utf-8"
+	contentTypeJavaScript         = "application/javascript; charset=utf-8"
 	contentTypeJSON               = "application/json; charset=utf-8"
 	contentTypePlainText          = "text/plain; charset=utf-8"
 	contentEncodingHeader         = "Content-Encoding"
@@ -183,6 +184,12 @@ func (ctx *Context) HTML(html string) string {
 func (ctx *Context) Text(text string) string {
 	ctx.SetResponseHeader(contentTypeHeader, contentTypePlainText)
 	return text
+}
+
+// JavaScript sends a script.
+func (ctx *Context) JavaScript(code string) string {
+	ctx.SetResponseHeader(contentTypeHeader, contentTypeJavaScript)
+	return code
 }
 
 // File sends the contents of a local file and determines its mime type by extension.
