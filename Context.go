@@ -374,7 +374,7 @@ func (ctx *Context) respondBytes(b []byte) {
 	} else {
 		header.Set(cacheControlHeader, cacheControlAlwaysValidate)
 		header.Set(serverHeader, server)
-		header.Set(responseTimeHeader, strconv.FormatInt(time.Since(ctx.start).Nanoseconds()/1000, 10)+" us")
+		// header.Set(responseTimeHeader, strconv.FormatInt(time.Since(ctx.start).Nanoseconds()/1000, 10)+" us")
 	}
 
 	// Small response
