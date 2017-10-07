@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/OneOfOne/xxhash"
 	"github.com/aerogo/session"
@@ -76,9 +75,6 @@ type Context struct {
 
 	// Custom data
 	Data interface{}
-
-	// Start time
-	start time.Time
 
 	// User session
 	session *session.Session

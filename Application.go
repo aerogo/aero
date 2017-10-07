@@ -99,7 +99,6 @@ func (app *Application) createRouteHandler(path string, handle Handle) httproute
 			request:    request,
 			response:   response,
 			params:     params,
-			start:      time.Now(),
 		}
 
 		// The last part of the call chain will send the actual response.
