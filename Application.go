@@ -234,13 +234,20 @@ func (app *Application) Handler() http.Handler {
 	return router
 }
 
+// createServer creates an http server instance.
+func (app *Application) createServer(address string) *http.Server {
+	return &http.Server{
+		Addr:              address,
+		Handler:           app.Handler(),
+		ReadHeaderTimeout: 5 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       120 * time.Second,
+	}
+}
+
 // serveHTTP serves requests from the given listener.
 func (app *Application) serveHTTP(address string) {
-	server := &http.Server{
-		Addr:    address,
-		Handler: app.Handler(),
-	}
-
+	server := app.createServer(address)
 	app.Servers[0] = server
 
 	// This will block the calling goroutine until the server shuts down.
@@ -253,11 +260,7 @@ func (app *Application) serveHTTP(address string) {
 
 // serveHTTPS serves requests from the given listener.
 func (app *Application) serveHTTPS(address string) {
-	server := &http.Server{
-		Addr:    address,
-		Handler: app.Handler(),
-	}
-
+	server := app.createServer(address)
 	app.Servers[1] = server
 
 	// This will block the calling goroutine until the server shuts down.
