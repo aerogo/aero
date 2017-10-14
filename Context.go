@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"mime"
@@ -78,6 +77,20 @@ type Context struct {
 
 	// User session
 	session *session.Session
+}
+
+// Request returns the HTTP request.
+func (ctx *Context) Request() Request {
+	return Request{
+		inner: ctx.request,
+	}
+}
+
+// Response returns the HTTP response.
+func (ctx *Context) Response() Response {
+	return Response{
+		inner: ctx.response,
+	}
 }
 
 // Session returns the session of the context or creates and caches a new session.
@@ -156,21 +169,21 @@ func (ctx *Context) HasSession() bool {
 func (ctx *Context) JSON(value interface{}) string {
 	bytes, _ := json.Marshal(value)
 
-	ctx.SetResponseHeader(contentTypeHeader, contentTypeJSON)
+	ctx.response.Header().Set(contentTypeHeader, contentTypeJSON)
 	return string(bytes)
 }
 
 // HTML sends a HTML string.
 func (ctx *Context) HTML(html string) string {
-	ctx.SetResponseHeader(contentTypeHeader, contentTypeHTML)
-	ctx.SetResponseHeader(contentTypeOptionsHeader, contentTypeOptions)
-	ctx.SetResponseHeader(xssProtectionHeader, xssProtection)
-	// ctx.SetResponseHeader(xFrameOptionsHeader, xFrameOptions)
-	ctx.SetResponseHeader(referrerPolicyHeader, referrerPolicySameOrigin)
+	ctx.response.Header().Set(contentTypeHeader, contentTypeHTML)
+	ctx.response.Header().Set(contentTypeOptionsHeader, contentTypeOptions)
+	ctx.response.Header().Set(xssProtectionHeader, xssProtection)
+	// ctx.response.Header().Set(xFrameOptionsHeader, xFrameOptions)
+	ctx.response.Header().Set(referrerPolicyHeader, referrerPolicySameOrigin)
 
 	if ctx.App.Security.Certificate != "" {
-		ctx.SetResponseHeader(strictTransportSecurityHeader, strictTransportSecurity)
-		ctx.SetResponseHeader(contentSecurityPolicyHeader, ctx.App.contentSecurityPolicy)
+		ctx.response.Header().Set(strictTransportSecurityHeader, strictTransportSecurity)
+		ctx.response.Header().Set(contentSecurityPolicyHeader, ctx.App.contentSecurityPolicy)
 	}
 
 	return html
@@ -178,13 +191,13 @@ func (ctx *Context) HTML(html string) string {
 
 // Text sends a plain text string.
 func (ctx *Context) Text(text string) string {
-	ctx.SetResponseHeader(contentTypeHeader, contentTypePlainText)
+	ctx.response.Header().Set(contentTypeHeader, contentTypePlainText)
 	return text
 }
 
 // JavaScript sends a script.
 func (ctx *Context) JavaScript(code string) string {
-	ctx.SetResponseHeader(contentTypeHeader, contentTypeJavaScript)
+	ctx.response.Header().Set(contentTypeHeader, contentTypeJavaScript)
 	return code
 }
 
@@ -198,7 +211,7 @@ func (ctx *Context) File(file string) string {
 		mimeType = http.DetectContentType(data)
 	}
 
-	ctx.SetResponseHeader(contentTypeHeader, mimeType)
+	ctx.response.Header().Set(contentTypeHeader, mimeType)
 	return string(data)
 }
 
@@ -214,12 +227,8 @@ func (ctx *Context) TryWebP(path string, extension string) string {
 // Error should be used for sending error messages to the user.
 func (ctx *Context) Error(statusCode int, explanation string, err error) string {
 	ctx.StatusCode = statusCode
-	ctx.SetResponseHeader(contentTypeHeader, contentTypeHTML)
-	// ctx.App.Logger.Error(
-	// 	color.RedString(explanation),
-	// 	zap.String("error", err.Error()),
-	// 	zap.String("url", ctx.request.RequestURI),
-	// )
+	ctx.response.Header().Set(contentTypeHeader, contentTypeHTML)
+
 	if err != nil {
 		detailed := err.Error()
 		color.Red(detailed)
@@ -227,26 +236,6 @@ func (ctx *Context) Error(statusCode int, explanation string, err error) string 
 	}
 
 	return explanation
-}
-
-// GetRequestHeader retrieves the value for the request header.
-func (ctx *Context) GetRequestHeader(header string) string {
-	return ctx.request.Header.Get(header)
-}
-
-// SetRequestHeader set the value for the request header.
-func (ctx *Context) SetRequestHeader(header string, value string) {
-	ctx.request.Header.Set(header, value)
-}
-
-// GetResponseHeader sets response header to value.
-func (ctx *Context) GetResponseHeader(header string) string {
-	return ctx.response.Header().Get(header)
-}
-
-// SetResponseHeader sets response header to value.
-func (ctx *Context) SetResponseHeader(header string, value string) {
-	ctx.response.Header().Set(header, value)
 }
 
 // URI returns the relative path, e.g. /blog/post/123.
@@ -269,41 +258,6 @@ func (ctx *Context) GetInt(param string) (int, error) {
 	return strconv.Atoi(ctx.Get(param))
 }
 
-// RequestBody returns the request body as a string.
-func (ctx *Context) RequestBody() []byte {
-	body, err := ioutil.ReadAll(ctx.request.Body)
-
-	if err != nil {
-		panic(err)
-	}
-
-	return body
-}
-
-// RequestBodyJSON returns the JSON parsed request body as map[string]interface{} or []interface{}.
-func (ctx *Context) RequestBodyJSON() (interface{}, error) {
-	var data interface{}
-	err := json.Unmarshal(ctx.RequestBody(), &data)
-	return data, err
-}
-
-// RequestBodyJSONObject returns the JSON parsed request body as map[string]interface{}.
-func (ctx *Context) RequestBodyJSONObject() (map[string]interface{}, error) {
-	json, err := ctx.RequestBodyJSON()
-
-	if err != nil {
-		return nil, err
-	}
-
-	data, formatOK := json.(map[string]interface{})
-
-	if !formatOK {
-		return nil, errors.New("Invalid format: Expected JSON object")
-	}
-
-	return data, nil
-}
-
 // RealIP tries to determine the real IP address of the request.
 func (ctx *Context) RealIP() string {
 	return realip.RealIP(ctx.request)
@@ -323,20 +277,20 @@ func (ctx *Context) Query(param string) string {
 // Redirect redirects to the given URL using status code 302.
 func (ctx *Context) Redirect(url string) string {
 	ctx.StatusCode = http.StatusFound
-	ctx.SetResponseHeader("Location", url)
+	ctx.response.Header().Set("Location", url)
 	return ""
 }
 
 // RedirectPermanently redirects to the given URL and indicates that this is a permanent change using status code 301.
 func (ctx *Context) RedirectPermanently(url string) string {
 	ctx.StatusCode = http.StatusPermanentRedirect
-	ctx.SetResponseHeader("Location", url)
+	ctx.response.Header().Set("Location", url)
 	return ""
 }
 
 // CanUseWebP checks the Accept header to find out if WebP is supported by the client's browser.
 func (ctx *Context) CanUseWebP() bool {
-	accept := ctx.GetRequestHeader("Accept")
+	accept := ctx.request.Header.Get("Accept")
 
 	if strings.Index(accept, "image/webp") != -1 {
 		return true
