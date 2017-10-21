@@ -331,9 +331,9 @@ func (app *Application) TestRoutes() {
 func (app *Application) TestRoute(label string, route string) {
 	// Measure response time and size
 	start := time.Now()
-	body, _ := client.Get("http://localhost:" + strconv.Itoa(app.Config.Ports.HTTP) + route).End()
+	response, _ := client.Get("http://localhost:" + strconv.Itoa(app.Config.Ports.HTTP) + route).End()
 	responseTime := time.Since(start).Nanoseconds() / 1000000
-	responseSize := float64(len(body)) / 1024
+	responseSize := float64(len(response.RawBody())) / 1024
 
 	// Show results on terminal
 	PrintTestResult(label, responseTime, responseSize)
