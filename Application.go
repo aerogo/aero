@@ -16,6 +16,7 @@ import (
 
 	"encoding/base64"
 
+	"github.com/aerogo/http/client"
 	"github.com/aerogo/session"
 	memstore "github.com/aerogo/session-store-memory"
 	"github.com/fatih/color"
@@ -330,7 +331,7 @@ func (app *Application) TestRoutes() {
 func (app *Application) TestRoute(label string, route string) {
 	// Measure response time and size
 	start := time.Now()
-	body, _ := Get("http://localhost:" + strconv.Itoa(app.Config.Ports.HTTP) + route).Send()
+	body, _ := client.Get("http://localhost:" + strconv.Itoa(app.Config.Ports.HTTP) + route).Send()
 	responseTime := time.Since(start).Nanoseconds() / 1000000
 	responseSize := float64(len(body)) / 1024
 
