@@ -167,9 +167,15 @@ func (ctx *Context) HasSession() bool {
 
 // JSON encodes the object to a JSON string and responds.
 func (ctx *Context) JSON(value interface{}) string {
-	bytes, _ := json.Marshal(value)
-
 	ctx.response.Header().Set(contentTypeHeader, contentTypeJSON)
+
+	bytes, err := json.Marshal(value)
+
+	if err != nil {
+		ctx.StatusCode = http.StatusInternalServerError
+		return `{"error": "Could not encode object to JSON"}`
+	}
+
 	return string(bytes)
 }
 
