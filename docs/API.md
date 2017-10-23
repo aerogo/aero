@@ -50,13 +50,12 @@ app.Use(
 You can set a global wrapper for your HTML content which will only be used in routes registered via `Ajax()`. `Get()` and `Post()` routes are not affected.
 
 ```go
-// Render layout.
 app.Layout = func(ctx *aero.Context, content string) string {
 	return "<html><head></head><body>" + content + "</body></html>"
 }
 ```
 
-It is highly recommended to use a high-performance renderer like [Pixy](https://github.com/aerogo/pixy) for your HTML templates.
+It is highly recommended to use a high-performance renderer like [pixy](https://github.com/aerogo/pixy) via [pack](https://github.com/aerogo/pack) for your HTML templates.
 
 ## AJAX routing
 
