@@ -66,6 +66,14 @@ app.Ajax("/hello", func(ctx *aero.Context) string {
 })
 ```
 
+## Styling
+
+Calculates the SHA-1 hash of the CSS string, sets `Content-Security-Policy` to only accept this hash as the style and registers the CSS to be sent inline in the very first response to avoid [render blocking CSS](https://developers.google.com/web/fundamentals/performance/critical-rendering-path/render-blocking-css).
+
+```go
+app.SetStyle("body{color:red}")
+```
+
 ## Rewrite
 
 You can change the internal URI before routing happens:
