@@ -56,6 +56,8 @@ app.Layout = func(ctx *aero.Context, content string) string {
 }
 ```
 
+It is highly recommended to use a high-performance renderer like [Pixy](https://github.com/aerogo/pixy) for your HTML templates.
+
 ## AJAX routing
 
 Registers `/hello` which renders the full page with `app.Layout` and `/_/hello` rendering only the page contents.
