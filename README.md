@@ -3,7 +3,7 @@
 [![Godoc reference][godoc-image]][godoc-url]
 [![Discord][discord-image]][discord-url]
 
-This project is work in progress.
+Aero is a high performance web server that aims to provide a clean API for web development.
 
 ## Goals
 

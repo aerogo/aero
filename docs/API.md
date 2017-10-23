@@ -17,19 +17,8 @@ app.Get("/hello", func(ctx *aero.Context) string {
 ## Routing with parameters
 
 ```go
-app.Get("/hello/:who", func(ctx *aero.Context) string {
-	who := ctx.Get("who")
-	return ctx.Text("Hello " + who)
-})
-```
-
-## AJAX routing
-
-Registers `/hello` which renders the full page and `/_/hello` rendering only the page contents.
-
-```go
-app.Ajax("/hello", func(ctx *aero.Context) string {
-	return ctx.HTML("<h1>Hello</h1>")
+app.Get("/hello/:person", func(ctx *aero.Context) string {
+	return ctx.Text("Hello " + ctx.Get("person"))
 })
 ```
 
@@ -44,7 +33,9 @@ app.Use(func(ctx *aero.Context, next func()) {
 })
 ```
 
-## Multiple middleware (in one call)
+## Multiple middleware
+
+You can use multiple `Use()` calls or combine them into a single call:
 
 ```go
 app.Use(
@@ -54,7 +45,30 @@ app.Use(
 )
 ```
 
-## Rewrite (change URI before routing happens)
+## Layout
+
+You can set a global wrapper for your HTML content which will only be used in routes registered via `Ajax()`. `Get()` and `Post()` routes are not affected.
+
+```go
+// Render layout.
+app.Layout = func(ctx *aero.Context, content string) string {
+	return "<html><head></head><body>" + content + "</body></html>"
+}
+```
+
+## AJAX routing
+
+Registers `/hello` which renders the full page with `app.Layout` and `/_/hello` rendering only the page contents.
+
+```go
+app.Ajax("/hello", func(ctx *aero.Context) string {
+	return ctx.HTML("<h1>Hello</h1>")
+})
+```
+
+## Rewrite
+
+You can change the internal URI before routing happens:
 
 ```go
 app.Rewrite(func(ctx *aero.RewriteContext) {
