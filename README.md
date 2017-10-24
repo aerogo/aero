@@ -14,6 +14,8 @@ go install github.com/aerogo/aero/cmd/aero
 
 ## Usage
 
+![Aero usage](docs/usage.gif)
+
 Run this in an empty directory:
 
 ```bash
