@@ -10,14 +10,12 @@ type Configuration struct {
 	Domain    string               `json:"domain"`
 	Title     string               `json:"title"`
 	Fonts     []string             `json:"fonts"`
-	Icons     []string             `json:"icons"`
-	Static    []string             `json:"static"`
 	Styles    []string             `json:"styles"`
 	Scripts   ScriptsConfiguration `json:"scripts"`
 	Manifest  Manifest             `json:"manifest"`
-	Ports     PortConfiguration    `json:"ports"`
 	GZip      bool                 `json:"gzip"`
 	GZipCache bool                 `json:"gzipCache"`
+	Ports     PortConfiguration    `json:"ports"`
 }
 
 // ScriptsConfiguration ...
@@ -57,6 +55,9 @@ func (config *Configuration) Reset() {
 	config.GZipCache = true
 	config.Ports.HTTP = 4000
 	config.Ports.HTTPS = 4001
+	config.Manifest.StartURL = "/"
+	config.Manifest.Display = "standalone"
+	config.Manifest.Lang = "en"
 	config.Title = "Untitled site"
 }
 
@@ -68,7 +69,7 @@ func LoadConfig(path string) (*Configuration, error) {
 		return nil, err
 	}
 
-	config := new(Configuration)
+	config := &Configuration{}
 	config.Reset()
 
 	jsonDecodeError := json.Unmarshal(data, config)
@@ -83,18 +84,6 @@ func LoadConfig(path string) (*Configuration, error) {
 
 	if config.Manifest.ShortName == "" {
 		config.Manifest.ShortName = config.Title
-	}
-
-	if config.Manifest.Lang == "" {
-		config.Manifest.Lang = "en"
-	}
-
-	if config.Manifest.Display == "" {
-		config.Manifest.Display = "standalone"
-	}
-
-	if config.Manifest.StartURL == "" {
-		config.Manifest.StartURL = "/"
 	}
 
 	return config, nil
