@@ -9,7 +9,18 @@ Aero is a high-performance web server with a clean API for web development.
 
 ```bash
 go get github.com/aerogo/aero
+go install github.com/aerogo/aero/cmd/aero
 ```
+
+## Usage
+
+Run this in an empty directory:
+
+```bash
+aero -newapp
+```
+
+Now you can build your app with `go build` or use the more advanced [run](https://github.com/aerogo/run) tool.
 
 ## Features
 

@@ -23,19 +23,53 @@ func init() {
 
 // Main
 func main() {
-	if newApp {
-		color.Yellow("Creating new app...")
+	if !newApp {
+		return
+	}
 
-		fmt.Println("Creating", color.MagentaString(".gitignore"))
-		gitignore()
+	faint := color.New(color.Faint).SprintFunc()
 
-		fmt.Println("Creating", color.MagentaString("config.json"))
-		config()
+	color.Yellow("Creating new app...")
+	println()
 
-		fmt.Println("Creating", color.MagentaString("main.go"))
-		mainFile()
+	fmt.Println(color.GreenString(" ✔ "), ".gitignore")
+	gitignore()
 
-		color.Green("Finished.")
+	fmt.Println(color.GreenString(" ✔ "), "config.json")
+	config()
+
+	fmt.Println(color.GreenString(" ✔ "), "main.go")
+	mainFile()
+
+	fmt.Println(color.GreenString(" ✔ "), "main_test.go")
+	mainTestFile()
+
+	fmt.Println(color.GreenString(" ✔ "), faint("layout"))
+	createDirectory("layout")
+
+	fmt.Println(color.GreenString(" ✔ "), faint("pages"))
+	createDirectory("pages")
+
+	fmt.Println(color.GreenString(" ✔ "), faint("scripts"))
+	createDirectory("scripts")
+	panicOnError(ioutil.WriteFile("scripts/main.ts", []byte(`console.log("Hello World")`), 0644))
+
+	fmt.Println(color.GreenString(" ✔ "), faint("security"))
+	createDirectory("security")
+	gitignoreAll("security")
+
+	fmt.Println(color.GreenString(" ✔ "), faint("styles"))
+	createDirectory("styles")
+
+	println()
+	color.Green("Finished.")
+}
+
+func createDirectory(name string) {
+	err := os.Mkdir(name, 0777)
+
+	if err != nil && !os.IsExist(err) {
+		panic(err)
 	}
 }
 
@@ -44,15 +78,26 @@ func mainFile() {
 	panicOnError(err)
 }
 
+func mainTestFile() {
+	err := ioutil.WriteFile("main_test.go", []byte(mainTestCode), 0644)
+	panicOnError(err)
+}
+
 func config() {
 	config := aero.Configuration{}
 	config.Reset()
 	config.Styles = []string{}
 	config.Fonts = []string{}
+	config.Scripts.Main = "main"
 	bytes, err := json.MarshalIndent(config, "", "\t")
 	panicOnError(err)
 
 	err = ioutil.WriteFile("config.json", bytes, 0644)
+	panicOnError(err)
+}
+
+func gitignoreAll(directory string) {
+	err := ioutil.WriteFile(directory+"/.gitignore", []byte("*"), 0644)
 	panicOnError(err)
 }
 
