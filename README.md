@@ -16,11 +16,11 @@ go get github.com/aerogo/aero
 - Makes it easy to reach top scores in [Google PageSpeed](https://developers.google.com/speed/pagespeed/insights/), [Mozilla Observatory](https://observatory.mozilla.org/) and [Google Lighthouse](https://developers.google.com/web/tools/lighthouse/)
 - Optimizes your website for high latency environments (mobile networks)
 - Simplifies single page app development
-- Supports HTTP/2 & IPv6
 - Provides HTTP and HTTPS listener
 - Has a strict content security policy to improve security
 - Shows response time and size for your routes
 - Finishes ongoing requests on a server shutdown
+- Supports HTTP/2, IPv6 and Web Manifest
 - Can run standalone without `nginx` babysitting it
 
 ## Documentation
