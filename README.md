@@ -17,8 +17,14 @@ I already succeeded in getting top scores for all of these checks on one website
 
 ## Documentation
 
-* [API](docs/API.md)
-* [Benchmarks](docs/Benchmarks.md)
+- [API](docs/API.md)
+- [Benchmarks](docs/Benchmarks.md)
+
+## Chat
+
+Feel free to join us on [Discord][discord-url] (better than Slack and IRC).
+
+![Discord](https://puu.sh/y61Ym/3a95a8ce66.png)
 
 ## Work in progress
 
