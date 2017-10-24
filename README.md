@@ -8,7 +8,7 @@ Aero is a high-performance web server with a clean API for web development.
 ## Installation
 
 ```bash
-go get github.com/aerogo/aero
+go get -u github.com/aerogo/aero
 go install github.com/aerogo/aero/cmd/aero
 ```
 
