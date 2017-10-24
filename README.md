@@ -31,6 +31,7 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 - Simplifies single page app development
 - Has a strict content security policy to improve security
 - Shows response time and size for your routes
+- Calculates ETags out of the box (client caching)
 - Provides http: and https: listener
 - Finishes ongoing requests on a server shutdown
 - Supports HTTP/2, IPv6 and Web Manifest
