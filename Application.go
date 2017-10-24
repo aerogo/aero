@@ -17,6 +17,7 @@ import (
 	"encoding/base64"
 
 	"github.com/aerogo/http/client"
+	performance "github.com/aerogo/linter-performance"
 	"github.com/aerogo/session"
 	memstore "github.com/aerogo/session-store-memory"
 	"github.com/fatih/color"
@@ -38,6 +39,7 @@ type Application struct {
 	Sessions session.Manager
 	Security ApplicationSecurity
 	Servers  [2]*http.Server
+	Linters  []Linter
 
 	Router *httprouter.Router
 	routes struct {
@@ -62,11 +64,14 @@ type Application struct {
 func New() *Application {
 	app := new(Application)
 	app.start = time.Now()
-	app.Router = httprouter.New()
 	app.routeTests = make(map[string][]string)
 	app.gzipCache = cache.New(gzipCacheDuration, gzipCacheCleanup)
+	app.Router = httprouter.New()
 	app.Layout = func(ctx *Context, content string) string {
 		return content
+	}
+	app.Linters = []Linter{
+		performance.New(),
 	}
 	app.Config = new(Configuration)
 	app.Config.Reset()
@@ -328,45 +333,14 @@ func (app *Application) TestRoutes() {
 }
 
 // TestRoute tests the given route.
-func (app *Application) TestRoute(label string, route string) {
-	// Measure response time and size
-	start := time.Now()
-	response, _ := client.Get("http://localhost:" + strconv.Itoa(app.Config.Ports.HTTP) + route).End()
-	responseTime := time.Since(start).Nanoseconds() / 1000000
-	responseSize := float64(len(response.RawBytes())) / 1024
-
-	// Show results on terminal
-	PrintTestResult(label, responseTime, responseSize)
-}
-
-// PrintTestResult shows the test result for a route on the terminal.
-func PrintTestResult(label string, responseTime int64, responseSize float64) {
-	faint := color.New(color.Faint).SprintFunc()
-
-	// Response size color
-	var responseSizeColor func(a ...interface{}) string
-
-	switch {
-	case responseSize < 15:
-		responseSizeColor = color.New(color.FgGreen).SprintFunc()
-	case responseSize < 100:
-		responseSizeColor = color.New(color.FgYellow).SprintFunc()
-	default:
-		responseSizeColor = color.New(color.FgRed).SprintFunc()
+func (app *Application) TestRoute(route string, uri string) {
+	for _, linter := range app.Linters {
+		linter.Begin(route, uri)
 	}
 
-	// Response time color
-	var responseTimeColor func(a ...interface{}) string
+	response, _ := client.Get("http://localhost:" + strconv.Itoa(app.Config.Ports.HTTP) + uri).End()
 
-	switch {
-	case responseTime < 10:
-		responseTimeColor = color.New(color.FgGreen).SprintFunc()
-	case responseTime < 100:
-		responseTimeColor = color.New(color.FgYellow).SprintFunc()
-	default:
-		responseTimeColor = color.New(color.FgRed).SprintFunc()
+	for _, linter := range app.Linters {
+		linter.End(route, uri, response)
 	}
-
-	// Output
-	fmt.Printf("%-67s %s %s %s %s\n", color.BlueString(label), responseSizeColor(fmt.Sprintf("%6.0f", responseSize)), faint("KB"), responseTimeColor(fmt.Sprintf("%7d", responseTime)), faint("ms"))
 }
