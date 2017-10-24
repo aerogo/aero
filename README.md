@@ -13,7 +13,7 @@ go get github.com/aerogo/aero
 
 ## Features
 
-- Makes it easy to reach 100/100 scores in [Google PageSpeed](https://developers.google.com/speed/pagespeed/insights/), [Mozilla Observatory](https://observatory.mozilla.org/) and [Google Lighthouse](https://developers.google.com/web/tools/lighthouse/)
+- Makes it easy to reach top scores in [Google PageSpeed](https://developers.google.com/speed/pagespeed/insights/), [Mozilla Observatory](https://observatory.mozilla.org/) and [Google Lighthouse](https://developers.google.com/web/tools/lighthouse/)
 - Optimizes your website for high latency environments (mobile networks)
 - Simplifies single page app development
 - Supports HTTP/2 & IPv6
