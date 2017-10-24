@@ -3,7 +3,7 @@
 [![Godoc reference][godoc-image]][godoc-url]
 [![Discord][discord-image]][discord-url]
 
-Aero is a high-performance web server with strict security limitations and a clean API for web development.
+Aero is a high-performance web server with a clean API for web development.
 
 ## Goals
 
