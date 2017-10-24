@@ -58,6 +58,7 @@ func (config *Configuration) Reset() {
 	config.Manifest.StartURL = "/"
 	config.Manifest.Display = "standalone"
 	config.Manifest.Lang = "en"
+	config.Manifest.ShortName = "Untitled"
 	config.Title = "Untitled site"
 }
 
