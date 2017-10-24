@@ -5,13 +5,23 @@
 
 Aero is a high-performance web server with a clean API for web development.
 
-## Goals
+## Installation
 
-The goal of this project is to make web apps developed in Aero reach maximum score in PageSpeed, Observatory and Lighthouse. These goals are objectively measurable.
+```bash
+go get github.com/aerogo/aero
+```
 
-- [x] Reach 100/100 [Google PageSpeed](https://developers.google.com/speed/pagespeed/insights/) score
-- [x] Reach 120/100 [Mozilla Observatory](https://observatory.mozilla.org/) score (A+)
-- [x] Reach 100/100 [Google Lighthouse](https://developers.google.com/web/tools/lighthouse/) score
+## Features
+
+- Makes it easy to reach 100/100 scores in [Google PageSpeed](https://developers.google.com/speed/pagespeed/insights/), [Mozilla Observatory](https://observatory.mozilla.org/) and [Google Lighthouse](https://developers.google.com/web/tools/lighthouse/)
+- Optimizes your website for high latency environments (mobile networks)
+- Simplifies single page app development
+- Supports HTTP/2 & IPv6
+- Provides HTTP and HTTPS listener
+- Has a strict content security policy to improve security
+- Shows response time and size for your routes
+- Finishes ongoing requests on a server shutdown
+- Can run standalone without `nginx` babysitting it
 
 ## Documentation
 
@@ -24,9 +34,9 @@ Feel free to join us on [Discord][discord-url] (better than Slack and IRC).
 
 ![Discord](https://puu.sh/y62bO/bfb44dbd11.png)
 
-## Work in progress
+## In development
 
-This is an on-going project. The documentation is lacking and API rework happens regularly to provide a better developer experience. Use at your own risk.
+This is an ongoing project. Use at your own risk.
 
 ---
 
