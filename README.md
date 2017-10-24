@@ -13,8 +13,6 @@ The goal of this project is to make web apps developed in Aero reach maximum sco
 - [x] Reach 120/100 [Mozilla Observatory](https://observatory.mozilla.org/) score (A+)
 - [x] Reach 100/100 [Google Lighthouse](https://developers.google.com/web/tools/lighthouse/) score
 
-I already succeeded in getting top scores for all of these checks on one website but I'd still like to lessen the amount of work a developer has to do.
-
 ## Documentation
 
 - [API](docs/API.md)
@@ -24,7 +22,7 @@ I already succeeded in getting top scores for all of these checks on one website
 
 Feel free to join us on [Discord][discord-url] (better than Slack and IRC).
 
-![Discord](https://puu.sh/y61Ym/3a95a8ce66.png)
+![Discord](https://puu.sh/y62bO/bfb44dbd11.png)
 
 ## Work in progress
 
