@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/aerogo/csp"
+
 	"crypto/sha256"
 
 	"encoding/base64"
@@ -32,32 +34,30 @@ const (
 
 // Application represents a single web service.
 type Application struct {
-	root string
+	Config                *Configuration
+	Layout                func(*Context, string) string
+	Sessions              session.Manager
+	Security              ApplicationSecurity
+	Servers               [2]*http.Server
+	Linters               []Linter
+	Router                *httprouter.Router
+	ContentSecurityPolicy *csp.ContentSecurityPolicy
 
-	Config   *Configuration
-	Layout   func(*Context, string) string
-	Sessions session.Manager
-	Security ApplicationSecurity
-	Servers  [2]*http.Server
-	Linters  []Linter
-
-	Router *httprouter.Router
-	routes struct {
-		GET  []string
-		POST []string
-	}
+	root       string
 	routeTests map[string][]string
 	gzipCache  *cache.Cache
 	start      time.Time
 	rewrite    func(*RewriteContext)
-
 	middleware []Middleware
+
+	routes struct {
+		GET  []string
+		POST []string
+	}
 
 	css            string
 	cssHash        string
 	cssReplacement string
-
-	contentSecurityPolicy string
 }
 
 // New creates a new application.
@@ -67,12 +67,32 @@ func New() *Application {
 	app.routeTests = make(map[string][]string)
 	app.gzipCache = cache.New(gzipCacheDuration, gzipCacheCleanup)
 	app.Router = httprouter.New()
+
+	// Default layout
 	app.Layout = func(ctx *Context, content string) string {
 		return content
 	}
+
+	// Default linters
 	app.Linters = []Linter{
 		performance.New(),
 	}
+
+	// Default CSP
+	app.ContentSecurityPolicy = csp.New()
+	app.ContentSecurityPolicy.SetMap(map[string]string{
+		"default-src":  "'none'",
+		"img-src":      "https:",
+		"media-src":    "https:",
+		"script-src":   "'self'",
+		"style-src":    "'self'",
+		"font-src":     "https:",
+		"manifest-src": "'self'",
+		"child-src":    "https:",
+		"connect-src":  "https: wss:",
+	})
+
+	// Configuration
 	app.Config = new(Configuration)
 	app.Config.Reset()
 	app.Load()
@@ -214,7 +234,9 @@ func (app *Application) SetStyle(css string) {
 	// Generate a hash
 	hash := sha256.Sum256([]byte(css))
 	app.cssHash = base64.StdEncoding.EncodeToString(hash[:])
-	app.contentSecurityPolicy = "default-src 'none'; img-src https:; media-src https:; script-src 'self'; style-src 'sha256-" + app.cssHash + "'; font-src https:; manifest-src 'self'; child-src https:; connect-src https: wss:"
+
+	// Content security policy
+	app.ContentSecurityPolicy.Set("style-src", "'sha256-"+app.cssHash+"'")
 
 	// This will be used in the final response later on to inject the CSS code
 	app.cssReplacement = "<style>" + app.css + "</style></head><body"

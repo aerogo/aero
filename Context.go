@@ -189,7 +189,7 @@ func (ctx *Context) HTML(html string) string {
 
 	if ctx.App.Security.Certificate != "" {
 		ctx.response.Header().Set(strictTransportSecurityHeader, strictTransportSecurity)
-		ctx.response.Header().Set(contentSecurityPolicyHeader, ctx.App.contentSecurityPolicy)
+		ctx.response.Header().Set(contentSecurityPolicyHeader, ctx.App.ContentSecurityPolicy.String())
 	}
 
 	return html
