@@ -270,6 +270,7 @@ func (app *Application) createServer(address string) *http.Server {
 		ReadHeaderTimeout: 5 * time.Second,
 		WriteTimeout:      15 * time.Second,
 		IdleTimeout:       120 * time.Second,
+		TLSConfig:         createTLSConfig(),
 	}
 }
 
