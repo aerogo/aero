@@ -160,7 +160,11 @@ func (ctx *Context) HasSession() bool {
 		return false
 	}
 
-	ctx.session, _ = ctx.App.Sessions.Store.Get(cookie.Value)
+	ctx.session, err = ctx.App.Sessions.Store.Get(cookie.Value)
+
+	if err != nil {
+		return false
+	}
 
 	return ctx.session != nil
 }
