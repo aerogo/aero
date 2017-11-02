@@ -89,3 +89,11 @@ app.Rewrite(func(ctx *aero.RewriteContext) {
 	}
 })
 ```
+
+## OnShutdown
+
+```go
+app.OnShutdown(func() {
+	// Free up resources.
+})
+```

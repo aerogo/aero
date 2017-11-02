@@ -49,6 +49,7 @@ type Application struct {
 	start      time.Time
 	rewrite    func(*RewriteContext)
 	middleware []Middleware
+	onShutdown []func()
 
 	routes struct {
 		GET  []string
@@ -220,6 +221,15 @@ func (app *Application) Shutdown() {
 
 		server.Shutdown(context.Background())
 	}
+
+	for _, callback := range app.onShutdown {
+		callback()
+	}
+}
+
+// OnShutdown registers a callback to be executed on server shutdown.
+func (app *Application) OnShutdown(callback func()) {
+	app.onShutdown = append(app.onShutdown, callback)
 }
 
 // Rewrite sets the URL rewrite function.
