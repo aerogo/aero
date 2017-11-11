@@ -316,14 +316,30 @@ func IsMediaType(contentType string) bool {
 }
 
 // pushResources will push the given resources to the HTTP response.
-func pushResources(response http.ResponseWriter, resources []string) {
-	pusher, ok := response.(http.Pusher)
+func (ctx *Context) pushResources() {
+	// Check if all the conditions for a push are met
+	for _, pushCondition := range ctx.App.pushConditions {
+		if !pushCondition(ctx) {
+			return
+		}
+	}
 
-	if ok {
-		for _, resource := range resources {
-			if err := pusher.Push(resource, nil); err != nil {
-				log.Printf("Failed to push %s: %v", resource, err)
-			}
+	// OnPush callbacks
+	for _, callback := range ctx.App.onPush {
+		callback(ctx)
+	}
+
+	// Check if we can push
+	pusher, ok := ctx.response.(http.Pusher)
+
+	if !ok {
+		return
+	}
+
+	// Push every resource defined in config.json
+	for _, resource := range ctx.App.Config.Push {
+		if err := pusher.Push(resource, nil); err != nil {
+			log.Printf("Failed to push %s: %v", resource, err)
 		}
 	}
 }
@@ -345,14 +361,7 @@ func (ctx *Context) respondBytes(b []byte) {
 	// Push
 	if contentType == contentTypeHTML {
 		header.Set(serverHeader, server)
-
-		if ctx.App.PushCondition == nil || ctx.App.PushCondition(ctx) {
-			for _, callback := range ctx.App.onPush {
-				callback(ctx)
-			}
-
-			pushResources(response, ctx.App.Config.Push)
-		}
+		ctx.pushResources()
 	}
 
 	// Cache control header

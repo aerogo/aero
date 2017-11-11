@@ -40,17 +40,17 @@ type Application struct {
 	Servers               [2]*http.Server
 	Linters               []Linter
 	Router                *httprouter.Router
-	PushCondition         func(ctx *Context) bool
 	ContentSecurityPolicy *csp.ContentSecurityPolicy
 
-	root       string
-	routeTests map[string][]string
-	gzipCache  *cache.Cache
-	start      time.Time
-	rewrite    func(*RewriteContext)
-	middleware []Middleware
-	onShutdown []func()
-	onPush     []func(*Context)
+	root           string
+	routeTests     map[string][]string
+	gzipCache      *cache.Cache
+	start          time.Time
+	rewrite        func(*RewriteContext)
+	middleware     []Middleware
+	pushConditions []func(*Context) bool
+	onShutdown     []func()
+	onPush         []func(*Context)
 
 	routes struct {
 		GET  []string
@@ -220,6 +220,11 @@ func (app *Application) OnShutdown(callback func()) {
 // OnPush registers a callback to be executed when an HTTP/2 push happens.
 func (app *Application) OnPush(callback func(*Context)) {
 	app.onPush = append(app.onPush, callback)
+}
+
+// AddPushCondition registers a callback to be executed when an HTTP/2 push happens.
+func (app *Application) AddPushCondition(test func(*Context) bool) {
+	app.pushConditions = append(app.pushConditions, test)
 }
 
 // Rewrite sets the URL rewrite function.
