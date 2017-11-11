@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"mime"
 	"net/http"
 	"path/filepath"
@@ -309,10 +310,22 @@ func (ctx *Context) CanUseWebP() bool {
 	return false
 }
 
-// IsMediaResponse returns whether the given context has already set its content type to a media type.
-func (ctx *Context) IsMediaResponse() bool {
-	contentType := ctx.response.Header().Get(contentTypeHeader)
-	return strings.HasPrefix(contentType, "image/") || strings.HasPrefix(contentType, "video/")
+// IsMediaType returns whether the given content type is a media type.
+func IsMediaType(contentType string) bool {
+	return strings.HasPrefix(contentType, "image/") || strings.HasPrefix(contentType, "video/") || strings.HasPrefix(contentType, "audio/")
+}
+
+// pushResources will push the given resources to the HTTP response.
+func pushResources(response http.ResponseWriter, resources []string) {
+	pusher, ok := response.(http.Pusher)
+
+	if ok {
+		for _, resource := range resources {
+			if err := pusher.Push(resource, nil); err != nil {
+				log.Printf("Failed to push %s: %v", resource, err)
+			}
+		}
+	}
 }
 
 // respond responds either with raw code or gzipped if the
@@ -326,15 +339,27 @@ func (ctx *Context) respond(code string) {
 func (ctx *Context) respondBytes(b []byte) {
 	response := ctx.response
 	header := response.Header()
-	isMedia := ctx.IsMediaResponse()
+	contentType := header.Get(contentTypeHeader)
+	isMedia := IsMediaType(contentType)
 
-	// Headers
+	// Push
+	if contentType == contentTypeHTML {
+		header.Set(serverHeader, server)
+
+		if ctx.App.PushCondition == nil || ctx.App.PushCondition(ctx) {
+			for _, callback := range ctx.App.onPush {
+				callback(ctx)
+			}
+
+			pushResources(response, ctx.App.Config.Push)
+		}
+	}
+
+	// Cache control header
 	if isMedia {
 		header.Set(cacheControlHeader, cacheControlMedia)
 	} else {
 		header.Set(cacheControlHeader, cacheControlAlwaysValidate)
-		header.Set(serverHeader, server)
-		// header.Set(responseTimeHeader, strconv.FormatInt(time.Since(ctx.start).Nanoseconds()/1000, 10)+" us")
 	}
 
 	// Small response

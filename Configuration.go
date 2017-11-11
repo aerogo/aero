@@ -12,6 +12,7 @@ type Configuration struct {
 	Fonts     []string             `json:"fonts"`
 	Styles    []string             `json:"styles"`
 	Scripts   ScriptsConfiguration `json:"scripts"`
+	Push      []string             `json:"push"`
 	Manifest  Manifest             `json:"manifest"`
 	GZip      bool                 `json:"gzip"`
 	GZipCache bool                 `json:"gzipCache"`
