@@ -157,8 +157,8 @@ func (app *Application) createRouteHandler(path string, handle Handle) httproute
 func (app *Application) Ajax(path string, handle Handle) {
 	app.Get("/_"+path, handle)
 	app.Get(path, func(ctx *Context) string {
-		page := handle(ctx)
-		html := app.Layout(ctx, page)
+		content := handle(ctx)
+		html := app.Layout(ctx, content)
 		html = strings.Replace(html, "</head><body", app.cssReplacement, 1)
 		return html
 	})
