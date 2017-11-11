@@ -47,22 +47,16 @@ app.Use(
 
 ## Layout
 
-You can set a global wrapper for your HTML content which will only be used in routes registered via `Ajax()`. `Get()` and `Post()` routes are not affected.
+The server package by itself doesn't concern itself with your layout implementation but you can add [aerogo/layout](https://github.com/aerogo/layout) to register full-page and content-only routes at once.
 
 ```go
-app.Layout = func(ctx *aero.Context, content string) string {
+l := layout.New(app)
+
+l.Render = func(ctx *aero.Context, content string) string {
 	return "<html><head></head><body>" + content + "</body></html>"
 }
-```
 
-It is highly recommended to use a high-performance renderer like [pixy](https://github.com/aerogo/pixy) via [pack](https://github.com/aerogo/pack) for your HTML templates.
-
-## AJAX routing
-
-Registers `/hello` which renders the full page with `app.Layout` and `/_/hello` rendering only the page contents.
-
-```go
-app.Ajax("/hello", func(ctx *aero.Context) string {
+l.Page("/hello", func(ctx *aero.Context) string {
 	return ctx.HTML("<h1>Hello</h1>")
 })
 ```
