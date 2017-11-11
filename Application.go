@@ -235,6 +235,11 @@ func (app *Application) SetStyle(css string) {
 	app.cssReplacement = "<style>" + app.css + "</style></head><body"
 }
 
+// Finalize post-processes the HTML to add styles to the output.
+func (app *Application) Finalize(html string) string {
+	return strings.Replace(html, "</head><body", app.cssReplacement, 1)
+}
+
 // StartTime returns the time the application started.
 func (app *Application) StartTime() time.Time {
 	return app.start
