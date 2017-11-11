@@ -35,7 +35,6 @@ const (
 // Application represents a single web service.
 type Application struct {
 	Config                *Configuration
-	Layout                func(*Context, string) string
 	Sessions              session.Manager
 	Security              ApplicationSecurity
 	Servers               [2]*http.Server
@@ -68,11 +67,6 @@ func New() *Application {
 	app.routeTests = make(map[string][]string)
 	app.gzipCache = cache.New(gzipCacheDuration, gzipCacheCleanup)
 	app.Router = httprouter.New()
-
-	// Default layout
-	app.Layout = func(ctx *Context, content string) string {
-		return content
-	}
 
 	// Default linters
 	app.Linters = []Linter{
@@ -151,17 +145,6 @@ func (app *Application) createRouteHandler(path string, handle Handle) httproute
 
 		generateNext(0)()
 	}
-}
-
-// Ajax calls app.Get for both /route and /_/route
-func (app *Application) Ajax(path string, handle Handle) {
-	app.Get("/_"+path, handle)
-	app.Get(path, func(ctx *Context) string {
-		content := handle(ctx)
-		html := app.Layout(ctx, content)
-		html = strings.Replace(html, "</head><body", app.cssReplacement, 1)
-		return html
-	})
 }
 
 // Run starts your application.
