@@ -83,7 +83,7 @@ func New() *Application {
 		"style-src":    "'self'",
 		"font-src":     "https:",
 		"manifest-src": "'self'",
-		"child-src":    "https:",
+		"frame-src":    "https:",
 		"connect-src":  "https: wss:",
 	})
 
