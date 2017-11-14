@@ -193,7 +193,7 @@ func (app *Application) Listen() {
 // Wait will make the process wait until it is killed.
 func (app *Application) Wait() {
 	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+	signal.Notify(stop, os.Interrupt, os.Kill, syscall.SIGTERM)
 	<-stop
 }
 
@@ -204,7 +204,11 @@ func (app *Application) Shutdown() {
 			continue
 		}
 
-		server.Shutdown(context.Background())
+		err := server.Shutdown(context.Background())
+
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 
 	for _, callback := range app.onShutdown {
