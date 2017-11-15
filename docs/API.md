@@ -45,6 +45,12 @@ app.Use(
 )
 ```
 
+## Starting server
+
+```go
+app.Run()
+```
+
 ## Layout
 
 The server package by itself doesn't concern itself with your layout implementation but you can add [aerogo/layout](https://github.com/aerogo/layout) to register full-page and content-only routes at once.
