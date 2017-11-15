@@ -34,3 +34,16 @@ The ports that will be used for the HTTP and HTTPS listener.
 	}
 }
 ```
+
+## push
+
+Specifies resources that you want to be HTTP/2 pushed on first load:
+
+```json
+{
+	"push": [
+		"/scripts.js",
+		"/image.webp"
+	]
+}
+```
