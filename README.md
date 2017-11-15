@@ -28,7 +28,7 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 
 - Makes it easy to reach top scores in [Google PageSpeed](https://developers.google.com/speed/pagespeed/insights/), [Mozilla Observatory](https://observatory.mozilla.org/) and [Google Lighthouse](https://developers.google.com/web/tools/lighthouse/)
 - Optimizes your website for high latency environments (mobile networks)
-- Simplifies single page app development
+- Can simplify single page app development via the optional [aerogo/layout](https://github.com/aerogo/layout)
 - Has a strict content security policy to improve security
 - Shows response time and size for your routes
 - Calculates ETags out of the box (client caching)
@@ -42,6 +42,19 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 
 - [API](docs/API.md)
 - [Benchmarks](docs/Benchmarks.md)
+
+## Optional
+
+- [layout](https://github.com/aerogo/layout) as a layout system
+- [pack](https://github.com/aerogo/pack) to compile Pixy, Scarlet and JS assets in record time
+- [run](https://github.com/aerogo/run) which automatically restarts your server on code/template/style changes
+- [pixy](https://github.com/aerogo/pixy) as a high-performance template engine similar to Jade/Pug
+- [scarlet](https://github.com/aerogo/scarlet) as an aggressively compressing stylesheet preprocessor
+- [nano](https://github.com/aerogo/nano) as the fastest decentralized database that has ever existed (alpha)
+- [api](https://github.com/aerogo/api) to automatically implement your REST API routes
+- [markdown](https://github.com/aerogo/markdown) as an overly simplified markdown wrapper
+- [http](https://github.com/aerogo/http) as an HTTP client with a simple and clean API
+- [log](https://github.com/aerogo/log) for simple & performant logging
 
 ## Chat
 
