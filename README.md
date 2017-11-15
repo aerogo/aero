@@ -56,15 +56,15 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 - [http](https://github.com/aerogo/http) as an HTTP client with a simple and clean API
 - [log](https://github.com/aerogo/log) for simple & performant logging
 
+## In development
+
+This is an ongoing project under heavy development. API stability is **not guaranteed**. Use at your own risk.
+
 ## Chat
 
 Feel free to join us on [Discord][discord-url] (better than Slack and IRC).
 
 ![Discord](https://puu.sh/y62bO/bfb44dbd11.png)
-
-## In development
-
-This is an ongoing project. Use at your own risk.
 
 ---
 
