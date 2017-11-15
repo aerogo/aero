@@ -26,16 +26,15 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 
 ## Features
 
-- Makes it easy to reach top scores in [Google PageSpeed](https://developers.google.com/speed/pagespeed/insights/), [Mozilla Observatory](https://observatory.mozilla.org/) and [Google Lighthouse](https://developers.google.com/web/tools/lighthouse/)
-- Optimizes your website for high latency environments (mobile networks)
-- Can simplify single page app development via the optional [aerogo/layout](https://github.com/aerogo/layout)
-- Has a strict content security policy to improve security
-- Shows response time and size for your routes
-- Calculates ETags out of the box (client caching)
-- Provides http: and https: listener
+- Makes it easy to reach top scores in [Lighthouse](https://developers.google.com/web/tools/lighthouse/), [PageSpeed](https://developers.google.com/speed/pagespeed/insights/) and [Mozilla Observatory](https://observatory.mozilla.org/)
+- Optimized for high latency environments (mobile networks)
+- Has a strict content security policy
+- Calculates E-Tags out of the box
 - Finishes ongoing requests on a server shutdown
 - Supports HTTP/2, IPv6 and Web Manifest
 - Automatic HTTP/2 push of configured resources
+- Provides http and https listener
+- Shows response time and size for your routes
 - Can run standalone without `nginx` babysitting it
 
 ## Optional
@@ -56,10 +55,6 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 - [API](docs/API.md)
 - [Configuration](docs/Configuration.md)
 - [Benchmarks](docs/Benchmarks.md)
-
-## Stability
-
-The server has been used in production (without `nginx`) for the past couple months and hasn't crashed once.
 
 ---
 
