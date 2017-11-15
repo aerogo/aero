@@ -165,12 +165,14 @@ func (app *Application) Use(middlewares ...Middleware) {
 
 // Load loads the application configuration from config.json.
 func (app *Application) Load() {
-	var err error
-	app.Config, err = LoadConfig("config.json")
+	config, err := LoadConfig("config.json")
 
 	if err != nil {
-		color.Red(err.Error())
+		// Ignore missing config file, we can perfectly run without one
+		return
 	}
+
+	app.Config = config
 }
 
 // Listen starts the server.

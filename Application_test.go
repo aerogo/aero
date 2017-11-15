@@ -3,6 +3,7 @@ package aero_test
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/aerogo/aero"
@@ -68,4 +69,22 @@ func TestApplicationRewrite(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, responseRecorder.Code)
 	assert.Equal(t, helloWorld, responseRecorder.Body.String())
+}
+
+func TestApplicationGetBigResponse(t *testing.T) {
+	text := strings.Repeat("Hello World", 1000000)
+	app := aero.New()
+
+	app.Get("/", func(ctx *aero.Context) string {
+		return ctx.Text(text)
+	})
+
+	request, err := http.NewRequest("GET", "/", nil)
+	assert.NoError(t, err)
+
+	responseRecorder := httptest.NewRecorder()
+	app.Handler().ServeHTTP(responseRecorder, request)
+
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	assert.Equal(t, "gzip", responseRecorder.Header().Get("Content-Encoding"))
 }
