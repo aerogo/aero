@@ -54,6 +54,7 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 ## Documentation
 
 - [API](docs/API.md)
+- [Configuration](docs/Configuration.md)
 - [Benchmarks](docs/Benchmarks.md)
 
 ## In development
