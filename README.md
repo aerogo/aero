@@ -38,11 +38,6 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 - Supports HTTP/2 push of resources (add resource URL to "push" in config.json)
 - Can run standalone without `nginx` babysitting it
 
-## Documentation
-
-- [API](docs/API.md)
-- [Benchmarks](docs/Benchmarks.md)
-
 ## Optional
 
 - [layout](https://github.com/aerogo/layout) as a layout system
@@ -55,6 +50,11 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 - [markdown](https://github.com/aerogo/markdown) as an overly simplified markdown wrapper
 - [http](https://github.com/aerogo/http) as an HTTP client with a simple and clean API
 - [log](https://github.com/aerogo/log) for simple & performant logging
+
+## Documentation
+
+- [API](docs/API.md)
+- [Benchmarks](docs/Benchmarks.md)
 
 ## In development
 
