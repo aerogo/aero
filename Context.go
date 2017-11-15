@@ -226,15 +226,6 @@ func (ctx *Context) File(file string) string {
 	return string(data)
 }
 
-// TryWebP tries to serve a WebP image but will fall back to the specified extension if needed.
-func (ctx *Context) TryWebP(path string, extension string) string {
-	if ctx.CanUseWebP() {
-		extension = ".webp"
-	}
-
-	return ctx.File(path + extension)
-}
-
 // Error should be used for sending error messages to the user.
 func (ctx *Context) Error(statusCode int, explanation string, err error) string {
 	ctx.StatusCode = statusCode
@@ -297,17 +288,6 @@ func (ctx *Context) RedirectPermanently(url string) string {
 	ctx.StatusCode = http.StatusPermanentRedirect
 	ctx.response.Header().Set("Location", url)
 	return ""
-}
-
-// CanUseWebP checks the Accept header to find out if WebP is supported by the client's browser.
-func (ctx *Context) CanUseWebP() bool {
-	accept := ctx.request.Header.Get("Accept")
-
-	if strings.Index(accept, "image/webp") != -1 {
-		return true
-	}
-
-	return false
 }
 
 // IsMediaType returns whether the given content type is a media type.
