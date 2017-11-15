@@ -35,6 +35,7 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 - Provides http: and https: listener
 - Finishes ongoing requests on a server shutdown
 - Supports HTTP/2, IPv6 and Web Manifest
+- Supports HTTP/2 push of resources (add resource URL to "push" in config.json)
 - Can run standalone without `nginx` babysitting it
 
 ## Documentation

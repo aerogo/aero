@@ -91,3 +91,14 @@ app.OnShutdown(func() {
 	// Free up resources.
 })
 ```
+
+## AddPushCondition
+
+By default, HTTP/2 push will only trigger on `text/html` responses. You can add more conditions via:
+
+```go
+// Do not use HTTP/2 push on service worker requests
+app.AddPushCondition(func(ctx *aero.Context) bool {
+	return ctx.Request().Header().Get("X-Source") != "service-worker"
+})
+```
