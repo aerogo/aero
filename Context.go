@@ -60,7 +60,7 @@ const (
 	contentSecurityPolicyHeader   = "Content-Security-Policy"
 )
 
-// Context ...
+// Context represents a single request & response.
 type Context struct {
 	// net/http
 	request  *http.Request

@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 )
 
-// Configuration ...
+// Configuration represents the data in your config.json file.
 type Configuration struct {
 	Domain    string               `json:"domain"`
 	Title     string               `json:"title"`
@@ -19,7 +19,7 @@ type Configuration struct {
 	Ports     PortConfiguration    `json:"ports"`
 }
 
-// ScriptsConfiguration ...
+// ScriptsConfiguration lets you configure your main entry script.
 type ScriptsConfiguration struct {
 	// Entry point for scripts
 	Main string `json:"main"`
@@ -44,7 +44,7 @@ type ManifestIcon struct {
 	Sizes  string `json:"sizes"`
 }
 
-// PortConfiguration ...
+// PortConfiguration lets you configure the ports that Aero will listen on.
 type PortConfiguration struct {
 	HTTP  int `json:"http"`
 	HTTPS int `json:"https"`
