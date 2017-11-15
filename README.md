@@ -57,15 +57,9 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 - [Configuration](docs/Configuration.md)
 - [Benchmarks](docs/Benchmarks.md)
 
-## In development
+## Stability
 
-This is an ongoing project under heavy development. API stability is **not guaranteed**. Use at your own risk.
-
-## Chat
-
-Feel free to join us on [Discord][discord-url] (better than Slack and IRC).
-
-![Discord](https://puu.sh/y62bO/bfb44dbd11.png)
+The server has been used in production (without `nginx`) for the past couple months and hasn't crashed once.
 
 ---
 
