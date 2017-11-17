@@ -262,7 +262,7 @@ func (ctx *Context) GetInt(param string) (int, error) {
 
 // RealIP tries to determine the real IP address of the request.
 func (ctx *Context) RealIP() string {
-	return realip.RealIP(ctx.request)
+	return strings.Trim(realip.RealIP(ctx.request), "[]")
 }
 
 // UserAgent retrieves the user agent for the given request.
