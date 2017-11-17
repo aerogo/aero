@@ -45,6 +45,7 @@ const (
 	contentTypeHTML               = "text/html; charset=utf-8"
 	contentTypeJavaScript         = "application/javascript; charset=utf-8"
 	contentTypeJSON               = "application/json; charset=utf-8"
+	contentTypeJSONLD             = "application/ld+json; charset=utf-8"
 	contentTypePlainText          = "text/plain; charset=utf-8"
 	contentEncodingHeader         = "Content-Encoding"
 	contentEncodingGzip           = "gzip"
@@ -173,6 +174,20 @@ func (ctx *Context) HasSession() bool {
 // JSON encodes the object to a JSON string and responds.
 func (ctx *Context) JSON(value interface{}) string {
 	ctx.response.Header().Set(contentTypeHeader, contentTypeJSON)
+
+	bytes, err := json.Marshal(value)
+
+	if err != nil {
+		ctx.StatusCode = http.StatusInternalServerError
+		return `{"error": "Could not encode object to JSON"}`
+	}
+
+	return string(bytes)
+}
+
+// JSONLinkedData encodes the object to a JSON linked data string and responds.
+func (ctx *Context) JSONLinkedData(value interface{}) string {
+	ctx.response.Header().Set(contentTypeHeader, contentTypeJSONLD)
 
 	bytes, err := json.Marshal(value)
 
