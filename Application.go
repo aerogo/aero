@@ -97,6 +97,9 @@ func New() *Application {
 	// Default session store: Memory
 	app.Sessions.Store = memstore.New()
 
+	// Default style
+	app.SetStyle("")
+
 	return app
 }
 
