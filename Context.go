@@ -360,17 +360,16 @@ func (ctx *Context) respondBytes(b []byte) {
 	contentType := header.Get(contentTypeHeader)
 	isMedia := IsMediaType(contentType)
 
-	// Push
-	if contentType == contentTypeHTML {
-		header.Set(serverHeader, server)
-		ctx.pushResources()
-	}
-
 	// Cache control header
 	if isMedia {
 		header.Set(cacheControlHeader, cacheControlMedia)
 	} else {
 		header.Set(cacheControlHeader, cacheControlAlwaysValidate)
+	}
+
+	// Push
+	if contentType == contentTypeHTML && len(ctx.App.Config.Push) > 0 {
+		defer ctx.pushResources()
 	}
 
 	// Small response
