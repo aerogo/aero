@@ -43,6 +43,7 @@ const (
 	etagHeader                    = "ETag"
 	contentTypeHeader             = "Content-Type"
 	contentTypeHTML               = "text/html; charset=utf-8"
+	contentTypeCSS                = "text/css; charset=utf-8"
 	contentTypeJavaScript         = "application/javascript; charset=utf-8"
 	contentTypeJSON               = "application/json; charset=utf-8"
 	contentTypeJSONLD             = "application/ld+json; charset=utf-8"
@@ -218,6 +219,12 @@ func (ctx *Context) HTML(html string) string {
 // Text sends a plain text string.
 func (ctx *Context) Text(text string) string {
 	ctx.response.Header().Set(contentTypeHeader, contentTypePlainText)
+	return text
+}
+
+// CSS sends a style sheet.
+func (ctx *Context) CSS(text string) string {
+	ctx.response.Header().Set(contentTypeHeader, contentTypeCSS)
 	return text
 }
 

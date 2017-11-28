@@ -98,7 +98,7 @@ func New() *Application {
 	app.Sessions.Store = memstore.New()
 
 	// Default style
-	app.SetStyle("")
+	// app.SetStyle("")
 
 	return app
 }
@@ -258,6 +258,10 @@ func (app *Application) SetStyle(css string) {
 
 // Finalize post-processes the HTML to add styles to the output.
 func (app *Application) Finalize(html string) string {
+	if app.cssReplacement == "" {
+		return html
+	}
+
 	return strings.Replace(html, "</head><body", app.cssReplacement, 1)
 }
 
