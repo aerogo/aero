@@ -87,7 +87,7 @@ func New() *Application {
 		"manifest-src": "'self'",
 		"child-src":    "https:",
 		"connect-src":  "https: wss:",
-		"worker-src":   "https:",
+		"worker-src":   "'self'",
 	})
 
 	// Configuration
