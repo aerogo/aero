@@ -398,9 +398,9 @@ func (ctx *Context) respondBytes(b []byte) {
 	header.Set(etagHeader, etag)
 
 	// No GZip?
-	supportsGzip := strings.Contains(ctx.request.Header.Get(acceptEncodingHeader), "gzip")
+	supportsGZip := strings.Contains(ctx.request.Header.Get(acceptEncodingHeader), "gzip")
 
-	if !ctx.App.Config.GZip || !supportsGzip || isMedia {
+	if !ctx.App.Config.GZip || !supportsGZip || isMedia {
 		header.Set(contentLengthHeader, strconv.Itoa(len(b)))
 		response.WriteHeader(ctx.StatusCode)
 		response.Write(b)
