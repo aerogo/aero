@@ -50,6 +50,7 @@ const (
 	contentTypePlainText          = "text/plain; charset=utf-8"
 	contentEncodingHeader         = "Content-Encoding"
 	contentEncodingGzip           = "gzip"
+	acceptEncodingHeader          = "Accept-Encoding"
 	contentLengthHeader           = "Content-Length"
 	responseTimeHeader            = "X-Response-Time"
 	ifNoneMatchHeader             = "If-None-Match"
@@ -397,7 +398,9 @@ func (ctx *Context) respondBytes(b []byte) {
 	header.Set(etagHeader, etag)
 
 	// No GZip?
-	if !ctx.App.Config.GZip || isMedia {
+	supportsGzip := strings.Contains(ctx.request.Header.Get(acceptEncodingHeader), "gzip")
+
+	if !ctx.App.Config.GZip || !supportsGzip || isMedia {
 		header.Set(contentLengthHeader, strconv.Itoa(len(b)))
 		response.WriteHeader(ctx.StatusCode)
 		response.Write(b)
