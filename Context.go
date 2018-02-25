@@ -63,6 +63,15 @@ const (
 	contentSecurityPolicyHeader   = "Content-Security-Policy"
 )
 
+// Push options describes the headers that are sent
+// to our server to retrieve the push response.
+var pushOptions = http.PushOptions{
+	Method: "GET",
+	Header: http.Header{
+		acceptEncodingHeader: []string{"gzip"},
+	},
+}
+
 // Context represents a single request & response.
 type Context struct {
 	// net/http
@@ -341,7 +350,7 @@ func (ctx *Context) pushResources() {
 
 	// Push every resource defined in config.json
 	for _, resource := range ctx.App.Config.Push {
-		if err := pusher.Push(resource, nil); err != nil {
+		if err := pusher.Push(resource, &pushOptions); err != nil {
 			log.Printf("Failed to push %s: %v", resource, err)
 		}
 	}
