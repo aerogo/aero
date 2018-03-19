@@ -1,5 +1,7 @@
 # API
 
+Unless specified otherwise, the API is considered to be stable.
+
 ## Creating an app
 
 ```go
@@ -24,6 +26,8 @@ app.Get("/hello/:person", func(ctx *aero.Context) string {
 
 ## Middleware
 
+You can run middleware functions that are executed after the routing phase and before the final request handler.
+
 ```go
 app.Use(func(ctx *aero.Context, next func()) {
 	start := time.Now()
@@ -32,6 +36,10 @@ app.Use(func(ctx *aero.Context, next func()) {
 	fmt.Println(responseTime)
 })
 ```
+
+It is possible to implement a firewall by filtering requests and denying the `next()` call as the final request handler is also part of the middleware chain. Not calling `next()` means the request will not be handled.
+
+It is also possible to create a request / access log that includes performance timings as shown in the code example above. `ctx.URI()` will retrieve the URI of the request. Note that the actual logging happens **after** the request has been dealt with (`next()` call) which makes it efficient.
 
 ## Multiple middleware
 
@@ -47,27 +55,35 @@ app.Use(
 
 ## Starting server
 
+This will start the server and block until a termination signal arrives.
+
 ```go
 app.Run()
 ```
 
 ## Layout
 
-The server package by itself doesn't concern itself with your layout implementation but you can add [aerogo/layout](https://github.com/aerogo/layout) to register full-page and content-only routes at once.
+The server package by itself does **not** concern itself with the implementation of your layout system but you can add [aerogo/layout](https://github.com/aerogo/layout) to register full-page and content-only routes at once.
 
 ```go
+// Create a new aerogo/layout
 l := layout.New(app)
 
+// Specify the page frame
 l.Render = func(ctx *aero.Context, content string) string {
 	return "<html><head></head><body>" + content + "</body></html>"
 }
 
+// Register the /hello page.
+// The page without the page frame will be available under /_/hello
 l.Page("/hello", func(ctx *aero.Context) string {
 	return ctx.HTML("<h1>Hello</h1>")
 })
 ```
 
 ## Styling
+
+*Stability: SetStyle inlining **might** be deprecated in the future (HTTP/2 push of styles is preferred).*
 
 Calculates the SHA-1 hash of the CSS string, sets `Content-Security-Policy` to only accept this hash as the style and registers the CSS to be sent inline in the very first response to avoid [render blocking CSS](https://developers.google.com/web/fundamentals/performance/critical-rendering-path/render-blocking-css).
 
@@ -77,7 +93,7 @@ app.SetStyle("body{color:red}")
 
 ## Rewrite
 
-You can change the internal URI before routing happens:
+Rewrites the internal URI before routing happens:
 
 ```go
 app.Rewrite(func(ctx *aero.RewriteContext) {
@@ -90,7 +106,11 @@ app.Rewrite(func(ctx *aero.RewriteContext) {
 })
 ```
 
+Only one rewrite function can be active in an Application. Multiple calls will overwrite the previously registered function.
+
 ## OnShutdown
+
+In case the server is terminated by outside factors such as the operating system, you can specify a function to be called in that event.
 
 ```go
 app.OnShutdown(func() {
@@ -108,3 +128,5 @@ app.AddPushCondition(func(ctx *aero.Context) bool {
 	return ctx.Request().Header().Get("X-Source") != "service-worker"
 })
 ```
+
+Returning `true` for a given request will allow the push of resources while returning `false` will cancel the push immediately in the given request.

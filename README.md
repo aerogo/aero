@@ -44,7 +44,7 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 - [run](https://github.com/aerogo/run) which automatically restarts your server on code/template/style changes
 - [pixy](https://github.com/aerogo/pixy) as a high-performance template engine similar to Jade/Pug
 - [scarlet](https://github.com/aerogo/scarlet) as an aggressively compressing stylesheet preprocessor
-- [nano](https://github.com/aerogo/nano) as the fastest decentralized database that has ever existed (experimental alpha)
+- [nano](https://github.com/aerogo/nano) as a fast, decentralized and git-trackable database
 - [api](https://github.com/aerogo/api) to automatically implement your REST API routes
 - [markdown](https://github.com/aerogo/markdown) as an overly simplified markdown wrapper
 - [http](https://github.com/aerogo/http) as an HTTP client with a simple and clean API
