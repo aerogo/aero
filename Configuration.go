@@ -42,6 +42,7 @@ type Manifest struct {
 type ManifestIcon struct {
 	Source string `json:"src"`
 	Sizes  string `json:"sizes"`
+	Type   string `json:"type"`
 }
 
 // PortConfiguration lets you configure the ports that Aero will listen on.
