@@ -1,8 +1,7 @@
 package aero
 
 import (
-	"bufio"
-	"bytes"
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -17,9 +16,7 @@ import (
 	"github.com/aerogo/session"
 	"github.com/fatih/color"
 	"github.com/julienschmidt/httprouter"
-	cache "github.com/patrickmn/go-cache"
 	"github.com/tomasen/realip"
-	"github.com/valyala/fasthttp"
 )
 
 // This should be close to the MTU size of a TCP packet.
@@ -418,30 +415,10 @@ func (ctx *Context) respondBytes(b []byte) {
 
 	// GZip
 	header.Set(contentEncodingHeader, contentEncodingGzip)
-
-	if ctx.App.Config.GZipCache {
-		cachedResponse, found := ctx.App.gzipCache.Get(etag)
-
-		if found {
-			cachedResponseBytes := cachedResponse.([]byte)
-			header.Set(contentLengthHeader, strconv.Itoa(len(cachedResponseBytes)))
-			response.WriteHeader(ctx.StatusCode)
-			response.Write(cachedResponseBytes)
-			return
-		}
-	}
-
-	var buffer bytes.Buffer
-	writer := bufio.NewWriter(&buffer)
-	fasthttp.WriteGzipLevel(writer, b, 9)
-	writer.Flush()
-	gzippedBytes := buffer.Bytes()
-
-	header.Set(contentLengthHeader, strconv.Itoa(len(gzippedBytes)))
 	response.WriteHeader(ctx.StatusCode)
-	response.Write(gzippedBytes)
 
-	if ctx.App.Config.GZipCache {
-		ctx.App.gzipCache.Set(etag, gzippedBytes, cache.DefaultExpiration)
-	}
+	// Write response body
+	writer, _ := gzip.NewWriterLevel(response, gzip.BestCompression)
+	writer.Write(b)
+	writer.Flush()
 }

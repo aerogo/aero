@@ -24,12 +24,6 @@ import (
 	memstore "github.com/aerogo/session-store-memory"
 	"github.com/fatih/color"
 	"github.com/julienschmidt/httprouter"
-	cache "github.com/patrickmn/go-cache"
-)
-
-const (
-	gzipCacheDuration = 5 * time.Minute
-	gzipCacheCleanup  = 1 * time.Minute
 )
 
 // Application represents a single web service.
@@ -44,7 +38,6 @@ type Application struct {
 
 	root           string
 	routeTests     map[string][]string
-	gzipCache      *cache.Cache
 	start          time.Time
 	rewrite        func(*RewriteContext)
 	middleware     []Middleware
@@ -67,7 +60,6 @@ func New() *Application {
 	app := new(Application)
 	app.start = time.Now()
 	app.routeTests = make(map[string][]string)
-	app.gzipCache = cache.New(gzipCacheDuration, gzipCacheCleanup)
 	app.Router = httprouter.New()
 
 	// Default linters

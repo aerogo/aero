@@ -7,16 +7,15 @@ import (
 
 // Configuration represents the data in your config.json file.
 type Configuration struct {
-	Domain    string               `json:"domain"`
-	Title     string               `json:"title"`
-	Fonts     []string             `json:"fonts"`
-	Styles    []string             `json:"styles"`
-	Scripts   ScriptsConfiguration `json:"scripts"`
-	Push      []string             `json:"push"`
-	Manifest  Manifest             `json:"manifest"`
-	GZip      bool                 `json:"gzip"`
-	GZipCache bool                 `json:"gzipCache"`
-	Ports     PortConfiguration    `json:"ports"`
+	Domain   string               `json:"domain"`
+	Title    string               `json:"title"`
+	Fonts    []string             `json:"fonts"`
+	Styles   []string             `json:"styles"`
+	Scripts  ScriptsConfiguration `json:"scripts"`
+	Push     []string             `json:"push"`
+	Manifest Manifest             `json:"manifest"`
+	GZip     bool                 `json:"gzip"`
+	Ports    PortConfiguration    `json:"ports"`
 }
 
 // ScriptsConfiguration lets you configure your main entry script.
@@ -54,7 +53,6 @@ type PortConfiguration struct {
 // Reset resets all fields to the default configuration.
 func (config *Configuration) Reset() {
 	config.GZip = true
-	config.GZipCache = true
 	config.Ports.HTTP = 4000
 	config.Ports.HTTPS = 4001
 	config.Manifest.StartURL = "/"
