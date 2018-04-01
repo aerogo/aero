@@ -71,9 +71,11 @@ func TestApplicationRewrite(t *testing.T) {
 	assert.Equal(t, helloWorld, responseRecorder.Body.String())
 }
 
-func TestApplicationGetBigResponse(t *testing.T) {
+func TestBigResponse(t *testing.T) {
 	text := strings.Repeat("Hello World", 1000000)
 	app := aero.New()
+
+	assert.Equal(t, true, app.Config.GZip)
 
 	app.Get("/", func(ctx *aero.Context) string {
 		return ctx.Text(text)
@@ -81,6 +83,8 @@ func TestApplicationGetBigResponse(t *testing.T) {
 
 	request, err := http.NewRequest("GET", "/", nil)
 	assert.NoError(t, err)
+
+	request.Header.Set("Accept-Encoding", "gzip")
 
 	responseRecorder := httptest.NewRecorder()
 	app.Handler().ServeHTTP(responseRecorder, request)
