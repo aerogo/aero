@@ -71,11 +71,10 @@ func LoadConfig(path string) (*Configuration, error) {
 		return nil, err
 	}
 
-	decoder := json.NewDecoder(file)
-
 	config := &Configuration{}
 	config.Reset()
 
+	decoder := json.NewDecoder(file)
 	err = decoder.Decode(config)
 
 	if err != nil {
