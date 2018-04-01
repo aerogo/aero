@@ -10,50 +10,53 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const helloWorld = "Hello World"
+
 func TestApplicationGet(t *testing.T) {
-	helloWorld := "Hello World"
 	app := aero.New()
 
+	// Register route
 	app.Get("/", func(ctx *aero.Context) string {
 		return ctx.Text(helloWorld)
 	})
 
-	request, err := http.NewRequest("GET", "/", nil)
-	assert.NoError(t, err)
+	// Get response
+	request, _ := http.NewRequest("GET", "/", nil)
+	response := httptest.NewRecorder()
+	app.Handler().ServeHTTP(response, request)
 
-	responseRecorder := httptest.NewRecorder()
-	app.Handler().ServeHTTP(responseRecorder, request)
-
-	assert.Equal(t, http.StatusOK, responseRecorder.Code)
-	assert.Equal(t, helloWorld, responseRecorder.Body.String())
+	// Verify response
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, helloWorld, response.Body.String())
 }
 
 func TestApplicationPost(t *testing.T) {
-	helloWorld := "Hello World"
 	app := aero.New()
 
+	// Register route
 	app.Post("/", func(ctx *aero.Context) string {
 		return ctx.Text(helloWorld)
 	})
 
-	request, err := http.NewRequest("POST", "/", nil)
-	assert.NoError(t, err)
+	// Get response
+	request, _ := http.NewRequest("POST", "/", nil)
+	response := httptest.NewRecorder()
+	app.Handler().ServeHTTP(response, request)
 
-	responseRecorder := httptest.NewRecorder()
-	app.Handler().ServeHTTP(responseRecorder, request)
-
-	assert.Equal(t, http.StatusOK, responseRecorder.Code)
-	assert.Equal(t, helloWorld, responseRecorder.Body.String())
+	// Verify response
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, helloWorld, response.Body.String())
 }
 
 func TestApplicationRewrite(t *testing.T) {
-	helloWorld := "Hello World"
 	app := aero.New()
 
+	// Register route
 	app.Get("/hello", func(ctx *aero.Context) string {
 		return ctx.Text(helloWorld)
 	})
 
+	// Rewrite route
 	app.Rewrite(func(ctx *aero.RewriteContext) {
 		if ctx.URI() == "/" {
 			ctx.SetURI("/hello")
@@ -61,34 +64,37 @@ func TestApplicationRewrite(t *testing.T) {
 		}
 	})
 
-	request, err := http.NewRequest("GET", "/", nil)
-	assert.NoError(t, err)
+	// Get response
+	request, _ := http.NewRequest("GET", "/", nil)
+	response := httptest.NewRecorder()
+	app.Handler().ServeHTTP(response, request)
 
-	responseRecorder := httptest.NewRecorder()
-	app.Handler().ServeHTTP(responseRecorder, request)
-
-	assert.Equal(t, http.StatusOK, responseRecorder.Code)
-	assert.Equal(t, helloWorld, responseRecorder.Body.String())
+	// Verify response
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, helloWorld, response.Body.String())
 }
 
 func TestBigResponse(t *testing.T) {
 	text := strings.Repeat("Hello World", 1000000)
 	app := aero.New()
 
+	// Make sure GZip is enabled
 	assert.Equal(t, true, app.Config.GZip)
 
+	// Register route
 	app.Get("/", func(ctx *aero.Context) string {
 		return ctx.Text(text)
 	})
 
-	request, err := http.NewRequest("GET", "/", nil)
-	assert.NoError(t, err)
-
+	// Create request
+	request, _ := http.NewRequest("GET", "/", nil)
 	request.Header.Set("Accept-Encoding", "gzip")
 
-	responseRecorder := httptest.NewRecorder()
-	app.Handler().ServeHTTP(responseRecorder, request)
+	// Get response
+	response := httptest.NewRecorder()
+	app.Handler().ServeHTTP(response, request)
 
-	assert.Equal(t, http.StatusOK, responseRecorder.Code)
-	assert.Equal(t, "gzip", responseRecorder.Header().Get("Content-Encoding"))
+	// Verify the response
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, "gzip", response.Header().Get("Content-Encoding"))
 }
