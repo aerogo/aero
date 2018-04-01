@@ -79,15 +79,12 @@ func TestApplicationGetBigResponse(t *testing.T) {
 		return ctx.Text(text)
 	})
 
-	// Query twice to trigger a cached response
-	for i := 0; i < 2; i++ {
-		request, err := http.NewRequest("GET", "/", nil)
-		assert.NoError(t, err)
+	request, err := http.NewRequest("GET", "/", nil)
+	assert.NoError(t, err)
 
-		responseRecorder := httptest.NewRecorder()
-		app.Handler().ServeHTTP(responseRecorder, request)
+	responseRecorder := httptest.NewRecorder()
+	app.Handler().ServeHTTP(responseRecorder, request)
 
-		assert.Equal(t, http.StatusOK, responseRecorder.Code)
-		assert.Equal(t, "gzip", responseRecorder.Header().Get("Content-Encoding"))
-	}
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	assert.Equal(t, "gzip", responseRecorder.Header().Get("Content-Encoding"))
 }

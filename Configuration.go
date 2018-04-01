@@ -2,7 +2,7 @@ package aero
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 )
 
 // Configuration represents the data in your config.json file.
@@ -64,19 +64,22 @@ func (config *Configuration) Reset() {
 
 // LoadConfig loads the application configuration from the file system.
 func LoadConfig(path string) (*Configuration, error) {
-	data, err := ioutil.ReadFile(path)
+	file, err := os.Open(path)
+	defer file.Close()
 
 	if err != nil {
 		return nil, err
 	}
 
+	decoder := json.NewDecoder(file)
+
 	config := &Configuration{}
 	config.Reset()
 
-	jsonDecodeError := json.Unmarshal(data, config)
+	err = decoder.Decode(config)
 
-	if jsonDecodeError != nil {
-		return nil, jsonDecodeError
+	if err != nil {
+		return nil, err
 	}
 
 	if config.Manifest.Name == "" {
