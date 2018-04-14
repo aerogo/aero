@@ -8,7 +8,7 @@ import (
 
 	"github.com/aerogo/aero"
 	"github.com/stretchr/testify/assert"
-	"github.com/tdewolff/buffer"
+	"github.com/tdewolff/parse/buffer"
 )
 
 func TestBodyReader(t *testing.T) {
