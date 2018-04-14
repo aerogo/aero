@@ -4,7 +4,6 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"mime"
 	"net/http"
@@ -32,7 +31,7 @@ const (
 	server                        = "Aero"
 	cacheControlHeader            = "Cache-Control"
 	cacheControlAlwaysValidate    = "must-revalidate"
-	cacheControlMedia             = "public, max-age=864000"
+	cacheControlMedia             = "public, max-age=13824000"
 	contentTypeOptionsHeader      = "X-Content-Type-Options"
 	contentTypeOptions            = "nosniff"
 	xssProtectionHeader           = "X-XSS-Protection"
@@ -75,6 +74,9 @@ type Context struct {
 	request  *http.Request
 	response http.ResponseWriter
 	params   httprouter.Params
+
+	// Responded tells if the request has been dealt with already
+	responded bool
 
 	// A pointer to the application this request occured on.
 	App *Application
@@ -244,15 +246,16 @@ func (ctx *Context) JavaScript(code string) string {
 // File sends the contents of a local file and determines its mime type by extension.
 func (ctx *Context) File(file string) string {
 	extension := filepath.Ext(file)
-	mimeType := mime.TypeByExtension(extension)
-	data, _ := ioutil.ReadFile(file)
+	contentType := mime.TypeByExtension(extension)
 
-	if mimeType == "" {
-		mimeType = http.DetectContentType(data)
+	// Cache control header
+	if IsMediaType(contentType) {
+		ctx.response.Header().Set(cacheControlHeader, cacheControlMedia)
 	}
 
-	ctx.response.Header().Set(contentTypeHeader, mimeType)
-	return string(data)
+	http.ServeFile(ctx.response, ctx.request, file)
+	ctx.responded = true
+	return ""
 }
 
 // Error should be used for sending error messages to the user.
@@ -356,6 +359,12 @@ func (ctx *Context) pushResources() {
 // respond responds either with raw code or gzipped if the
 // code length is greater than the gzip threshold.
 func (ctx *Context) respond(code string) {
+	// If the request has been dealt with already,
+	// there's nothing to do here.
+	if ctx.responded {
+		return
+	}
+
 	ctx.respondBytes(StringToBytesUnsafe(code))
 }
 
