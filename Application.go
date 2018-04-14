@@ -3,6 +3,7 @@ package aero
 import (
 	"context"
 	"fmt"
+	"mime"
 	"net/http"
 	"os"
 	"os/signal"
@@ -92,6 +93,9 @@ func New() *Application {
 
 	// Default style
 	// app.SetStyle("")
+
+	// Set mime type for WebP because Go standard library doesn't include it
+	mime.AddExtensionType(".webp", "image/webp")
 
 	return app
 }
