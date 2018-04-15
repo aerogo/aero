@@ -288,7 +288,7 @@ func (app *Application) createServer(address string) *http.Server {
 		Addr:              address,
 		Handler:           app.Handler(),
 		ReadHeaderTimeout: 5 * time.Second,
-		WriteTimeout:      60 * time.Second,
+		WriteTimeout:      180 * time.Second,
 		IdleTimeout:       120 * time.Second,
 		TLSConfig:         createTLSConfig(),
 	}
