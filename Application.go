@@ -81,6 +81,8 @@ func New() *Application {
 		"connect-src":  "https: wss:",
 		"worker-src":   "'self'",
 		"frame-src":    "https:",
+		"base-uri":     "'self'",
+		"form-action":  "'self'",
 	})
 
 	// Configuration
