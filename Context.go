@@ -385,7 +385,7 @@ func (ctx *Context) respondBytes(b []byte) {
 
 	// Push
 	if contentType == contentTypeHTML && len(ctx.App.Config.Push) > 0 {
-		defer ctx.pushResources()
+		ctx.pushResources()
 	}
 
 	// Small response
