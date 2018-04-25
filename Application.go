@@ -208,7 +208,12 @@ func (app *Application) Shutdown() {
 			continue
 		}
 
-		err := server.Shutdown(context.Background())
+		// Add a timeout to the server shutdown
+		ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+		defer cancel()
+
+		// Shut down server
+		err := server.Shutdown(ctx)
 
 		if err != nil {
 			fmt.Println(err)
