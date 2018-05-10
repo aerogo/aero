@@ -38,6 +38,9 @@ func main() {
 	fmt.Println(color.GreenString(" ✔ "), "config.json")
 	config()
 
+	fmt.Println(color.GreenString(" ✔ "), "tsconfig.json")
+	tsconfig()
+
 	fmt.Println(color.GreenString(" ✔ "), "main.go")
 	mainFile()
 
@@ -94,6 +97,11 @@ func config() {
 	panicOnError(err)
 
 	err = ioutil.WriteFile("config.json", bytes, 0644)
+	panicOnError(err)
+}
+
+func tsconfig() {
+	err := ioutil.WriteFile("tsconfig.json", []byte(tsconfigText), 0644)
 	panicOnError(err)
 }
 
