@@ -21,9 +21,7 @@ func TestApplicationGet(t *testing.T) {
 	})
 
 	// Get response
-	request, _ := http.NewRequest("GET", "/", nil)
-	response := httptest.NewRecorder()
-	app.Handler().ServeHTTP(response, request)
+	response := request(app, "/")
 
 	// Verify response
 	assert.Equal(t, http.StatusOK, response.Code)
@@ -65,9 +63,7 @@ func TestApplicationRewrite(t *testing.T) {
 	})
 
 	// Get response
-	request, _ := http.NewRequest("GET", "/", nil)
-	response := httptest.NewRecorder()
-	app.Handler().ServeHTTP(response, request)
+	response := request(app, "/")
 
 	// Verify response
 	assert.Equal(t, http.StatusOK, response.Code)
@@ -86,15 +82,23 @@ func TestBigResponse(t *testing.T) {
 		return ctx.Text(text)
 	})
 
+	// Get response
+	response := request(app, "/")
+
+	// Verify the response
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, "gzip", response.Header().Get("Content-Encoding"))
+}
+
+// request sends a request to the server and returns the response.
+func request(app *aero.Application, route string) *httptest.ResponseRecorder {
 	// Create request
-	request, _ := http.NewRequest("GET", "/", nil)
+	request, _ := http.NewRequest("GET", route, nil)
 	request.Header.Set("Accept-Encoding", "gzip")
 
 	// Get response
 	response := httptest.NewRecorder()
 	app.Handler().ServeHTTP(response, request)
 
-	// Verify the response
-	assert.Equal(t, http.StatusOK, response.Code)
-	assert.Equal(t, "gzip", response.Header().Get("Content-Encoding"))
+	return response
 }
