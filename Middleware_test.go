@@ -18,7 +18,7 @@ func TestApplicationMiddleware(t *testing.T) {
 
 	// Register middleware
 	app.Use(func(ctx *aero.Context, next func()) {
-		ctx.StatusCode = http.StatusUnauthorized
+		ctx.StatusCode = http.StatusPermanentRedirect
 		next()
 	})
 
@@ -26,7 +26,7 @@ func TestApplicationMiddleware(t *testing.T) {
 	response := request(app, "/")
 
 	// Verify response
-	assert.Equal(t, http.StatusUnauthorized, response.Code)
+	assert.Equal(t, http.StatusPermanentRedirect, response.Code)
 	assert.Equal(t, helloWorld, response.Body.String())
 }
 
@@ -40,7 +40,8 @@ func TestApplicationMiddlewareSkipNext(t *testing.T) {
 
 	// Register middleware
 	app.Use(func(ctx *aero.Context, next func()) {
-		// Not calling next() ignores the request
+		ctx.StatusCode = http.StatusUnauthorized
+		// Not calling next() will stop the response chain
 	})
 
 	// Get response
