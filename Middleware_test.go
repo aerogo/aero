@@ -40,7 +40,6 @@ func TestApplicationMiddlewareSkipNext(t *testing.T) {
 
 	// Register middleware
 	app.Use(func(ctx *aero.Context, next func()) {
-		ctx.StatusCode = http.StatusUnauthorized
 		// Not calling next() will stop the response chain
 	})
 
