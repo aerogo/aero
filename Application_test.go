@@ -90,6 +90,18 @@ func TestBigResponse(t *testing.T) {
 	assert.Equal(t, "gzip", response.Header().Get("Content-Encoding"))
 }
 
+// func TestApplicationRun(t *testing.T) {
+// 	app := aero.New()
+
+// 	// Register route
+// 	app.Get("/", func(ctx *aero.Context) string {
+// 		return ctx.Text(helloWorld)
+// 	})
+
+// 	// Run
+// 	app.Run()
+// }
+
 // request sends a request to the server and returns the response.
 func request(app *aero.Application, route string) *httptest.ResponseRecorder {
 	// Create request
