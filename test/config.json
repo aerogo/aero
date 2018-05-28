@@ -1,0 +1,22 @@
+{
+	"domain": "",
+	"title": "Untitled site",
+	"fonts": [],
+	"styles": [],
+	"scripts": {
+		"main": "main"
+	},
+	"push": [],
+	"manifest": {
+		"name": "",
+		"short_name": "Untitled",
+		"start_url": "/",
+		"display": "standalone",
+		"lang": "en"
+	},
+	"gzip": true,
+	"ports": {
+		"http": 4000,
+		"https": 4001
+	}
+}
