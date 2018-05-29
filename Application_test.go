@@ -1,6 +1,7 @@
 package aero_test
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -95,24 +96,46 @@ func TestBigResponse(t *testing.T) {
 
 func TestApplicationRun(t *testing.T) {
 	app := aero.New()
+
+	// When frontpage is requested, kill the server
+	app.Get("/", func(ctx *aero.Context) string {
+		return ctx.HTML(helloWorld)
+	})
+
+	// When the server is started, we request the frontpage
+	app.OnStart(func() {
+		client.Get(fmt.Sprintf("http://localhost:%d/", app.Config.Ports.HTTP)).End()
+		syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
+	})
+
+	// When the server ends, check elapsed time
+	app.OnEnd(func() {
+		elapsed := time.Since(app.StartTime())
+		assert.True(t, elapsed < 2*time.Second)
+	})
+
+	// Run
+	app.Run()
+}
+
+func TestApplicationRunHTTPS(t *testing.T) {
+	app := aero.New()
 	app.Security.Load("test/fullchain.pem", "test/privkey.pem")
 
 	// Register route
 	app.Get("/", func(ctx *aero.Context) string {
-		syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
-		return ""
+		return ctx.HTML(helloWorld)
 	})
 
-	go func() {
-		client.Get("http://localhost:4000/").End()
-	}()
+	// When the server is started, we request the frontpage
+	app.OnStart(func() {
+		client.Get(fmt.Sprintf("http://localhost:%d/", app.Config.Ports.HTTP)).End()
+		// client.Get(fmt.Sprintf("https://localhost:%d/", app.Config.Ports.HTTPS)).End()
+		syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
+	})
 
 	// Run
 	app.Run()
-
-	// End
-	elapsed := time.Since(app.StartTime())
-	assert.True(t, elapsed < 1*time.Second)
 }
 
 // request sends a request to the server and returns the response.

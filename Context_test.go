@@ -2,6 +2,7 @@ package aero_test
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -30,6 +31,29 @@ func TestContextResponseHeader(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.Code)
 	assert.Equal(t, helloWorld, response.Body.String())
 	assert.Equal(t, "42", response.Header().Get("X-Custom"))
+}
+
+func TestContextError(t *testing.T) {
+	app := aero.New()
+
+	// Register route
+	app.Get("/", func(ctx *aero.Context) string {
+		return ctx.Error(http.StatusUnauthorized, errors.New("Not logged in"))
+	})
+
+	app.Get("/unknown-error", func(ctx *aero.Context) string {
+		return ctx.Error(http.StatusUnauthorized, nil)
+	})
+
+	// Verify response with known error
+	response := request(app, "/")
+	assert.Equal(t, http.StatusUnauthorized, response.Code)
+	assert.Contains(t, response.Body.String(), "Not logged in")
+
+	// Verify response with unknown error
+	response = request(app, "/unknown-error")
+	assert.Equal(t, http.StatusUnauthorized, response.Code)
+	assert.Contains(t, response.Body.String(), "Unknown error")
 }
 
 func TestContextSession(t *testing.T) {
@@ -86,12 +110,20 @@ func TestContextSessionValidCookie(t *testing.T) {
 		assert.Equal(t, false, ctx.HasSession())
 		ctx.Session().Set("custom", helloWorld)
 		assert.Equal(t, true, ctx.HasSession())
+		assert.Equal(t, ctx.Session().GetString("sid"), ctx.Session().ID())
 
 		return ctx.Text(ctx.Session().GetString("custom"))
 	})
 
 	app.Get("/2", func(ctx *aero.Context) string {
 		assert.Equal(t, true, ctx.HasSession())
+		assert.Equal(t, ctx.Session().GetString("sid"), ctx.Session().ID())
+
+		return ctx.Text(ctx.Session().GetString("custom"))
+	})
+
+	app.Get("/3", func(ctx *aero.Context) string {
+		assert.Equal(t, ctx.Session().GetString("sid"), ctx.Session().ID())
 
 		return ctx.Text(ctx.Session().GetString("custom"))
 	})
@@ -131,6 +163,21 @@ func TestContextSessionValidCookie(t *testing.T) {
 	// Verify response 2
 	assert.Equal(t, http.StatusOK, response2.Code)
 	assert.Equal(t, helloWorld, response2.Body.String())
+
+	// Create request 3
+	request3, _ := http.NewRequest("GET", "/3", nil)
+	request3.AddCookie(&http.Cookie{
+		Name:  "sid",
+		Value: sid,
+	})
+
+	// Get response 3
+	response3 := httptest.NewRecorder()
+	app.Handler().ServeHTTP(response3, request3)
+
+	// Verify response 3
+	assert.Equal(t, http.StatusOK, response3.Code)
+	assert.Equal(t, helloWorld, response3.Body.String())
 }
 
 func TestContextContentTypes(t *testing.T) {
@@ -141,6 +188,10 @@ func TestContextContentTypes(t *testing.T) {
 		return ctx.JSON(app.Config)
 	})
 
+	app.Get("/jsonld", func(ctx *aero.Context) string {
+		return ctx.JSONLinkedData(app.Config)
+	})
+
 	app.Get("/html", func(ctx *aero.Context) string {
 		return ctx.HTML("<html></html>")
 	})
@@ -149,21 +200,33 @@ func TestContextContentTypes(t *testing.T) {
 		return ctx.CSS("body{}")
 	})
 
+	app.Get("/js", func(ctx *aero.Context) string {
+		return ctx.JavaScript("console.log(42)")
+	})
+
 	app.Get("/files/*file", func(ctx *aero.Context) string {
 		return ctx.File(strings.TrimPrefix(ctx.Get("file"), "/"))
 	})
 
 	// Get responses
 	responseJSON := request(app, "/json")
+	responseJSONLD := request(app, "/jsonld")
 	responseHTML := request(app, "/html")
 	responseCSS := request(app, "/css")
+	responseJS := request(app, "/js")
 	responseFile := request(app, "/files/Application.go")
+	responseMediaFile := request(app, "/files/docs/usage.gif")
 
 	// Verify JSON response
 	json, _ := json.Marshal(app.Config)
 	assert.Equal(t, http.StatusOK, responseJSON.Code)
 	assert.Equal(t, json, responseJSON.Body.Bytes())
 	assert.Contains(t, responseJSON.Header().Get("Content-Type"), "application/json")
+
+	// Verify JSON+LD response
+	assert.Equal(t, http.StatusOK, responseJSONLD.Code)
+	assert.Equal(t, json, responseJSONLD.Body.Bytes())
+	assert.Contains(t, responseJSONLD.Header().Get("Content-Type"), "application/ld+json")
 
 	// Verify HTML response
 	assert.Equal(t, http.StatusOK, responseHTML.Code)
@@ -175,11 +238,22 @@ func TestContextContentTypes(t *testing.T) {
 	assert.Equal(t, "body{}", responseCSS.Body.String())
 	assert.Contains(t, responseCSS.Header().Get("Content-Type"), "text/css")
 
-	// // Verify File response
+	// Verify JS response
+	assert.Equal(t, http.StatusOK, responseJS.Code)
+	assert.Equal(t, "console.log(42)", responseJS.Body.String())
+	assert.Contains(t, responseJS.Header().Get("Content-Type"), "application/javascript")
+
+	// Verify file response
 	appSourceCode, _ := ioutil.ReadFile("Application.go")
 	assert.Equal(t, http.StatusOK, responseFile.Code)
 	assert.Equal(t, appSourceCode, responseFile.Body.Bytes())
 	assert.Contains(t, responseFile.Header().Get("Content-Type"), "text/plain")
+
+	// Verify media file response
+	imageData, _ := ioutil.ReadFile("docs/usage.gif")
+	assert.Equal(t, http.StatusOK, responseMediaFile.Code)
+	assert.Equal(t, imageData, responseMediaFile.Body.Bytes())
+	assert.Contains(t, responseMediaFile.Header().Get("Content-Type"), "image/gif")
 }
 
 func TestContextHTTP2Push(t *testing.T) {
@@ -193,6 +267,11 @@ func TestContextHTTP2Push(t *testing.T) {
 
 	app.Get("/pushed.css", func(ctx *aero.Context) string {
 		return ctx.CSS("body{}")
+	})
+
+	// Add no-op push condition
+	app.AddPushCondition(func(ctx *aero.Context) bool {
+		return true
 	})
 
 	// Get response

@@ -152,12 +152,6 @@ func (ctx *Context) createSessionCookie() {
 	}
 
 	http.SetCookie(ctx.response, &sessionCookie)
-
-	// HACK: Add SameSite attribute
-	// Remove this once it's available inside http.Cookie
-	// cookieData := ctx.response.Header().Get("Set-Cookie")
-	// cookieData += "; SameSite=lax"
-	// ctx.response.Header().Set("Set-Cookie", cookieData)
 }
 
 // HasSession indicates whether the client has a valid session or not.
@@ -259,17 +253,17 @@ func (ctx *Context) File(file string) string {
 }
 
 // Error should be used for sending error messages to the user.
-func (ctx *Context) Error(statusCode int, explanation string, err error) string {
+func (ctx *Context) Error(statusCode int, err error) string {
 	ctx.StatusCode = statusCode
 	ctx.response.Header().Set(contentTypeHeader, contentTypeHTML)
 
 	if err != nil {
 		detailed := err.Error()
 		color.Red(detailed)
-		return fmt.Sprintf("%s (%s)", explanation, detailed)
+		return detailed
 	}
 
-	return explanation
+	return fmt.Sprintf("Unknown error (%d)", statusCode)
 }
 
 // URI returns the relative path, e.g. /blog/post/123.

@@ -149,11 +149,6 @@ func (app *Application) Run() {
 	app.TestManifest()
 	app.TestRoutes()
 	app.Listen()
-
-	for _, callback := range app.onStart {
-		callback()
-	}
-
 	app.Wait()
 	app.Shutdown()
 }
@@ -196,6 +191,11 @@ func (app *Application) Listen() {
 func (app *Application) Wait() {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, os.Kill, syscall.SIGTERM)
+
+	for _, callback := range app.onStart {
+		callback()
+	}
+
 	<-stop
 }
 
@@ -228,8 +228,8 @@ func (app *Application) OnStart(callback func()) {
 	app.onStart = append(app.onStart, callback)
 }
 
-// OnShutdown registers a callback to be executed on server shutdown.
-func (app *Application) OnShutdown(callback func()) {
+// OnEnd registers a callback to be executed on server shutdown.
+func (app *Application) OnEnd(callback func()) {
 	app.onShutdown = append(app.onShutdown, callback)
 }
 
