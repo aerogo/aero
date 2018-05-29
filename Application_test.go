@@ -4,9 +4,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"syscall"
 	"testing"
+	"time"
 
 	"github.com/aerogo/aero"
+	"github.com/aerogo/http/client"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -90,17 +93,27 @@ func TestBigResponse(t *testing.T) {
 	assert.Equal(t, "gzip", response.Header().Get("Content-Encoding"))
 }
 
-// func TestApplicationRun(t *testing.T) {
-// 	app := aero.New()
+func TestApplicationRun(t *testing.T) {
+	app := aero.New()
+	app.Security.Load("test/fullchain.pem", "test/privkey.pem")
 
-// 	// Register route
-// 	app.Get("/", func(ctx *aero.Context) string {
-// 		return ctx.Text(helloWorld)
-// 	})
+	// Register route
+	app.Get("/", func(ctx *aero.Context) string {
+		syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
+		return ""
+	})
 
-// 	// Run
-// 	app.Run()
-// }
+	go func() {
+		client.Get("http://localhost:4000/").End()
+	}()
+
+	// Run
+	app.Run()
+
+	// End
+	elapsed := time.Since(app.StartTime())
+	assert.True(t, elapsed < 1*time.Second)
+}
 
 // request sends a request to the server and returns the response.
 func request(app *aero.Application, route string) *httptest.ResponseRecorder {

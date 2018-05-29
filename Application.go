@@ -15,10 +15,6 @@ import (
 
 	"github.com/aerogo/csp"
 
-	"crypto/sha256"
-
-	"encoding/base64"
-
 	"github.com/aerogo/http/client"
 	performance "github.com/aerogo/linter-performance"
 	"github.com/aerogo/session"
@@ -43,6 +39,7 @@ type Application struct {
 	rewrite        func(*RewriteContext)
 	middleware     []Middleware
 	pushConditions []func(*Context) bool
+	onStart        []func()
 	onShutdown     []func()
 	onPush         []func(*Context)
 
@@ -50,10 +47,6 @@ type Application struct {
 		GET  []string
 		POST []string
 	}
-
-	css            string
-	cssHash        string
-	cssReplacement string
 }
 
 // New creates a new application.
@@ -156,6 +149,11 @@ func (app *Application) Run() {
 	app.TestManifest()
 	app.TestRoutes()
 	app.Listen()
+
+	for _, callback := range app.onStart {
+		callback()
+	}
+
 	app.Wait()
 	app.Shutdown()
 }
@@ -225,6 +223,11 @@ func (app *Application) Shutdown() {
 	}
 }
 
+// OnStart registers a callback to be executed on server start.
+func (app *Application) OnStart(callback func()) {
+	app.onStart = append(app.onStart, callback)
+}
+
 // OnShutdown registers a callback to be executed on server shutdown.
 func (app *Application) OnShutdown(callback func()) {
 	app.onShutdown = append(app.onShutdown, callback)
@@ -245,28 +248,9 @@ func (app *Application) Rewrite(rewrite func(*RewriteContext)) {
 	app.rewrite = rewrite
 }
 
-// SetStyle applies the given CSS code to the application.
-func (app *Application) SetStyle(css string) {
-	app.css = css
-
-	// Generate a hash
-	hash := sha256.Sum256([]byte(css))
-	app.cssHash = base64.StdEncoding.EncodeToString(hash[:])
-
-	// Content security policy
-	app.ContentSecurityPolicy.Set("style-src", "'sha256-"+app.cssHash+"'")
-
-	// This will be used in the final response later on to inject the CSS code
-	app.cssReplacement = "<style>" + app.css + "</style></head><body"
-}
-
-// Finalize post-processes the HTML to add styles to the output.
+// Finalize post-processes the HTML (currently a noop).
 func (app *Application) Finalize(html string) string {
-	if app.cssReplacement == "" {
-		return html
-	}
-
-	return strings.Replace(html, "</head><body", app.cssReplacement, 1)
+	return html
 }
 
 // StartTime returns the time the application started.
