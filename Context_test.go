@@ -38,17 +38,26 @@ func TestContextError(t *testing.T) {
 
 	// Register route
 	app.Get("/", func(ctx *aero.Context) string {
-		return ctx.Error(http.StatusUnauthorized, errors.New("Not logged in"))
+		return ctx.Error(http.StatusUnauthorized, "Not authorized", errors.New("Not logged in"))
+	})
+
+	app.Get("/explanation-only", func(ctx *aero.Context) string {
+		return ctx.Error(http.StatusUnauthorized, "Not authorized", nil)
 	})
 
 	app.Get("/unknown-error", func(ctx *aero.Context) string {
-		return ctx.Error(http.StatusUnauthorized, nil)
+		return ctx.Error(http.StatusUnauthorized, "", nil)
 	})
 
 	// Verify response with known error
 	response := request(app, "/")
 	assert.Equal(t, http.StatusUnauthorized, response.Code)
 	assert.Contains(t, response.Body.String(), "Not logged in")
+
+	// Verify response with explanation only
+	response = request(app, "/explanation-only")
+	assert.Equal(t, http.StatusUnauthorized, response.Code)
+	assert.Contains(t, response.Body.String(), "Not authorized")
 
 	// Verify response with unknown error
 	response = request(app, "/unknown-error")

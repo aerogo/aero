@@ -253,17 +253,24 @@ func (ctx *Context) File(file string) string {
 }
 
 // Error should be used for sending error messages to the user.
-func (ctx *Context) Error(statusCode int, err error) string {
+func (ctx *Context) Error(statusCode int, explanation string, err error) string {
 	ctx.StatusCode = statusCode
 	ctx.response.Header().Set(contentTypeHeader, contentTypeHTML)
 
 	if err != nil {
-		detailed := err.Error()
-		color.Red(detailed)
-		return detailed
+		message := fmt.Sprintf("%s: %s", explanation, err.Error())
+		color.Red(message)
+		return message
 	}
 
-	return fmt.Sprintf("Unknown error (%d)", statusCode)
+	if explanation != "" {
+		color.Red(explanation)
+		return explanation
+	}
+
+	message := fmt.Sprintf("Unknown error: %d", statusCode)
+	color.Red(message)
+	return message
 }
 
 // URI returns the relative path, e.g. /blog/post/123.
