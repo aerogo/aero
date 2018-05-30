@@ -65,12 +65,12 @@ func (config *Configuration) Reset() {
 // LoadConfig loads the application configuration from the file system.
 func LoadConfig(path string) (*Configuration, error) {
 	file, err := os.Open(path)
-	defer file.Close()
 
 	if err != nil {
 		return nil, err
 	}
 
+	defer file.Close()
 	config := &Configuration{}
 	config.Reset()
 

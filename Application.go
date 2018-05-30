@@ -33,7 +33,6 @@ type Application struct {
 	Router                *httprouter.Router
 	ContentSecurityPolicy *csp.ContentSecurityPolicy
 
-	root           string
 	routeTests     map[string][]string
 	start          time.Time
 	rewrite        func(*RewriteContext)
@@ -190,7 +189,7 @@ func (app *Application) Listen() {
 // Wait will make the process wait until it is killed.
 func (app *Application) Wait() {
 	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt, os.Kill, syscall.SIGTERM)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
 	for _, callback := range app.onStart {
 		callback()
@@ -293,7 +292,7 @@ func (app *Application) serveHTTP(address string) {
 	// This will block the calling goroutine until the server shuts down.
 	serveError := server.ListenAndServe()
 
-	if serveError != nil && strings.Index(serveError.Error(), "closed") == -1 {
+	if serveError != nil && !strings.Contains(serveError.Error(), "closed") {
 		panic(serveError)
 	}
 }
@@ -306,7 +305,7 @@ func (app *Application) serveHTTPS(address string) {
 	// This will block the calling goroutine until the server shuts down.
 	serveError := server.ListenAndServeTLS(app.Security.Certificate, app.Security.Key)
 
-	if serveError != nil && strings.Index(serveError.Error(), "closed") == -1 {
+	if serveError != nil && !strings.Contains(serveError.Error(), "closed") {
 		panic(serveError)
 	}
 }

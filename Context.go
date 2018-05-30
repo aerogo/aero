@@ -27,8 +27,6 @@ import (
 const gzipThreshold = 1450
 
 const (
-	serverHeader                  = "Server"
-	server                        = "Aero"
 	cacheControlHeader            = "Cache-Control"
 	cacheControlAlwaysValidate    = "must-revalidate"
 	cacheControlMedia             = "public, max-age=13824000"
@@ -48,15 +46,18 @@ const (
 	contentEncodingGzip           = "gzip"
 	acceptEncodingHeader          = "Accept-Encoding"
 	contentLengthHeader           = "Content-Length"
-	responseTimeHeader            = "X-Response-Time"
 	ifNoneMatchHeader             = "If-None-Match"
-	xFrameOptionsHeader           = "X-Frame-Options"
-	xFrameOptions                 = "SAMEORIGIN"
 	referrerPolicyHeader          = "Referrer-Policy"
 	referrerPolicySameOrigin      = "no-referrer"
 	strictTransportSecurityHeader = "Strict-Transport-Security"
 	strictTransportSecurity       = "max-age=31536000; includeSubDomains; preload"
 	contentSecurityPolicyHeader   = "Content-Security-Policy"
+
+	// responseTimeHeader            = "X-Response-Time"
+	// xFrameOptionsHeader           = "X-Frame-Options"
+	// xFrameOptions                 = "SAMEORIGIN"
+	// serverHeader                  = "Server"
+	// server                        = "Aero"
 )
 
 // Push options describes the headers that are sent
