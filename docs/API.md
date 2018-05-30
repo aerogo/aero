@@ -98,12 +98,22 @@ app.Rewrite(func(ctx *aero.RewriteContext) {
 
 Only one rewrite function can be active in an Application. Multiple calls will overwrite the previously registered function.
 
-## OnShutdown
+## OnStart
 
-In case the server is terminated by outside factors such as the operating system, you can specify a function to be called in that event.
+Schedules the function to be called when the server has started. Calling `OnStart` multiple times will register multiple callbacks.
 
 ```go
-app.OnShutdown(func() {
+app.OnStart(func() {
+	// Do something.
+})
+```
+
+## OnEnd
+
+In case the server is terminated by outside factors such as a kill signal sent by the operating system, you can specify a function to be called in that event. Calling `OnEnd` multiple times will register multiple callbacks.
+
+```go
+app.OnEnd(func() {
 	// Free up resources.
 })
 ```
