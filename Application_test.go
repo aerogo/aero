@@ -105,6 +105,7 @@ func TestApplicationRun(t *testing.T) {
 	// When the server is started, we request the frontpage
 	app.OnStart(func() {
 		client.Get(fmt.Sprintf("http://localhost:%d/", app.Config.Ports.HTTP)).End()
+		time.Sleep(10 * time.Millisecond)
 		syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
 	})
 
@@ -131,6 +132,7 @@ func TestApplicationRunHTTPS(t *testing.T) {
 	app.OnStart(func() {
 		client.Get(fmt.Sprintf("http://localhost:%d/", app.Config.Ports.HTTP)).End()
 		// client.Get(fmt.Sprintf("https://localhost:%d/", app.Config.Ports.HTTPS)).End()
+		time.Sleep(10 * time.Millisecond)
 		syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
 	})
 

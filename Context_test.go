@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -289,4 +290,69 @@ func TestContextHTTP2Push(t *testing.T) {
 	// Verify response
 	assert.Equal(t, http.StatusOK, response.Code)
 	assert.Equal(t, "<html></html>", response.Body.String())
+}
+
+func TestContextGetInt(t *testing.T) {
+	app := aero.New()
+
+	// Register route
+	app.Get("/:number", func(ctx *aero.Context) string {
+		number, err := ctx.GetInt("number")
+		assert.NoError(t, err)
+		assert.NotZero(t, number)
+
+		return ctx.Text(strconv.Itoa(number * 2))
+	})
+
+	// Get response
+	response := request(app, "/21")
+
+	// Verify response
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, "42", response.Body.String())
+}
+
+func TestContextUserAgent(t *testing.T) {
+	app := aero.New()
+	agent := "Luke Skywalker"
+
+	// Register route
+	app.Get("/", func(ctx *aero.Context) string {
+		userAgent := ctx.UserAgent()
+		return ctx.Text(userAgent)
+	})
+
+	// Create request
+	request, _ := http.NewRequest("GET", "/", nil)
+	request.Header.Set("User-Agent", agent)
+
+	// Get response
+	response := httptest.NewRecorder()
+	app.Handler().ServeHTTP(response, request)
+
+	// Verify response
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, agent, response.Body.String())
+}
+
+func TestContextQuery(t *testing.T) {
+	app := aero.New()
+	search := "Luke Skywalker"
+
+	// Register route
+	app.Get("/", func(ctx *aero.Context) string {
+		search := ctx.Query("search")
+		return ctx.Text(search)
+	})
+
+	// Create request
+	request, _ := http.NewRequest("GET", "/?search="+search, nil)
+
+	// Get response
+	response := httptest.NewRecorder()
+	app.Handler().ServeHTTP(response, request)
+
+	// Verify response
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, search, response.Body.String())
 }
