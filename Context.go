@@ -78,7 +78,7 @@ type Context struct {
 	// Responded tells if the request has been dealt with already
 	responded bool
 
-	// A pointer to the application this request occured on.
+	// A pointer to the application this request occurred on.
 	App *Application
 
 	// Status code
