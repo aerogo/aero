@@ -22,8 +22,11 @@ before_script:
   - go get -t -v ./...                                                           # Dependencies
 
 script:
-  - go test -v -race ./...                   # Run all the tests with the race detector enabled
-  - go vet ./...                             # go vet is the official Go static analyzer
-  - megacheck ./...                          # "go vet on steroids" + linter
-  - gocyclo -over 19 $GO_FILES               # forbid code with huge functions
-  - golint -set_exit_status $(go list ./...) # one last linter
+  - go test -v -race -coverprofile=coverage.txt -covermode=atomic ./... # Run all the tests with the race detector enabled
+  - go vet ./...                                                        # go vet is the official Go static analyzer
+  - megacheck ./...                                                     # "go vet on steroids" + linter
+  - gocyclo -over 19 $GO_FILES                                          # forbid code with huge functions
+  - golint -set_exit_status $(go list ./...)                            # one last linter
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
