@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -28,11 +29,12 @@ type Application struct {
 	Config                *Configuration
 	Sessions              session.Manager
 	Security              ApplicationSecurity
-	Servers               [2]*http.Server
 	Linters               []Linter
 	Router                *httprouter.Router
 	ContentSecurityPolicy *csp.ContentSecurityPolicy
 
+	servers        [2]*http.Server
+	serversMutex   sync.Mutex
 	routeTests     map[string][]string
 	start          time.Time
 	rewrite        func(*RewriteContext)
@@ -198,27 +200,34 @@ func (app *Application) Wait() {
 	<-stop
 }
 
-// Shutdown will gracefully shut down the server.
+// Shutdown will gracefully shut down all servers.
 func (app *Application) Shutdown() {
-	for _, server := range app.Servers {
-		if server == nil {
-			continue
-		}
+	app.serversMutex.Lock()
+	defer app.serversMutex.Unlock()
 
-		// Add a timeout to the server shutdown
-		ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
-		defer cancel()
-
-		// Shut down server
-		err := server.Shutdown(ctx)
-
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
+	shutdown(app.servers[0])
+	shutdown(app.servers[1])
 
 	for _, callback := range app.onShutdown {
 		callback()
+	}
+}
+
+// shutdown will gracefully shut down the server.
+func shutdown(server *http.Server) {
+	if server == nil {
+		return
+	}
+
+	// Add a timeout to the server shutdown
+	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	defer cancel()
+
+	// Shut down server
+	err := server.Shutdown(ctx)
+
+	if err != nil {
+		fmt.Println(err)
 	}
 }
 
@@ -287,7 +296,10 @@ func (app *Application) createServer(address string) *http.Server {
 // serveHTTP serves requests from the given listener.
 func (app *Application) serveHTTP(address string) {
 	server := app.createServer(address)
-	app.Servers[0] = server
+
+	app.serversMutex.Lock()
+	app.servers[0] = server
+	app.serversMutex.Unlock()
 
 	// This will block the calling goroutine until the server shuts down.
 	serveError := server.ListenAndServe()
@@ -300,7 +312,10 @@ func (app *Application) serveHTTP(address string) {
 // serveHTTPS serves requests from the given listener.
 func (app *Application) serveHTTPS(address string) {
 	server := app.createServer(address)
-	app.Servers[1] = server
+
+	app.serversMutex.Lock()
+	app.servers[1] = server
+	app.serversMutex.Unlock()
 
 	// This will block the calling goroutine until the server shuts down.
 	serveError := server.ListenAndServeTLS(app.Security.Certificate, app.Security.Key)
