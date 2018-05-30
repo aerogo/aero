@@ -52,3 +52,26 @@ func TestBodyReaderJSON(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.Code)
 	assert.Equal(t, "value", response.Body.String())
 }
+
+func TestBodyReaderErrors(t *testing.T) {
+	app := aero.New()
+
+	app.Get("/", func(ctx *aero.Context) string {
+		body := ctx.Request().Body()
+
+		bodyJSON, err := body.JSON()
+
+		assert.Error(t, err)
+		assert.Nil(t, bodyJSON)
+
+		bodyJSONObject, err := body.JSONObject()
+
+		assert.Error(t, err)
+		assert.Nil(t, bodyJSONObject)
+
+		return ctx.Text(helloWorld)
+	})
+
+	response := request(app, "/")
+	assert.Equal(t, http.StatusOK, response.Code)
+}

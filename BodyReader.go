@@ -14,6 +14,10 @@ type BodyReader struct {
 
 // JSON parses the body as a JSON object.
 func (body BodyReader) JSON() (interface{}, error) {
+	if body.reader == nil {
+		return nil, errors.New("Empty body")
+	}
+
 	decoder := json.NewDecoder(body.reader)
 	defer body.reader.Close()
 
