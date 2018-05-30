@@ -2,6 +2,7 @@
 
 [![Godoc reference][godoc-image]][godoc-url]
 [![Go report card][goreportcard-image]][goreportcard-url]
+[![License][license-image]][license-url]
 [![Discord][discord-image]][discord-url]
 
 Aero is a high-performance web server with a clean API for web development.
@@ -67,3 +68,6 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 [goreportcard-url]: https://goreportcard.com/report/github.com/aerogo/aero
 [discord-image]: https://img.shields.io/badge/discord-aero-738bd7.svg
 [discord-url]: https://discord.gg/vyk2MnK
+[license-image]: https://img.shields.io/badge/license-MIT-blue.svg
+[license-url]: https://github.com/aerogo/aero/blob/go/LICENSE
+
