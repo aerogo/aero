@@ -28,10 +28,11 @@ app.Get("/hello/:person", func(ctx *aero.Context) string {
 
 ```go
 app.Get("/", func(ctx *aero.Context) string {
-	// return ctx.HTML("<html></html>")
-	// return ctx.CSS("body{}")
-	// return ctx.JavaScript("console.log(42)")
-	// return ctx.JSON(app.Config)
+	// Choose one:
+	return ctx.HTML("<html></html>")
+	return ctx.CSS("body{}")
+	return ctx.JavaScript("console.log(42)")
+	return ctx.JSON(app.Config)
 	return ctx.Text("just some plain text")
 })
 ```
