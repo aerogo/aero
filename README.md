@@ -4,6 +4,7 @@
 [![Go report card][goreportcard-image]][goreportcard-url]
 [![Tests][test-image]][test-url]
 [![Code coverage][codecov-image]][codecov-url]
+[![Used by projects][sourcegraph-image]][sourcegraph-url]
 [![License][license-image]][license-url]
 [![Discord][discord-image]][discord-url]
 
@@ -72,6 +73,8 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 [test-url]: https://travis-ci.org/aerogo/aero
 [codecov-image]: https://codecov.io/gh/aerogo/aero/branch/go/graph/badge.svg
 [codecov-url]: https://codecov.io/gh/aerogo/aero
+[sourcegraph-image]: https://sourcegraph.com/github.com/aerogo/aero/-/badge.svg
+[sourcegraph-url]: https://sourcegraph.com/github.com/aerogo/aero?badge
 [license-image]: https://img.shields.io/badge/license-MIT-blue.svg
 [license-url]: https://github.com/aerogo/aero/blob/go/LICENSE
 [discord-image]: https://img.shields.io/badge/discord-aero-738bd7.svg
