@@ -215,7 +215,7 @@ func TestContextContentTypes(t *testing.T) {
 	})
 
 	app.Get("/files/*file", func(ctx *aero.Context) string {
-		return ctx.File(strings.TrimPrefix(ctx.Get("file"), "/"))
+		return ctx.File(ctx.Get("file"))
 	})
 
 	// Get responses

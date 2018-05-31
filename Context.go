@@ -286,7 +286,7 @@ func (ctx *Context) SetURI(b string) {
 
 // Get retrieves an URL parameter.
 func (ctx *Context) Get(param string) string {
-	return ctx.params.ByName(param)
+	return strings.TrimPrefix(ctx.params.ByName(param), "/")
 }
 
 // GetInt retrieves an URL parameter as an integer.
