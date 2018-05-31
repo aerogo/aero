@@ -1,6 +1,7 @@
 package aero_test
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -59,11 +60,13 @@ func TestBodyReaderErrors(t *testing.T) {
 	app.Get("/", func(ctx *aero.Context) string {
 		body := ctx.Request().Body()
 
+		// JSON
 		bodyJSON, err := body.JSON()
 
 		assert.Error(t, err)
 		assert.Nil(t, bodyJSON)
 
+		// JSON object
 		bodyJSONObject, err := body.JSONObject()
 
 		assert.Error(t, err)
@@ -72,6 +75,34 @@ func TestBodyReaderErrors(t *testing.T) {
 		return ctx.Text(helloWorld)
 	})
 
-	response := request(app, "/")
+	app.Get("/json-object", func(ctx *aero.Context) string {
+		body := ctx.Request().Body()
+		bodyJSONObject, err := body.JSONObject()
+
+		assert.Error(t, err)
+		assert.Nil(t, bodyJSONObject)
+
+		return ctx.Text(helloWorld)
+	})
+
+	// No body
+	request, _ := http.NewRequest("GET", "/", nil)
+	response := httptest.NewRecorder()
+	app.Handler().ServeHTTP(response, request)
+
+	assert.Equal(t, http.StatusOK, response.Code)
+
+	// Invalid JSON
+	request, _ = http.NewRequest("GET", "/", bytes.NewReader([]byte("{")))
+	response = httptest.NewRecorder()
+	app.Handler().ServeHTTP(response, request)
+
+	assert.Equal(t, http.StatusOK, response.Code)
+
+	// Not a JSON object
+	request, _ = http.NewRequest("GET", "/json-object", bytes.NewReader([]byte("123")))
+	response = httptest.NewRecorder()
+	app.Handler().ServeHTTP(response, request)
+
 	assert.Equal(t, http.StatusOK, response.Code)
 }
