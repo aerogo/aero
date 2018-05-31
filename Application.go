@@ -256,11 +256,6 @@ func (app *Application) Rewrite(rewrite func(*RewriteContext)) {
 	app.rewrite = rewrite
 }
 
-// Finalize post-processes the HTML (currently a noop).
-func (app *Application) Finalize(html string) string {
-	return html
-}
-
 // StartTime returns the time the application started.
 func (app *Application) StartTime() time.Time {
 	return app.start
