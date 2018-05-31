@@ -6,7 +6,6 @@
 [![Code coverage][codecov-image]][codecov-url]
 [![Used by projects][sourcegraph-image]][sourcegraph-url]
 [![License][license-image]][license-url]
-[![Discord][discord-image]][discord-url]
 
 Aero is a high-performance web server with a clean API for web development.
 
@@ -61,9 +60,14 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 - [Configuration](docs/Configuration.md)
 - [Benchmarks](docs/Benchmarks.md)
 
+## Others
+
+- [Slides for OWDDM talk](https://docs.google.com/presentation/d/166I69goLEVuvuFeeRfUu8c5lwl2_HAeSi2SZyzIuEKg/edit) (May 2018)
+- [Discord community][discord-url]
+
 ---
 
-[![By Eduard Urbach](http://forthebadge.com/images/badges/built-with-love.svg)](https://github.com/blitzprog)
+[![By Eduard Urbach](https://forthebadge.com/images/badges/built-with-love.svg)](https://github.com/blitzprog)
 
 [godoc-image]: https://godoc.org/github.com/aerogo/aero?status.svg
 [godoc-url]: https://godoc.org/github.com/aerogo/aero
