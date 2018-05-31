@@ -24,6 +24,18 @@ app.Get("/hello/:person", func(ctx *aero.Context) string {
 })
 ```
 
+## Shortcuts for different content types
+
+```go
+app.Get("/", func(ctx *aero.Context) string {
+	// return ctx.HTML("<html></html>")
+	// return ctx.CSS("body{}")
+	// return ctx.JavaScript("console.log(42)")
+	// return ctx.JSON(app.Config)
+	return ctx.Text("just some plain text")
+})
+```
+
 ## Middleware
 
 You can run middleware functions that are executed after the routing phase and before the final request handler.
