@@ -13,8 +13,3 @@ type Response struct {
 func (response Response) Header() http.Header {
 	return response.inner.Header()
 }
-
-// WriteHeader represents the response headers.
-func (response Response) WriteHeader(statusCode int) {
-	response.inner.WriteHeader(statusCode)
-}
