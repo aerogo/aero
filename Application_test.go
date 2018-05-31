@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"syscall"
 	"testing"
@@ -72,6 +73,17 @@ func TestApplicationRewrite(t *testing.T) {
 	// Verify response
 	assert.Equal(t, http.StatusOK, response.Code)
 	assert.Equal(t, helloWorld, response.Body.String())
+}
+
+func TestApplicationLoadConfig(t *testing.T) {
+	app := aero.New()
+	workingDirectory, _ := os.Getwd()
+
+	os.Chdir("test")
+	app.Load()
+	os.Chdir(workingDirectory)
+
+	assert.Equal(t, "Test title", app.Config.Title)
 }
 
 func TestBigResponse(t *testing.T) {
