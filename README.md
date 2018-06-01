@@ -62,7 +62,9 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 ## Others
 
 - [Slides for OWDDM talk](https://docs.google.com/presentation/d/166I69goLEVuvuFeeRfUu8c5lwl2_HAeSi2SZyzIuEKg/edit) (Osaka, May 2018)
-- [Discord community][discord-url]
+- [Discord][discord-url]
+- [Twitter](https://twitter.com/aeroframework)
+- [Facebook](https://www.facebook.com/aeroframework/)
 
 ---
 
