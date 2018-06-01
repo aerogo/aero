@@ -4,7 +4,6 @@
 [![Go report card][goreportcard-image]][goreportcard-url]
 [![Tests][test-image]][test-url]
 [![Code coverage][codecov-image]][codecov-url]
-[![Used by projects][sourcegraph-image]][sourcegraph-url]
 [![License][license-image]][license-url]
 
 Aero is a high-performance web server with a clean API for web development.
