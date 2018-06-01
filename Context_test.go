@@ -356,3 +356,72 @@ func TestContextQuery(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.Code)
 	assert.Equal(t, search, response.Body.String())
 }
+
+func TestBigResponse(t *testing.T) {
+	text := strings.Repeat("Hello World", 1000000)
+	app := aero.New()
+
+	// Make sure GZip is enabled
+	assert.Equal(t, true, app.Config.GZip)
+
+	// Register route
+	app.Get("/", func(ctx *aero.Context) string {
+		return ctx.Text(text)
+	})
+
+	// Get response
+	response := request(app, "/")
+
+	// Verify the response
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, "gzip", response.Header().Get("Content-Encoding"))
+}
+
+func TestBigResponseNoGzip(t *testing.T) {
+	text := strings.Repeat("Hello World", 1000000)
+	app := aero.New()
+
+	// Register route
+	app.Get("/", func(ctx *aero.Context) string {
+		return ctx.Text(text)
+	})
+
+	// Create request and record response
+	request, _ := http.NewRequest("GET", "/", nil)
+	response := httptest.NewRecorder()
+	app.Handler().ServeHTTP(response, request)
+
+	// Verify the response
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, "", response.Header().Get("Content-Encoding"))
+}
+
+func TestBigResponse304(t *testing.T) {
+	text := strings.Repeat("Hello World", 1000000)
+	app := aero.New()
+
+	// Register route
+	app.Get("/", func(ctx *aero.Context) string {
+		return ctx.Text(text)
+	})
+
+	// Create request and record response
+	request, _ := http.NewRequest("GET", "/", nil)
+	response := httptest.NewRecorder()
+	app.Handler().ServeHTTP(response, request)
+	etag := response.Header().Get("ETag")
+
+	// Verify the response
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.NotEmpty(t, response.Body.String())
+
+	// Set if-none-match to the etag we just received
+	request, _ = http.NewRequest("GET", "/", nil)
+	request.Header.Set("If-None-Match", etag)
+	response = httptest.NewRecorder()
+	app.Handler().ServeHTTP(response, request)
+
+	// Verify the response
+	assert.Equal(t, 304, response.Code)
+	assert.Empty(t, response.Body.String())
+}

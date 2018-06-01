@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"strings"
 	"syscall"
 	"testing"
 	"time"
@@ -84,26 +83,6 @@ func TestApplicationLoadConfig(t *testing.T) {
 	os.Chdir(workingDirectory)
 
 	assert.Equal(t, "Test title", app.Config.Title)
-}
-
-func TestBigResponse(t *testing.T) {
-	text := strings.Repeat("Hello World", 1000000)
-	app := aero.New()
-
-	// Make sure GZip is enabled
-	assert.Equal(t, true, app.Config.GZip)
-
-	// Register route
-	app.Get("/", func(ctx *aero.Context) string {
-		return ctx.Text(text)
-	})
-
-	// Get response
-	response := request(app, "/")
-
-	// Verify the response
-	assert.Equal(t, http.StatusOK, response.Code)
-	assert.Equal(t, "gzip", response.Header().Get("Content-Encoding"))
 }
 
 func TestApplicationRun(t *testing.T) {
