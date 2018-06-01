@@ -64,7 +64,7 @@ func New() *Application {
 
 	// Default CSP
 	app.ContentSecurityPolicy = csp.New()
-	app.ContentSecurityPolicy.SetMap(map[string]string{
+	app.ContentSecurityPolicy.SetMap(csp.Map{
 		"default-src":  "'none'",
 		"img-src":      "https:",
 		"media-src":    "https:",
