@@ -11,9 +11,6 @@ matrix:
     - go: master
   fast_finish: true
 
-notifications:
-  email: false
-
 before_script:
   - bash <(curl -s https://raw.githubusercontent.com/blitzprog/gotravis/master/before-script.sh)
 
