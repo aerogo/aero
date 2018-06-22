@@ -362,8 +362,9 @@ func (ctx *Context) pushResources() {
 // code length is greater than the gzip threshold.
 func (ctx *Context) respond(code string) {
 	// If the request has been dealt with already,
+	// or if the request has been canceled by the client,
 	// there's nothing to do here.
-	if ctx.responded {
+	if ctx.responded || ctx.request.Context().Err() != nil {
 		return
 	}
 
