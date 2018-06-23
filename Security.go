@@ -25,6 +25,11 @@ func createTLSConfig() *tls.Config {
 			tls.CurveP256,
 		},
 		CipherSuites: []uint16{
+			// ECDSA is about 3 times faster than RSA and should be preferred.
+			tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+
+			// RSA is slower but still widely used.
 			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
 			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
 			tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
