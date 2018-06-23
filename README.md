@@ -36,7 +36,7 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 - Finishes ongoing requests on a server shutdown
 - Supports HTTP/2, IPv6 and Web Manifest
 - Automatic HTTP/2 push of configured resources
-- Session support with custom stores
+- Supports session data with custom stores
 - Provides http and https listener
 - Shows response time and size for your routes
 - Can run standalone without `nginx` babysitting it
