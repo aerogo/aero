@@ -67,9 +67,11 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 - [Twitter account](https://twitter.com/aeroframework)
 - [Facebook page](https://www.facebook.com/aeroframework/)
 
----
+## Author
 
-[![By Eduard Urbach](https://forthebadge.com/images/badges/built-with-love.svg)](https://github.com/blitzprog)
+| [![Eduard Urbach on Twitter](https://gravatar.com/avatar/16ed4d41a5f244d1b10de1b791657989?s=70)](http://twitter.com/eduardurbach "Follow @eduardurbach on Twitter") |
+|---|
+| [Eduard Urbach](https://eduardurbach.com) |
 
 [godoc-image]: https://godoc.org/github.com/aerogo/aero?status.svg
 [godoc-url]: https://godoc.org/github.com/aerogo/aero
