@@ -24,6 +24,6 @@ func TestRequest(t *testing.T) {
 		return ctx.Text(helloWorld)
 	})
 
-	response := request(app, "/")
+	response := getResponse(app, "/")
 	assert.Equal(t, http.StatusOK, response.Code)
 }

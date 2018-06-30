@@ -23,7 +23,7 @@ func TestApplicationMiddleware(t *testing.T) {
 	})
 
 	// Get response
-	response := request(app, "/")
+	response := getResponse(app, "/")
 
 	// Verify response
 	assert.Equal(t, http.StatusPermanentRedirect, response.Code)
@@ -44,7 +44,7 @@ func TestApplicationMiddlewareSkipNext(t *testing.T) {
 	})
 
 	// Get response
-	response := request(app, "/")
+	response := getResponse(app, "/")
 
 	// Verify response
 	assert.Equal(t, "", response.Body.String())

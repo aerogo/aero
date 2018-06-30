@@ -25,7 +25,7 @@ func TestApplicationGet(t *testing.T) {
 	})
 
 	// Get response
-	response := request(app, "/")
+	response := getResponse(app, "/")
 
 	// Verify response
 	assert.Equal(t, http.StatusOK, response.Code)
@@ -67,7 +67,7 @@ func TestApplicationRewrite(t *testing.T) {
 	})
 
 	// Get response
-	response := request(app, "/")
+	response := getResponse(app, "/")
 
 	// Verify response
 	assert.Equal(t, http.StatusOK, response.Code)
@@ -132,8 +132,8 @@ func TestApplicationRunHTTPS(t *testing.T) {
 	app.Run()
 }
 
-// request sends a request to the server and returns the response.
-func request(app *aero.Application, route string) *httptest.ResponseRecorder {
+// getResponse sends a request to the server and returns the response.
+func getResponse(app *aero.Application, route string) *httptest.ResponseRecorder {
 	// Create request
 	request, _ := http.NewRequest("GET", route, nil)
 	request.Header.Set("Accept-Encoding", "gzip")

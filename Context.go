@@ -319,7 +319,7 @@ func (ctx *Context) Redirect(url string) string {
 
 // RedirectPermanently redirects to the given URL and indicates that this is a permanent change using status code 301.
 func (ctx *Context) RedirectPermanently(url string) string {
-	ctx.StatusCode = http.StatusPermanentRedirect
+	ctx.StatusCode = http.StatusMovedPermanently
 	ctx.response.Header().Set("Location", url)
 	return ""
 }

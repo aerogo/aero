@@ -26,7 +26,7 @@ func TestContextResponseHeader(t *testing.T) {
 	})
 
 	// Get response
-	response := request(app, "/")
+	response := getResponse(app, "/")
 
 	// Verify response
 	assert.Equal(t, http.StatusOK, response.Code)
@@ -51,17 +51,17 @@ func TestContextError(t *testing.T) {
 	})
 
 	// Verify response with known error
-	response := request(app, "/")
+	response := getResponse(app, "/")
 	assert.Equal(t, http.StatusUnauthorized, response.Code)
 	assert.Contains(t, response.Body.String(), "Not logged in")
 
 	// Verify response with explanation only
-	response = request(app, "/explanation-only")
+	response = getResponse(app, "/explanation-only")
 	assert.Equal(t, http.StatusUnauthorized, response.Code)
 	assert.Contains(t, response.Body.String(), "Not authorized")
 
 	// Verify response with unknown error
-	response = request(app, "/unknown-error")
+	response = getResponse(app, "/unknown-error")
 	assert.Equal(t, http.StatusUnauthorized, response.Code)
 	assert.Contains(t, response.Body.String(), "Unknown error")
 }
@@ -79,7 +79,7 @@ func TestContextSession(t *testing.T) {
 	})
 
 	// Get response
-	response := request(app, "/")
+	response := getResponse(app, "/")
 
 	// Verify response
 	assert.Equal(t, http.StatusOK, response.Code)
@@ -219,13 +219,13 @@ func TestContextContentTypes(t *testing.T) {
 	})
 
 	// Get responses
-	responseJSON := request(app, "/json")
-	responseJSONLD := request(app, "/jsonld")
-	responseHTML := request(app, "/html")
-	responseCSS := request(app, "/css")
-	responseJS := request(app, "/js")
-	responseFile := request(app, "/files/Application.go")
-	responseMediaFile := request(app, "/files/docs/usage.gif")
+	responseJSON := getResponse(app, "/json")
+	responseJSONLD := getResponse(app, "/jsonld")
+	responseHTML := getResponse(app, "/html")
+	responseCSS := getResponse(app, "/css")
+	responseJS := getResponse(app, "/js")
+	responseFile := getResponse(app, "/files/Application.go")
+	responseMediaFile := getResponse(app, "/files/docs/usage.gif")
 
 	// Verify JSON response
 	json, _ := json.Marshal(app.Config)
@@ -285,7 +285,7 @@ func TestContextHTTP2Push(t *testing.T) {
 	})
 
 	// Get response
-	response := request(app, "/")
+	response := getResponse(app, "/")
 
 	// Verify response
 	assert.Equal(t, http.StatusOK, response.Code)
@@ -305,7 +305,7 @@ func TestContextGetInt(t *testing.T) {
 	})
 
 	// Get response
-	response := request(app, "/21")
+	response := getResponse(app, "/21")
 
 	// Verify response
 	assert.Equal(t, http.StatusOK, response.Code)
@@ -333,6 +333,33 @@ func TestContextUserAgent(t *testing.T) {
 	// Verify response
 	assert.Equal(t, http.StatusOK, response.Code)
 	assert.Equal(t, agent, response.Body.String())
+}
+
+func TestContextRedirect(t *testing.T) {
+	app := aero.New()
+
+	// Register routes
+	app.Get("/permanent", func(ctx *aero.Context) string {
+		return ctx.RedirectPermanently("/target")
+	})
+
+	app.Get("/temporary", func(ctx *aero.Context) string {
+		return ctx.Redirect("/target")
+	})
+
+	// Get temporary response
+	response := getResponse(app, "/temporary")
+
+	// Verify response
+	assert.Equal(t, http.StatusFound, response.Code)
+	assert.Equal(t, "", response.Body.String())
+
+	// Get permanent response
+	response = getResponse(app, "/permanent")
+
+	// Verify response
+	assert.Equal(t, http.StatusMovedPermanently, response.Code)
+	assert.Equal(t, "", response.Body.String())
 }
 
 func TestContextQuery(t *testing.T) {
@@ -370,7 +397,7 @@ func TestBigResponse(t *testing.T) {
 	})
 
 	// Get response
-	response := request(app, "/")
+	response := getResponse(app, "/")
 
 	// Verify the response
 	assert.Equal(t, http.StatusOK, response.Code)
