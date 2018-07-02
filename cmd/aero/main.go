@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -9,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/aerogo/aero"
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/fatih/color"
 )
@@ -93,7 +93,7 @@ func config() {
 	config.Fonts = []string{}
 	config.Push = []string{}
 	config.Scripts.Main = "main"
-	bytes, err := json.MarshalIndent(config, "", "\t")
+	bytes, err := jsoniter.MarshalIndent(config, "", "\t")
 	panicOnError(err)
 
 	err = ioutil.WriteFile("config.json", bytes, 0644)

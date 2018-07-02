@@ -1,8 +1,9 @@
 package aero
 
 import (
-	"encoding/json"
 	"os"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 // Configuration represents the data in your config.json file.
@@ -74,7 +75,7 @@ func LoadConfig(path string) (*Configuration, error) {
 	config := &Configuration{}
 	config.Reset()
 
-	decoder := json.NewDecoder(file)
+	decoder := jsoniter.NewDecoder(file)
 	err = decoder.Decode(config)
 
 	if err != nil {

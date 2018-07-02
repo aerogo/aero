@@ -1,7 +1,6 @@
 package aero_test
 
 import (
-	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net/http"
@@ -11,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/aerogo/session"
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/aerogo/aero"
 	"github.com/stretchr/testify/assert"
@@ -228,7 +228,7 @@ func TestContextContentTypes(t *testing.T) {
 	responseMediaFile := getResponse(app, "/files/docs/usage.gif")
 
 	// Verify JSON response
-	json, _ := json.Marshal(app.Config)
+	json, _ := jsoniter.Marshal(app.Config)
 	assert.Equal(t, http.StatusOK, responseJSON.Code)
 	assert.Equal(t, json, responseJSON.Body.Bytes())
 	assert.Contains(t, responseJSON.Header().Get("Content-Type"), "application/json")

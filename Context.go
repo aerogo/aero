@@ -2,7 +2,6 @@ package aero
 
 import (
 	"compress/gzip"
-	"encoding/json"
 	"fmt"
 	"log"
 	"mime"
@@ -14,6 +13,7 @@ import (
 	"github.com/OneOfOne/xxhash"
 	"github.com/aerogo/session"
 	"github.com/fatih/color"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/julienschmidt/httprouter"
 	"github.com/tomasen/realip"
 )
@@ -180,7 +180,7 @@ func (ctx *Context) HasSession() bool {
 func (ctx *Context) JSON(value interface{}) string {
 	ctx.response.Header().Set(contentTypeHeader, contentTypeJSON)
 
-	bytes, err := json.Marshal(value)
+	bytes, err := jsoniter.Marshal(value)
 
 	if err != nil {
 		ctx.StatusCode = http.StatusInternalServerError
@@ -194,7 +194,7 @@ func (ctx *Context) JSON(value interface{}) string {
 func (ctx *Context) JSONLinkedData(value interface{}) string {
 	ctx.response.Header().Set(contentTypeHeader, contentTypeJSONLD)
 
-	bytes, err := json.Marshal(value)
+	bytes, err := jsoniter.Marshal(value)
 
 	if err != nil {
 		ctx.StatusCode = http.StatusInternalServerError
