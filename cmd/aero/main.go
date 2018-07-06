@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -8,7 +9,6 @@ import (
 	"path/filepath"
 
 	"github.com/aerogo/aero"
-	jsoniter "github.com/json-iterator/go"
 
 	"github.com/fatih/color"
 )
@@ -18,12 +18,14 @@ var newApp bool
 // Shell flags
 func init() {
 	flag.BoolVar(&newApp, "newapp", false, "Creates the basic structure of a new app in an empty directory")
-	flag.Parse()
 }
 
 // Main
 func main() {
+	flag.Parse()
+
 	if !newApp {
+		flag.Usage()
 		return
 	}
 
@@ -93,7 +95,7 @@ func config() {
 	config.Fonts = []string{}
 	config.Push = []string{}
 	config.Scripts.Main = "main"
-	bytes, err := jsoniter.MarshalIndent(config, "", "\t")
+	bytes, err := json.MarshalIndent(config, "", "\t")
 	panicOnError(err)
 
 	err = ioutil.WriteFile("config.json", bytes, 0644)
