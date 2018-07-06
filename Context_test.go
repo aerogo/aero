@@ -47,7 +47,7 @@ func TestContextError(t *testing.T) {
 	})
 
 	app.Get("/unknown-error", func(ctx *aero.Context) string {
-		return ctx.Error(http.StatusUnauthorized, "", nil)
+		return ctx.Error(http.StatusUnauthorized)
 	})
 
 	// Verify response with known error

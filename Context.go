@@ -1,6 +1,7 @@
 package aero
 
 import (
+	"bytes"
 	"compress/gzip"
 	"fmt"
 	"log"
@@ -254,24 +255,34 @@ func (ctx *Context) File(file string) string {
 }
 
 // Error should be used for sending error messages to the user.
-func (ctx *Context) Error(statusCode int, explanation string, err error) string {
+func (ctx *Context) Error(statusCode int, errors ...interface{}) string {
 	ctx.StatusCode = statusCode
 	ctx.response.Header().Set(contentTypeHeader, contentTypeHTML)
 
-	if err != nil {
-		message := fmt.Sprintf("%s: %s", explanation, err.Error())
-		color.Red(message)
-		return message
+	message := bytes.Buffer{}
+
+	if len(errors) == 0 {
+		message.WriteString(fmt.Sprintf("Unknown error: %d", statusCode))
+	} else {
+		for index, err := range errors {
+			switch err.(type) {
+			case string:
+				message.WriteString(err.(string))
+			case error:
+				message.WriteString(err.(error).Error())
+			default:
+				continue
+			}
+
+			if index != len(errors)-1 {
+				message.WriteString(": ")
+			}
+		}
 	}
 
-	if explanation != "" {
-		color.Red(explanation)
-		return explanation
-	}
-
-	message := fmt.Sprintf("Unknown error: %d", statusCode)
-	color.Red(message)
-	return message
+	finalMessage := message.String()
+	color.Red(finalMessage)
+	return finalMessage
 }
 
 // URI returns the relative path, e.g. /blog/post/123.
