@@ -66,6 +66,46 @@ func TestContextError(t *testing.T) {
 	assert.Contains(t, response.Body.String(), "Unknown error")
 }
 
+func TestContextURI(t *testing.T) {
+	app := aero.New()
+
+	// Register route
+	app.Get("/uri", func(ctx *aero.Context) string {
+		return ctx.URI()
+	})
+
+	app.Get("/set-uri", func(ctx *aero.Context) string {
+		ctx.SetURI("/hello")
+		return ctx.URI()
+	})
+
+	// Verify response with read-only URI
+	response := getResponse(app, "/uri")
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.Contains(t, response.Body.String(), "/uri")
+
+	// Verify response with modified URI
+	response = getResponse(app, "/set-uri")
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.Contains(t, response.Body.String(), "/hello")
+}
+
+func TestContextRealIP(t *testing.T) {
+	app := aero.New()
+
+	// Register route
+	app.Get("/ip", func(ctx *aero.Context) string {
+		return ctx.RealIP()
+	})
+
+	// Get response
+	response := getResponse(app, "/ip")
+
+	// Verify response
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.Contains(t, response.Body.String(), "")
+}
+
 func TestContextSession(t *testing.T) {
 	app := aero.New()
 
