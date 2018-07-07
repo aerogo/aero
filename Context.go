@@ -86,6 +86,9 @@ type Context struct {
 	// Status code
 	StatusCode int
 
+	// Error message
+	ErrorMessage string
+
 	// Custom data
 	Data interface{}
 
@@ -280,9 +283,9 @@ func (ctx *Context) Error(statusCode int, errors ...interface{}) string {
 		}
 	}
 
-	finalMessage := message.String()
-	color.Red(finalMessage)
-	return finalMessage
+	ctx.ErrorMessage = message.String()
+	color.Red(ctx.ErrorMessage)
+	return ctx.ErrorMessage
 }
 
 // URI returns the relative path, e.g. /blog/post/123.
