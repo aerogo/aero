@@ -44,6 +44,7 @@ type Application struct {
 	onStart        []func()
 	onShutdown     []func()
 	onPush         []func(*Context)
+	stop           chan os.Signal
 
 	routes struct {
 		GET  []string
@@ -93,6 +94,10 @@ func New() *Application {
 
 	// Set mime type for WebP because Go standard library doesn't include it
 	mime.AddExtensionType(".webp", "image/webp")
+
+	// Receive signals
+	app.stop = make(chan os.Signal, 1)
+	signal.Notify(app.stop, os.Interrupt, syscall.SIGTERM)
 
 	return app
 }
@@ -202,9 +207,7 @@ func (app *Application) ListenAndServe() {
 
 // Wait will make the process wait until it is killed.
 func (app *Application) Wait() {
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-	<-stop
+	<-app.stop
 }
 
 // Shutdown will gracefully shut down all servers.
