@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"mime"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -147,7 +148,7 @@ func (app *Application) createRouteHandler(path string, handle Handle) httproute
 
 // Run starts your application.
 func (app *Application) Run() {
-	app.Listen()
+	app.ListenAndServe()
 
 	for _, callback := range app.onStart {
 		callback()
@@ -176,11 +177,15 @@ func (app *Application) Load() {
 	app.Config = config
 }
 
-// Listen starts the server.
-func (app *Application) Listen() {
+// ListenAndServe starts the server.
+// It guarantees that a TCP listener is listening on the ports defined in the config
+// when the function returns.
+func (app *Application) ListenAndServe() {
 	if app.Security.Key != "" && app.Security.Certificate != "" {
+		listener := app.listen(":" + strconv.Itoa(app.Config.Ports.HTTPS))
+
 		go func() {
-			app.serveHTTPS(":" + strconv.Itoa(app.Config.Ports.HTTPS))
+			app.serveHTTPS(listener)
 		}()
 
 		fmt.Println("Server running on:", color.GreenString("https://localhost:"+strconv.Itoa(app.Config.Ports.HTTPS)))
@@ -188,8 +193,10 @@ func (app *Application) Listen() {
 		fmt.Println("Server running on:", color.GreenString("http://localhost:"+strconv.Itoa(app.Config.Ports.HTTP)))
 	}
 
+	listener := app.listen(":" + strconv.Itoa(app.Config.Ports.HTTP))
+
 	go func() {
-		app.serveHTTP(":" + strconv.Itoa(app.Config.Ports.HTTP))
+		app.serveHTTP(listener)
 	}()
 }
 
@@ -220,7 +227,7 @@ func shutdown(server *http.Server) {
 	}
 
 	// Add a timeout to the server shutdown
-	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.Background(), 250*time.Millisecond)
 	defer cancel()
 
 	// Shut down server
@@ -277,9 +284,8 @@ func (app *Application) Handler() http.Handler {
 }
 
 // createServer creates an http server instance.
-func (app *Application) createServer(address string) *http.Server {
+func (app *Application) createServer() *http.Server {
 	return &http.Server{
-		Addr:              address,
 		Handler:           app.Handler(),
 		ReadHeaderTimeout: 5 * time.Second,
 		WriteTimeout:      180 * time.Second,
@@ -288,35 +294,46 @@ func (app *Application) createServer(address string) *http.Server {
 	}
 }
 
+// listen returns a Listener for the given address.
+func (app *Application) listen(address string) Listener {
+	listener, err := net.Listen("tcp", address)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return Listener{listener.(*net.TCPListener)}
+}
+
 // serveHTTP serves requests from the given listener.
-func (app *Application) serveHTTP(address string) {
-	server := app.createServer(address)
+func (app *Application) serveHTTP(listener Listener) {
+	server := app.createServer()
 
 	app.serversMutex.Lock()
 	app.servers[0] = server
 	app.serversMutex.Unlock()
 
 	// This will block the calling goroutine until the server shuts down.
-	serveError := server.ListenAndServe()
+	err := server.Serve(listener)
 
-	if serveError != nil && !strings.Contains(serveError.Error(), "closed") {
-		panic(serveError)
+	if err != nil && !strings.Contains(err.Error(), "closed") {
+		panic(err)
 	}
 }
 
 // serveHTTPS serves requests from the given listener.
-func (app *Application) serveHTTPS(address string) {
-	server := app.createServer(address)
+func (app *Application) serveHTTPS(listener Listener) {
+	server := app.createServer()
 
 	app.serversMutex.Lock()
 	app.servers[1] = server
 	app.serversMutex.Unlock()
 
 	// This will block the calling goroutine until the server shuts down.
-	serveError := server.ListenAndServeTLS(app.Security.Certificate, app.Security.Key)
+	err := server.ServeTLS(listener, app.Security.Certificate, app.Security.Key)
 
-	if serveError != nil && !strings.Contains(serveError.Error(), "closed") {
-		panic(serveError)
+	if err != nil && !strings.Contains(err.Error(), "closed") {
+		panic(err)
 	}
 }
 
