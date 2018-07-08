@@ -147,9 +147,14 @@ func (app *Application) createRouteHandler(path string, handle Handle) httproute
 
 // Run starts your application.
 func (app *Application) Run() {
+	app.Listen()
+
+	for _, callback := range app.onStart {
+		callback()
+	}
+
 	app.TestManifest()
 	app.TestRoutes()
-	app.Listen()
 	app.Wait()
 	app.Shutdown()
 }
@@ -192,11 +197,6 @@ func (app *Application) Listen() {
 func (app *Application) Wait() {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-
-	for _, callback := range app.onStart {
-		callback()
-	}
-
 	<-stop
 }
 
