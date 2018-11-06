@@ -1,6 +1,7 @@
 package aero_test
 
 import (
+	"context"
 	"errors"
 	"io/ioutil"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aerogo/session"
 	jsoniter "github.com/json-iterator/go"
@@ -422,6 +424,47 @@ func TestContextQuery(t *testing.T) {
 	// Verify response
 	assert.Equal(t, http.StatusOK, response.Code)
 	assert.Equal(t, search, response.Body.String())
+}
+
+func TestContextEventStream(t *testing.T) {
+	app := aero.New()
+
+	// Register route
+	app.Get("/", func(ctx *aero.Context) string {
+		events := make(chan *aero.Event)
+		disconnected := make(chan struct{})
+
+		go func() {
+			for {
+				select {
+				case <-disconnected:
+					close(events)
+					return
+
+				case <-time.After(10 * time.Millisecond):
+					events <- &aero.Event{
+						Name: "ping",
+						Data: "{}",
+					}
+				}
+			}
+		}()
+
+		return ctx.EventStream(events, disconnected)
+	})
+
+	// Create request
+	request, _ := http.NewRequest("GET", "/", nil)
+	ctx, cancel := context.WithTimeout(context.TODO(), 100*time.Millisecond)
+	defer cancel()
+	request = request.WithContext(ctx)
+
+	// Get response
+	response := httptest.NewRecorder()
+	app.Handler().ServeHTTP(response, request)
+
+	// Verify response
+	assert.Equal(t, http.StatusOK, response.Code)
 }
 
 func TestBigResponse(t *testing.T) {

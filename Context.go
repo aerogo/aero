@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/OneOfOne/xxhash"
 	"github.com/aerogo/session"
@@ -43,6 +44,7 @@ const (
 	contentTypeJSON               = "application/json; charset=utf-8"
 	contentTypeJSONLD             = "application/ld+json; charset=utf-8"
 	contentTypePlainText          = "text/plain; charset=utf-8"
+	contentTypeEventStream        = "text/event-stream; charset=utf-8"
 	contentEncodingHeader         = "Content-Encoding"
 	contentEncodingGzip           = "gzip"
 	acceptEncodingHeader          = "Accept-Encoding"
@@ -240,6 +242,48 @@ func (ctx *Context) CSS(text string) string {
 func (ctx *Context) JavaScript(code string) string {
 	ctx.response.Header().Set(contentTypeHeader, contentTypeJavaScript)
 	return code
+}
+
+// EventStream sends server events to the client.
+func (ctx *Context) EventStream(events <-chan *Event, done chan struct{}) string {
+	defer close(done)
+
+	// Flush
+	flusher, ok := ctx.response.(http.Flusher)
+
+	if !ok {
+		return ctx.Error(http.StatusNotImplemented, "Flushing not supported")
+	}
+
+	// Catch disconnect events
+	disconnected := ctx.request.Context().Done()
+
+	// Send headers
+	header := ctx.response.Header()
+	header.Set(contentTypeHeader, contentTypeEventStream)
+	header.Set(cacheControlHeader, "no-cache")
+	header.Set("Connection", "keep-alive")
+	header.Set("Access-Control-Allow-Origin", "*")
+	ctx.response.WriteHeader(200)
+	ctx.responded = true
+
+	for {
+		select {
+		case <-disconnected:
+			return ""
+
+		case event := <-events:
+			if event != nil {
+				fmt.Fprintf(ctx.response, "event: %s\ndata: %s\n\n", event.Name, event.Data)
+				flusher.Flush()
+			}
+
+		case <-time.After(keepAlivePeriod):
+			// Send a comment to keep alive the connection
+			ctx.response.Write([]byte(";\n"))
+			flusher.Flush()
+		}
+	}
 }
 
 // File sends the contents of a local file and determines its mime type by extension.
