@@ -278,7 +278,7 @@ func (ctx *Context) EventStream(events <-chan *Event, done chan struct{}) string
 				flusher.Flush()
 			}
 
-		case <-time.After(keepAlivePeriod):
+		case <-time.After(5 * time.Second):
 			// Send a comment to keep alive the connection
 			ctx.response.Write([]byte(";\n"))
 			flusher.Flush()
