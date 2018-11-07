@@ -245,8 +245,8 @@ func (ctx *Context) JavaScript(code string) string {
 }
 
 // EventStream sends server events to the client.
-func (ctx *Context) EventStream(events <-chan *Event, done chan struct{}) string {
-	defer close(done)
+func (ctx *Context) EventStream(stream *EventStream) string {
+	defer close(stream.Closed)
 
 	// Flush
 	flusher, ok := ctx.response.(http.Flusher)
@@ -272,15 +272,16 @@ func (ctx *Context) EventStream(events <-chan *Event, done chan struct{}) string
 		case <-disconnected:
 			return ""
 
-		case event := <-events:
+		case event := <-stream.Events:
 			if event != nil {
 				fmt.Fprintf(ctx.response, "event: %s\ndata: %s\n\n", event.Name, event.Data)
 				flusher.Flush()
 			}
 
 		case <-time.After(5 * time.Second):
-			// Send a comment to keep alive the connection
-			ctx.response.Write([]byte(";\n"))
+			// Send one byte to keep alive the connection
+			// which will also check for disconnection.
+			ctx.response.Write([]byte("\n"))
 			flusher.Flush()
 		}
 	}
