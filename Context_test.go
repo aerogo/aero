@@ -445,6 +445,25 @@ func TestContextEventStream(t *testing.T) {
 						Name: "ping",
 						Data: "{}",
 					}
+
+					stream.Events <- &aero.Event{
+						Name: "ping",
+						Data: []byte("{}"),
+					}
+
+					stream.Events <- &aero.Event{
+						Name: "ping",
+						Data: struct {
+							Message string `json:"message"`
+						}{
+							Message: "Hello",
+						},
+					}
+
+					stream.Events <- &aero.Event{
+						Name: "ping",
+						Data: nil,
+					}
 				}
 			}
 		}()

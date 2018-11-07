@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/OneOfOne/xxhash"
 	"github.com/aerogo/session"
 	"github.com/fatih/color"
 	jsoniter "github.com/json-iterator/go"
@@ -274,7 +273,16 @@ func (ctx *Context) EventStream(stream *EventStream) string {
 
 		case event := <-stream.Events:
 			if event != nil {
-				fmt.Fprintf(ctx.response, "event: %s\ndata: %s\n\n", event.Name, event.Data)
+				data := event.Data
+
+				switch data.(type) {
+				case string, []byte:
+					// Do nothing with the data if it's already a string or byte slice.
+				default:
+					data, _ = jsoniter.Marshal(data)
+				}
+
+				fmt.Fprintf(ctx.response, "event: %s\ndata: %s\n\n", event.Name, data)
 				flusher.Flush()
 			}
 
@@ -459,9 +467,7 @@ func (ctx *Context) respondBytes(b []byte) {
 	}
 
 	// ETag generation
-	h := xxhash.NewS64(0)
-	h.Write(b)
-	etag := strconv.FormatUint(h.Sum64(), 16)
+	etag := ETag(b)
 
 	// If client cache is up to date, send 304 with no response body.
 	clientETag := ctx.request.Header.Get(ifNoneMatchHeader)
