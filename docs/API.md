@@ -131,6 +131,29 @@ app.OnEnd(func() {
 })
 ```
 
+## Sessions
+
+```go
+app.Get("/", func(ctx *aero.Context) string {
+	// Load number of views
+	views := 0
+	storedViews := ctx.Session().Get("views")
+
+	if storedViews != nil {
+		views = storedViews.(int)
+	}
+
+	// Increment
+	views++
+
+	// Store number of views
+	ctx.Session().Set("views", views)
+
+	// Display current number of views
+	return ctx.Text(fmt.Sprintf("%d views", views))
+})
+```
+
 ## EventStream
 
 *SSE (server sent events) have recently been added as an experimental feature. The API is subject to change.*
