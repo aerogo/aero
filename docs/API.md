@@ -131,6 +131,39 @@ app.OnEnd(func() {
 })
 ```
 
+## EventStream
+
+*SSE (server sent events) have recently been added as an experimental feature. The API is subject to change.*
+
+Using an event stream, you can push data from your server at any time to your client.
+
+```go
+app.Get("/events/live", func(ctx *aero.Context) string {
+	stream := aero.NewEventStream()
+
+	go func() {
+		defer println("disconnected")
+
+		for {
+			select {
+			case <-stream.Closed:
+				return
+
+			case <-time.After(1 * time.Second):
+				stream.Events <- &aero.Event{
+					Name: "ping",
+					Data: "Hello World",
+				}
+			}
+		}
+	}()
+
+	return ctx.EventStream(stream)
+})
+```
+
+On the client side, use [EventSource](https://developer.mozilla.org/en-US/docs/Web/API/EventSource#Examples) to receive events.
+
 ## AddPushCondition
 
 By default, HTTP/2 push will only trigger on `text/html` responses. You can add more conditions via:

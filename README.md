@@ -36,6 +36,7 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 - Supports HTTP/2, IPv6 and Web Manifest
 - Automatic HTTP/2 push of configured resources
 - Supports session data with custom stores
+- Allows pushing live data to the client via SSE
 - Provides http and https listener
 - Shows response time and size for your routes
 - Can run standalone without `nginx` babysitting it
