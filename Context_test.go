@@ -431,18 +431,17 @@ func TestContextEventStream(t *testing.T) {
 
 	// Register route
 	app.Get("/", func(ctx *aero.Context) string {
-		events := make(chan *aero.Event)
-		disconnected := make(chan struct{})
+		stream := aero.NewEventStream()
 
 		go func() {
 			for {
 				select {
-				case <-disconnected:
-					close(events)
+				case <-stream.Closed:
+					close(stream.Events)
 					return
 
 				case <-time.After(10 * time.Millisecond):
-					events <- &aero.Event{
+					stream.Events <- &aero.Event{
 						Name: "ping",
 						Data: "{}",
 					}
@@ -450,7 +449,7 @@ func TestContextEventStream(t *testing.T) {
 			}
 		}()
 
-		return ctx.EventStream(events, disconnected)
+		return ctx.EventStream(stream)
 	})
 
 	// Create request
