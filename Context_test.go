@@ -3,6 +3,7 @@ package aero_test
 import (
 	"context"
 	"errors"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -306,6 +307,55 @@ func TestContextContentTypes(t *testing.T) {
 	assert.Equal(t, http.StatusOK, responseMediaFile.Code)
 	assert.Equal(t, imageData, responseMediaFile.Body.Bytes())
 	assert.Contains(t, responseMediaFile.Header().Get("Content-Type"), "image/gif")
+}
+
+func TestContextReader(t *testing.T) {
+	app := aero.New()
+	config, _ := jsoniter.MarshalToString(app.Config)
+
+	// ReadAll
+	app.Get("/readall", func(ctx *aero.Context) string {
+		reader, writer := io.Pipe()
+
+		go func() {
+			defer writer.Close()
+			encoder := jsoniter.NewEncoder(writer)
+			encoder.Encode(app.Config)
+		}()
+
+		return ctx.ReadAll(reader)
+	})
+
+	// Reader
+	app.Get("/reader", func(ctx *aero.Context) string {
+		reader, writer := io.Pipe()
+
+		go func() {
+			defer writer.Close()
+			encoder := jsoniter.NewEncoder(writer)
+			encoder.Encode(app.Config)
+		}()
+
+		return ctx.Reader(reader)
+	})
+
+	// ReadSeeker
+	app.Get("/readseeker", func(ctx *aero.Context) string {
+		return ctx.ReadSeeker(strings.NewReader(config))
+	})
+
+	routes := []string{
+		"/readall",
+		"/reader",
+		"/readseeker",
+	}
+
+	for _, route := range routes {
+		// Verify response
+		response := getResponse(app, route)
+		assert.Equal(t, http.StatusOK, response.Code)
+		assert.Equal(t, config, strings.TrimSpace(response.Body.String()))
+	}
 }
 
 func TestContextHTTP2Push(t *testing.T) {

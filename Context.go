@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
 	"mime"
 	"net/http"
@@ -306,6 +308,37 @@ func (ctx *Context) File(file string) string {
 	}
 
 	http.ServeFile(ctx.response, ctx.request, file)
+	ctx.responded = true
+	return ""
+}
+
+// ReadAll returns the contents of the reader.
+// This will create an in-memory copy and calculate the E-Tag before sending the data.
+// Compression will be applied if necessary.
+func (ctx *Context) ReadAll(reader io.Reader) string {
+	data, err := ioutil.ReadAll(reader)
+
+	if err != nil {
+		return ctx.Error(http.StatusInternalServerError, err)
+	}
+
+	return BytesToStringUnsafe(data)
+}
+
+// Reader sends the contents of the io.Reader without creating an in-memory copy.
+// E-Tags will not be generated for the content and compression will not be applied.
+// Use this function if your reader contains huge amounts of data.
+func (ctx *Context) Reader(reader io.Reader) string {
+	io.Copy(ctx.response, reader)
+	ctx.responded = true
+	return ""
+}
+
+// ReadSeeker sends the contents of the io.ReadSeeker without creating an in-memory copy.
+// E-Tags will not be generated for the content and compression will not be applied.
+// Use this function if your reader contains huge amounts of data.
+func (ctx *Context) ReadSeeker(reader io.ReadSeeker) string {
+	http.ServeContent(ctx.response, ctx.request, "", time.Time{}, reader)
 	ctx.responded = true
 	return ""
 }
