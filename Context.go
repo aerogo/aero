@@ -353,12 +353,12 @@ func (ctx *Context) Error(statusCode int, errors ...interface{}) string {
 	if len(errors) == 0 {
 		message.WriteString(fmt.Sprintf("Unknown error: %d", statusCode))
 	} else {
-		for index, err := range errors {
-			switch err.(type) {
+		for index, param := range errors {
+			switch err := param.(type) {
 			case string:
-				message.WriteString(err.(string))
+				message.WriteString(err)
 			case error:
-				message.WriteString(err.(error).Error())
+				message.WriteString(err.Error())
 			default:
 				continue
 			}
