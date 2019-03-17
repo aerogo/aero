@@ -132,6 +132,19 @@ func TestApplicationRunHTTPS(t *testing.T) {
 	app.Run()
 }
 
+func TestApplicationUnavailablePort(t *testing.T) {
+	defer func() {
+		r := recover()
+		assert.NotNil(t, r)
+		assert.Contains(t, r.(error).Error(), "bind: permission denied")
+	}()
+
+	app := aero.New()
+	app.Config.Ports.HTTP = 80
+	app.Config.Ports.HTTPS = 443
+	app.ListenAndServe()
+}
+
 // getResponse sends a request to the server and returns the response.
 func getResponse(app *aero.Application, route string) *httptest.ResponseRecorder {
 	// Create request
