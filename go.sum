@@ -2,12 +2,12 @@ github.com/OneOfOne/xxhash v1.2.5 h1:zl/OfRA6nftbBK9qTohYBJ5xvw6C/oNKizR7cZGl3cI
 github.com/OneOfOne/xxhash v1.2.5/go.mod h1:eZbhyaAYD41SGSSsnmcpxVoRiQ/MPUTjUdIIOT9Um7Q=
 github.com/aerogo/csp v0.1.0 h1:h7eLg7MsjIDaoh/dAdqDhjbq2BhYdPTKBpabm7E419U=
 github.com/aerogo/csp v0.1.0/go.mod h1:DHkDDUqlScJGntVPNQ1T9IizxyPV7Y48G3uFh4lmZCo=
-github.com/aerogo/http v0.1.0 h1:1a1JjQ5umSAEVYmZ9C0P9iMp619IjCdHG/aXENdFHZI=
-github.com/aerogo/http v0.1.0/go.mod h1:KbJZtG4p2+/DcZ5clCq518alHGJgLB2OzPaZydqdNv4=
+github.com/aerogo/http v0.1.1 h1:iAiWZVZTkogFJg1MYvhXyiBQSzODNf86M2/bpkZY3u0=
+github.com/aerogo/http v0.1.1/go.mod h1:biG/HWNyTuOlNiyQgGTw9Vg6QFpZf5f1qsGJAocmAsI=
 github.com/aerogo/linter-performance v0.0.0-20171030054710-39aac8f4afac h1:YGTKsdOdjQt6lciU67AbiZ237bzzZVVeb1BlrFBOhBU=
 github.com/aerogo/linter-performance v0.0.0-20171030054710-39aac8f4afac/go.mod h1:QvKa/bFrHWaEVDlCe/rgmoOfOwfQW+xf2Eg705Z0/P8=
-github.com/aerogo/session v0.1.0 h1:dx1BJ6V9+aHBIOjpu9jK4VncPee2GccqVUqWaVuSxsM=
-github.com/aerogo/session v0.1.0/go.mod h1:Px2DpU6eBU919Z1tl39VLcLk9ooSOJbohJItGSAH/2M=
+github.com/aerogo/session v0.1.1 h1:NBy3+fPwyHAzollumyqptLIyLjFyHuIwYDcQOll7UVE=
+github.com/aerogo/session v0.1.1/go.mod h1:A4S5dvAhpm+DRdQbno5Rn4Jvj0UVGJmOUKQXataNIDg=
 github.com/aerogo/session-store-memory v0.1.0 h1:oG8YYC+xuq6V0Z02eRpxbXI4HA9/HJo8Si1AwR/2ssU=
 github.com/aerogo/session-store-memory v0.1.0/go.mod h1:5FTLBWv0+sgrkcyLkW7NWVyW6VYgUbfTLZVF3y+xcl4=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
