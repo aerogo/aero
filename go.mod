@@ -6,14 +6,12 @@ require (
 	github.com/OneOfOne/xxhash v1.2.5
 	github.com/aerogo/csp v0.1.0
 	github.com/aerogo/http v0.1.1
-	github.com/aerogo/linter-performance v0.0.0-20171030054710-39aac8f4afac
+	github.com/aerogo/linter-performance v0.1.0
 	github.com/aerogo/session v0.1.1
 	github.com/aerogo/session-store-memory v0.1.0
-	github.com/fatih/color v1.7.0
+	github.com/blitzprog/color v1.8.0
 	github.com/json-iterator/go v1.1.6
 	github.com/julienschmidt/httprouter v1.2.0
-	github.com/mattn/go-colorable v0.1.1 // indirect
-	github.com/mattn/go-isatty v0.0.7 // indirect
 	github.com/stretchr/testify v1.3.0
 	github.com/tdewolff/parse v2.3.4+incompatible
 	github.com/tdewolff/test v1.0.0 // indirect
