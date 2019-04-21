@@ -530,5 +530,5 @@ func (ctx *Context) respondBytes(b []byte) {
 	// Write response body
 	writer, _ := gzip.NewWriterLevel(response, gzip.BestCompression)
 	writer.Write(b)
-	writer.Flush()
+	writer.Close()
 }
