@@ -10,7 +10,7 @@ import (
 
 	"github.com/aerogo/aero"
 
-	"github.com/blitzprog/color"
+	"github.com/akyoto/color"
 )
 
 var newApp bool

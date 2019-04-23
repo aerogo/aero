@@ -21,7 +21,7 @@ import (
 	performance "github.com/aerogo/linter-performance"
 	"github.com/aerogo/session"
 	memstore "github.com/aerogo/session-store-memory"
-	"github.com/blitzprog/color"
+	"github.com/akyoto/color"
 	"github.com/julienschmidt/httprouter"
 )
 

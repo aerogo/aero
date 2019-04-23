@@ -12,10 +12,10 @@ matrix:
   fast_finish: true
 
 before_script:
-  - bash <(curl -s https://raw.githubusercontent.com/blitzprog/gotravis/master/before-script.sh)
+  - bash <(curl -s https://raw.githubusercontent.com/akyoto/gotravis/master/before-script.sh)
 
 script:
-  - bash <(curl -s https://raw.githubusercontent.com/blitzprog/gotravis/master/script.sh)
+  - bash <(curl -s https://raw.githubusercontent.com/akyoto/gotravis/master/script.sh)
 
 after_success:
-  - bash <(curl -s https://raw.githubusercontent.com/blitzprog/gotravis/master/after-success.sh)
+  - bash <(curl -s https://raw.githubusercontent.com/akyoto/gotravis/master/after-success.sh)

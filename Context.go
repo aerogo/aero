@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/aerogo/session"
-	"github.com/blitzprog/color"
+	"github.com/akyoto/color"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/julienschmidt/httprouter"
 	"github.com/tomasen/realip"
