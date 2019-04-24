@@ -2,12 +2,10 @@ github.com/OneOfOne/xxhash v1.2.5 h1:zl/OfRA6nftbBK9qTohYBJ5xvw6C/oNKizR7cZGl3cI
 github.com/OneOfOne/xxhash v1.2.5/go.mod h1:eZbhyaAYD41SGSSsnmcpxVoRiQ/MPUTjUdIIOT9Um7Q=
 github.com/aerogo/csp v0.1.3 h1:1KPWzdfLRNllCTQx+KkxmcUBHiq2mBJcfjj4OUOgEUw=
 github.com/aerogo/csp v0.1.3/go.mod h1:KNqnTFffuDwIPJxBEFTl3baBx+x3Vw+9kcMfu5APFJA=
-github.com/aerogo/http v0.1.1 h1:iAiWZVZTkogFJg1MYvhXyiBQSzODNf86M2/bpkZY3u0=
-github.com/aerogo/http v0.1.1/go.mod h1:biG/HWNyTuOlNiyQgGTw9Vg6QFpZf5f1qsGJAocmAsI=
 github.com/aerogo/http v0.1.2 h1:3O2qhk2H5HkJg9QzMGEF7z04xRTyrD1raNV1z5QBpaY=
 github.com/aerogo/http v0.1.2/go.mod h1:biG/HWNyTuOlNiyQgGTw9Vg6QFpZf5f1qsGJAocmAsI=
-github.com/aerogo/linter-performance v0.1.2 h1:eKETM6L+7PGTh40p9dtZFE4ZXIS8Fho8wDSvGQwiqB0=
-github.com/aerogo/linter-performance v0.1.2/go.mod h1:JSCLikuDNLUERoJ4jmGJqgp8yE/gDPF+4v4yfdEviYw=
+github.com/aerogo/linter-performance v0.1.3 h1:nHdUfSZwZQZR2P9hmVIbjPXtqghgzLDQjAJ6rmV9Yxg=
+github.com/aerogo/linter-performance v0.1.3/go.mod h1:/W99F0NTxhldKvxnvaYTnx25MKUNbcHlt+T/jeOJ6m8=
 github.com/aerogo/session v0.1.1 h1:NBy3+fPwyHAzollumyqptLIyLjFyHuIwYDcQOll7UVE=
 github.com/aerogo/session v0.1.1/go.mod h1:A4S5dvAhpm+DRdQbno5Rn4Jvj0UVGJmOUKQXataNIDg=
 github.com/aerogo/session-store-memory v0.1.1 h1:ak8uPsbCtkX9yRWS+jWk+iJ8CI3MU/dNyZ0maIGRCJY=
@@ -26,8 +24,8 @@ github.com/julienschmidt/httprouter v1.2.0 h1:TDTW5Yz1mjftljbcKqRcrYhd4XeOoI98t+
 github.com/julienschmidt/httprouter v1.2.0/go.mod h1:SYymIcj16QtmaHHD7aYtjjsJG7VTCxuUUipMqKk8s4w=
 github.com/klauspost/compress v1.4.0 h1:8nsMz3tWa9SWWPL60G1V6CUsf4lLjWLTNEtibhe8gh8=
 github.com/klauspost/compress v1.4.0/go.mod h1:RyIbtBH6LamlWaDj8nUwkbUhJ87Yi3uG0guNDohfE1A=
-github.com/klauspost/compress v1.4.1 h1:8VMb5+0wMgdBykOV96DwNwKFQ+WTI4pzYURP99CcB9E=
-github.com/klauspost/compress v1.4.1/go.mod h1:RyIbtBH6LamlWaDj8nUwkbUhJ87Yi3uG0guNDohfE1A=
+github.com/klauspost/compress v1.5.0 h1:iDac0ZKbmSA4PRrRuXXjZL8C7UoJan8oBYxXkMzEQrI=
+github.com/klauspost/compress v1.5.0/go.mod h1:RyIbtBH6LamlWaDj8nUwkbUhJ87Yi3uG0guNDohfE1A=
 github.com/klauspost/cpuid v0.0.0-20180405133222-e7e905edc00e h1:+lIPJOWl+jSiJOc70QXJ07+2eg2Jy2EC7Mi11BWujeM=
 github.com/klauspost/cpuid v0.0.0-20180405133222-e7e905edc00e/go.mod h1:Pj4uuM528wm8OyEC2QMXAi2YiTZ96dNQPGgoMS4s3ek=
 github.com/klauspost/cpuid v1.2.1 h1:vJi+O/nMdFt0vqm8NZBI6wzALWdA2X+egi0ogNyrC/w=
