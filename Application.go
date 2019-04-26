@@ -3,7 +3,6 @@ package aero
 import (
 	"context"
 	"fmt"
-	"mime"
 	"net"
 	"net/http"
 	"os"
@@ -54,18 +53,21 @@ type Application struct {
 
 // New creates a new application.
 func New() *Application {
-	app := new(Application)
-	app.start = time.Now()
-	app.routeTests = make(map[string][]string)
-	app.Router = httprouter.New()
+	app := &Application{
+		start:                 time.Now(),
+		stop:                  make(chan os.Signal, 1),
+		routeTests:            make(map[string][]string),
+		Config:                &Configuration{},
+		Router:                httprouter.New(),
+		ContentSecurityPolicy: csp.New(),
 
-	// Default linters
-	app.Linters = []Linter{
-		performance.New(),
+		// Default linters
+		Linters: []Linter{
+			performance.New(),
+		},
 	}
 
 	// Default CSP
-	app.ContentSecurityPolicy = csp.New()
 	app.ContentSecurityPolicy.SetMap(csp.Map{
 		"default-src":  "'none'",
 		"img-src":      "https:",
@@ -82,21 +84,13 @@ func New() *Application {
 	})
 
 	// Configuration
-	app.Config = new(Configuration)
 	app.Config.Reset()
 	app.Load()
 
 	// Default session store: Memory
 	app.Sessions.Store = memstore.New()
 
-	// Default style
-	// app.SetStyle("")
-
-	// Set mime type for WebP because Go standard library doesn't include it
-	mime.AddExtensionType(".webp", "image/webp")
-
 	// Receive signals
-	app.stop = make(chan os.Signal, 1)
 	signal.Notify(app.stop, os.Interrupt, syscall.SIGTERM)
 
 	return app
@@ -112,43 +106,6 @@ func (app *Application) Get(path string, handle Handle) {
 func (app *Application) Post(path string, handle Handle) {
 	app.routes.POST = append(app.routes.POST, path)
 	app.Router.POST(path, app.createRouteHandler(path, handle))
-}
-
-// createRouteHandler creates a handler function for httprouter.
-func (app *Application) createRouteHandler(path string, handle Handle) httprouter.Handle {
-	return func(response http.ResponseWriter, request *http.Request, params httprouter.Params) {
-		// Create context.
-		ctx := Context{
-			App:        app,
-			StatusCode: http.StatusOK,
-			request:    request,
-			response:   response,
-			params:     params,
-		}
-
-		// The last part of the call chain will send the actual response.
-		lastPartOfCallChain := func() {
-			data := handle(&ctx)
-			ctx.respond(data)
-		}
-
-		// Declare the type of generateNext so that we can define it recursively in the next part.
-		var generateNext func(index int) func()
-
-		// Create a function that returns a bound function next()
-		// which can be used as the 2nd parameter in the call chain.
-		generateNext = func(index int) func() {
-			if index == len(app.middleware) {
-				return lastPartOfCallChain
-			}
-
-			return func() {
-				app.middleware[index](&ctx, generateNext(index+1))
-			}
-		}
-
-		generateNext(0)()
-	}
 }
 
 // Run starts your application.
@@ -223,24 +180,6 @@ func (app *Application) Shutdown() {
 	}
 }
 
-// shutdown will gracefully shut down the server.
-func shutdown(server *http.Server) {
-	if server == nil {
-		return
-	}
-
-	// Add a timeout to the server shutdown
-	ctx, cancel := context.WithTimeout(context.Background(), 250*time.Millisecond)
-	defer cancel()
-
-	// Shut down server
-	err := server.Shutdown(ctx)
-
-	if err != nil {
-		fmt.Println(err)
-	}
-}
-
 // OnStart registers a callback to be executed on server start.
 func (app *Application) OnStart(callback func()) {
 	app.onStart = append(app.onStart, callback)
@@ -284,60 +223,6 @@ func (app *Application) Handler() http.Handler {
 	}
 
 	return router
-}
-
-// createServer creates an http server instance.
-func (app *Application) createServer() *http.Server {
-	return &http.Server{
-		Handler:           app.Handler(),
-		ReadHeaderTimeout: 5 * time.Second,
-		WriteTimeout:      180 * time.Second,
-		IdleTimeout:       120 * time.Second,
-		TLSConfig:         createTLSConfig(),
-	}
-}
-
-// listen returns a Listener for the given address.
-func (app *Application) listen(address string) Listener {
-	listener, err := net.Listen("tcp", address)
-
-	if err != nil {
-		panic(err)
-	}
-
-	return Listener{listener.(*net.TCPListener)}
-}
-
-// serveHTTP serves requests from the given listener.
-func (app *Application) serveHTTP(listener Listener) {
-	server := app.createServer()
-
-	app.serversMutex.Lock()
-	app.servers[0] = server
-	app.serversMutex.Unlock()
-
-	// This will block the calling goroutine until the server shuts down.
-	err := server.Serve(listener)
-
-	if err != nil && !strings.Contains(err.Error(), "closed") {
-		panic(err)
-	}
-}
-
-// serveHTTPS serves requests from the given listener.
-func (app *Application) serveHTTPS(listener Listener) {
-	server := app.createServer()
-
-	app.serversMutex.Lock()
-	app.servers[1] = server
-	app.serversMutex.Unlock()
-
-	// This will block the calling goroutine until the server shuts down.
-	err := server.ServeTLS(listener, app.Security.Certificate, app.Security.Key)
-
-	if err != nil && !strings.Contains(err.Error(), "closed") {
-		panic(err)
-	}
 }
 
 // Test tests the given URI paths when the application starts.
@@ -405,5 +290,115 @@ func (app *Application) TestRoute(route string, uri string) {
 
 	for _, linter := range app.Linters {
 		linter.End(route, uri, response)
+	}
+}
+
+// createRouteHandler creates a handler function for httprouter.
+func (app *Application) createRouteHandler(path string, handle Handle) httprouter.Handle {
+	return func(response http.ResponseWriter, request *http.Request, params httprouter.Params) {
+		// Create context.
+		ctx := Context{
+			App:        app,
+			StatusCode: http.StatusOK,
+			request:    request,
+			response:   response,
+			params:     params,
+		}
+
+		// The last part of the call chain will send the actual response.
+		lastPartOfCallChain := func() {
+			data := handle(&ctx)
+			ctx.respond(data)
+		}
+
+		// Declare the type of generateNext so that we can define it recursively in the next part.
+		var generateNext func(index int) func()
+
+		// Create a function that returns a bound function next()
+		// which can be used as the 2nd parameter in the call chain.
+		generateNext = func(index int) func() {
+			if index == len(app.middleware) {
+				return lastPartOfCallChain
+			}
+
+			return func() {
+				app.middleware[index](&ctx, generateNext(index+1))
+			}
+		}
+
+		// Start the call chain
+		generateNext(0)()
+	}
+}
+
+// shutdown will gracefully shut down the server.
+func shutdown(server *http.Server) {
+	if server == nil {
+		return
+	}
+
+	// Add a timeout to the server shutdown
+	ctx, cancel := context.WithTimeout(context.Background(), 250*time.Millisecond)
+	defer cancel()
+
+	// Shut down server
+	err := server.Shutdown(ctx)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+// createServer creates an http server instance.
+func (app *Application) createServer() *http.Server {
+	return &http.Server{
+		Handler:           app.Handler(),
+		ReadHeaderTimeout: 5 * time.Second,
+		WriteTimeout:      180 * time.Second,
+		IdleTimeout:       120 * time.Second,
+		TLSConfig:         createTLSConfig(),
+	}
+}
+
+// listen returns a Listener for the given address.
+func (app *Application) listen(address string) Listener {
+	listener, err := net.Listen("tcp", address)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return Listener{listener.(*net.TCPListener)}
+}
+
+// serveHTTP serves requests from the given listener.
+func (app *Application) serveHTTP(listener Listener) {
+	server := app.createServer()
+
+	app.serversMutex.Lock()
+	app.servers[0] = server
+	app.serversMutex.Unlock()
+
+	// This will block the calling goroutine until the server shuts down.
+	err := server.Serve(listener)
+
+	if err != nil && !strings.Contains(err.Error(), "closed") {
+		panic(err)
+	}
+}
+
+// serveHTTPS serves requests from the given listener.
+func (app *Application) serveHTTPS(listener Listener) {
+	server := app.createServer()
+
+	app.serversMutex.Lock()
+	app.servers[1] = server
+	app.serversMutex.Unlock()
+
+	// This will block the calling goroutine until the server shuts down.
+	err := server.ServeTLS(listener, app.Security.Certificate, app.Security.Key)
+
+	if err != nil && !strings.Contains(err.Error(), "closed") {
+		panic(err)
 	}
 }

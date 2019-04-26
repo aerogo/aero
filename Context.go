@@ -2,7 +2,6 @@ package aero
 
 import (
 	"bytes"
-	"compress/gzip"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -528,7 +527,11 @@ func (ctx *Context) respondBytes(b []byte) {
 	response.WriteHeader(ctx.StatusCode)
 
 	// Write response body
-	writer, _ := gzip.NewWriterLevel(response, gzip.BestCompression)
+	writer := acquireGZipWriter(response)
 	writer.Write(b)
 	writer.Close()
+
+	// Put the writer back into the pool
+	// so we can reuse it in another request.
+	gzipWriterPool.Put(writer)
 }

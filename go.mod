@@ -17,4 +17,5 @@ require (
 	github.com/tdewolff/test v1.0.0 // indirect
 	github.com/tomasen/realip v0.0.0-20180522021738-f0c99a92ddce
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
+	golang.org/x/sys v0.0.0-20190425145619-16072639606e // indirect
 )
