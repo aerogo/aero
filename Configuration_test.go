@@ -8,7 +8,7 @@ import (
 )
 
 func TestLoadConfig(t *testing.T) {
-	config, err := aero.LoadConfig("test/config.json")
+	config, err := aero.LoadConfig("testdata/config.json")
 
 	// Verify configuration
 	assert.NoError(t, err)

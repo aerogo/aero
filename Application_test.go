@@ -78,7 +78,7 @@ func TestApplicationLoadConfig(t *testing.T) {
 	app := aero.New()
 	workingDirectory, _ := os.Getwd()
 
-	os.Chdir("test")
+	os.Chdir("testdata")
 	app.Load()
 	os.Chdir(workingDirectory)
 
@@ -111,7 +111,7 @@ func TestApplicationRun(t *testing.T) {
 
 func TestApplicationRunHTTPS(t *testing.T) {
 	app := aero.New()
-	app.Security.Load("test/fullchain.pem", "test/privkey.pem")
+	app.Security.Load("testdata/fullchain.pem", "testdata/privkey.pem")
 
 	// Register route
 	app.Get("/", func(ctx *aero.Context) string {
