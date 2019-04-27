@@ -5,8 +5,8 @@ go 1.12
 require (
 	github.com/OneOfOne/xxhash v1.2.5
 	github.com/aerogo/csp v0.1.3
-	github.com/aerogo/http v0.1.2
-	github.com/aerogo/linter-performance v0.1.3
+	github.com/aerogo/http v1.0.0
+	github.com/aerogo/linter-performance v1.0.0
 	github.com/aerogo/session v0.1.1
 	github.com/aerogo/session-store-memory v0.1.1
 	github.com/akyoto/color v1.8.1
@@ -17,5 +17,4 @@ require (
 	github.com/tdewolff/test v1.0.0 // indirect
 	github.com/tomasen/realip v0.0.0-20180522021738-f0c99a92ddce
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
-	golang.org/x/sys v0.0.0-20190425145619-16072639606e // indirect
 )
