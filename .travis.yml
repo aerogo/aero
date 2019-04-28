@@ -5,7 +5,8 @@ go:
   - master
 
 env:
-  - GO111MODULE=on
+  global:
+    - GO111MODULE=on
 
 install: true
 
