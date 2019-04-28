@@ -9,7 +9,7 @@ steps:
   commands:
   - go version
   - go get
-  - go build
+  - go build ./...
   - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.16.0
   - golangci-lint run
   - go test -v -race -coverprofile=coverage.txt ./...
