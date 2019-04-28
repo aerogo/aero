@@ -24,4 +24,7 @@ steps:
 
 - name: discord
   image: appleboy/drone-discord
-  secrets: [discord-id, discord-token]
+  webhook_id:
+    - from_secret: discord-id
+  webhook_token:
+    - from_secret: discord-token
