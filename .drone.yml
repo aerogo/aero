@@ -24,6 +24,9 @@ steps:
 
 - name: discord
   image: appleboy/drone-discord
+  when:
+    status:
+    - failure
   settings:
     webhook_id:
       from_secret: discord-id
