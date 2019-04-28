@@ -5,7 +5,8 @@ pipeline:
       GO111MODULES: on
     commands:
       - go version
-      - go build -v
+      - go get
+      - go build
       - go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
       - golangci-lint run
       - go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
