@@ -8,6 +8,7 @@ import (
 	"log"
 	"mime"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -287,11 +288,16 @@ func (ctx *Context) EventStream(stream *EventStream) string {
 				flusher.Flush()
 			}
 
-		case <-time.After(5 * time.Second):
-			// Send one byte to keep alive the connection
-			// which will also check for disconnection.
-			ctx.response.Write([]byte("\n"))
-			flusher.Flush()
+			// case <-time.After(5 * time.Second):
+			// 	// Send one byte to keep alive the connection
+			// 	// which will also check for disconnection.
+			// 	_, err := ctx.response.Write([]byte("\n"))
+
+			// 	if err != nil {
+
+			// 	}
+
+			// 	flusher.Flush()
 		}
 	}
 }
@@ -328,7 +334,12 @@ func (ctx *Context) ReadAll(reader io.Reader) string {
 // E-Tags will not be generated for the content and compression will not be applied.
 // Use this function if your reader contains huge amounts of data.
 func (ctx *Context) Reader(reader io.Reader) string {
-	io.Copy(ctx.response, reader)
+	_, err := io.Copy(ctx.response, reader)
+
+	if err != nil {
+		os.Stderr.WriteString("Error reading from io.Reader")
+	}
+
 	ctx.responded = true
 	return ""
 }
@@ -494,7 +505,12 @@ func (ctx *Context) respondBytes(b []byte) {
 	if len(b) < gzipThreshold {
 		header.Set(contentLengthHeader, strconv.Itoa(len(b)))
 		response.WriteHeader(ctx.StatusCode)
-		response.Write(b)
+		_, err := response.Write(b)
+
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error writing %s response to %s (%d bytes)", contentType, ctx.RealIP(), len(b))
+		}
+
 		return
 	}
 
@@ -518,7 +534,12 @@ func (ctx *Context) respondBytes(b []byte) {
 	if !ctx.App.Config.GZip || !supportsGZip || isMedia {
 		header.Set(contentLengthHeader, strconv.Itoa(len(b)))
 		response.WriteHeader(ctx.StatusCode)
-		response.Write(b)
+		_, err := response.Write(b)
+
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error writing %s response to %s (%d bytes)", contentType, ctx.RealIP(), len(b))
+		}
+
 		return
 	}
 
@@ -528,7 +549,12 @@ func (ctx *Context) respondBytes(b []byte) {
 
 	// Write response body
 	writer := acquireGZipWriter(response)
-	writer.Write(b)
+	_, err := writer.Write(b)
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error writing %s response using gzip to %s (%d bytes)", contentType, ctx.RealIP(), len(b))
+	}
+
 	writer.Close()
 
 	// Put the writer back into the pool

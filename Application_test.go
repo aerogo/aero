@@ -78,9 +78,13 @@ func TestApplicationLoadConfig(t *testing.T) {
 	app := aero.New()
 	workingDirectory, _ := os.Getwd()
 
-	os.Chdir("testdata")
+	err := os.Chdir("testdata")
+	assert.NoError(t, err)
+
 	app.Load()
-	os.Chdir(workingDirectory)
+
+	err = os.Chdir(workingDirectory)
+	assert.NoError(t, err)
 
 	assert.Equal(t, "Test title", app.Config.Title)
 }
@@ -95,8 +99,11 @@ func TestApplicationRun(t *testing.T) {
 
 	// When the server is started, we request the frontpage
 	app.OnStart(func() {
-		client.Get(fmt.Sprintf("http://localhost:%d/", app.Config.Ports.HTTP)).End()
-		syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
+		_, err := client.Get(fmt.Sprintf("http://localhost:%d/", app.Config.Ports.HTTP)).End()
+		assert.NoError(t, err)
+
+		err = syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
+		assert.NoError(t, err)
 	})
 
 	// When the server ends, check elapsed time
@@ -120,11 +127,15 @@ func TestApplicationRunHTTPS(t *testing.T) {
 
 	// When the server is started, we request the frontpage
 	app.OnStart(func() {
-		client.Get(fmt.Sprintf("http://localhost:%d/", app.Config.Ports.HTTP)).End()
-		client.Get(fmt.Sprintf("https://localhost:%d/", app.Config.Ports.HTTPS)).End()
+		_, err := client.Get(fmt.Sprintf("http://localhost:%d/", app.Config.Ports.HTTP)).End()
+		assert.NoError(t, err)
+
+		_, err = client.Get(fmt.Sprintf("https://localhost:%d/", app.Config.Ports.HTTPS)).End()
+		assert.NoError(t, err)
 
 		go func() {
-			syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
+			err = syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
+			assert.NoError(t, err)
 		}()
 	})
 

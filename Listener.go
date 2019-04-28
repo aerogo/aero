@@ -20,9 +20,23 @@ func (listener Listener) Accept() (net.Conn, error) {
 		return nil, err
 	}
 
-	connection.SetKeepAlive(true)
-	connection.SetKeepAlivePeriod(keepAlivePeriod)
-	connection.SetNoDelay(true)
+	err = connection.SetKeepAlive(true)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = connection.SetKeepAlivePeriod(keepAlivePeriod)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = connection.SetNoDelay(true)
+
+	if err != nil {
+		return nil, err
+	}
 
 	return connection, nil
 }

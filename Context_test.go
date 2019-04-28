@@ -320,7 +320,8 @@ func TestContextReader(t *testing.T) {
 		go func() {
 			defer writer.Close()
 			encoder := jsoniter.NewEncoder(writer)
-			encoder.Encode(app.Config)
+			err := encoder.Encode(app.Config)
+			assert.NoError(t, err)
 		}()
 
 		return ctx.ReadAll(reader)
@@ -333,7 +334,8 @@ func TestContextReader(t *testing.T) {
 		go func() {
 			defer writer.Close()
 			encoder := jsoniter.NewEncoder(writer)
-			encoder.Encode(app.Config)
+			err := encoder.Encode(app.Config)
+			assert.NoError(t, err)
 		}()
 
 		return ctx.Reader(reader)
