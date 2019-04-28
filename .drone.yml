@@ -1,7 +1,10 @@
 pipeline:
   testing:
     image: golang
+    environment:
+      GO111MODULES: on
     commands:
+      - go version
       - go get
       - go build
       - go test
