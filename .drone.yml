@@ -21,3 +21,7 @@ steps:
       from_secret: codecov-token
     files:
       - coverage.txt
+
+- name: discord
+  image: appleboy/drone-discord
+  secrets: [discord-id, discord-token]
