@@ -16,3 +16,7 @@ pipeline:
   
   coverage:
      image: plugins/codecov
+     settings:
+      token: a37fd4da2fa04aa5b5c69001143ea6aa
+      files:
+        - coverage.txt
