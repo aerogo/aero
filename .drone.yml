@@ -1,23 +1,21 @@
 kind: pipeline
-name: defaultd
+name: default
 
-pipeline:
-  testing:
-    image: golang
-    environment:
-      GO111MODULES: on
-    commands:
-      - go version
-      - go get
-      - go build
-      - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.16.0
-      - golangci-lint run
-      - go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
-  
-  coverage:
-     image: plugins/codecov
-     settings:
-      token:
-        from_secret: codecov-token
-      files:
-        - coverage.txt
+steps:
+- name: test
+  image: golang
+  commands:
+  - go version
+  - go get
+  - go build
+  - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.16.0
+  - golangci-lint run
+  - go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+
+- name: coverage
+  image: plugins/codecov
+  settings:
+    token:
+      from_secret: codecov-token
+    files:
+      - coverage.txt
