@@ -1,3 +1,6 @@
+kind: pipeline
+name: defaultd
+
 pipeline:
   testing:
     image: golang
@@ -11,3 +14,6 @@ pipeline:
       - golangci-lint run
       - go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
       - bash <(curl -s https://codecov.io/bash)
+  
+  coverage:
+     image: plugins/codecov
