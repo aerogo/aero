@@ -2,7 +2,7 @@
 
 [![Godoc reference][godoc-image]][godoc-url]
 [![Go report card][goreportcard-image]][goreportcard-url]
-[![Tests][travis-image]][travis-url]
+[![Tests][tests-image]][tests-url]
 [![Code coverage][codecov-image]][codecov-url]
 [![License][license-image]][license-url]
 
@@ -77,8 +77,8 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 [godoc-url]: https://godoc.org/github.com/aerogo/aero
 [goreportcard-image]: https://goreportcard.com/badge/github.com/aerogo/aero
 [goreportcard-url]: https://goreportcard.com/report/github.com/aerogo/aero
-[travis-image]: https://travis-ci.org/aerogo/aero.svg?branch=master
-[travis-url]: https://travis-ci.org/aerogo/aero
+[tests-image]: https://cloud.drone.io/api/badges/aerogo/aero/status.svg
+[tests-url]: https://cloud.drone.io/aerogo/aero
 [codecov-image]: https://codecov.io/gh/aerogo/aero/branch/master/graph/badge.svg
 [codecov-url]: https://codecov.io/gh/aerogo/aero
 [sourcegraph-image]: https://sourcegraph.com/github.com/aerogo/aero/-/badge.svg
