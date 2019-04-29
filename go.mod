@@ -5,7 +5,7 @@ go 1.12
 require (
 	github.com/OneOfOne/xxhash v1.2.5
 	github.com/aerogo/csp v0.1.3
-	github.com/aerogo/http v1.0.0
+	github.com/aerogo/http v1.0.1
 	github.com/aerogo/linter-performance v1.0.0
 	github.com/aerogo/session v0.1.1
 	github.com/aerogo/session-store-memory v0.1.1
