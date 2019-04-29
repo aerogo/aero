@@ -9,7 +9,7 @@ require (
 	github.com/aerogo/linter-performance v1.0.0
 	github.com/aerogo/session v0.1.1
 	github.com/aerogo/session-store-memory v0.1.1
-	github.com/akyoto/color v1.8.1
+	github.com/akyoto/color v1.8.2
 	github.com/json-iterator/go v1.1.6
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/stretchr/testify v1.3.0
