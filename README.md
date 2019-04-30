@@ -1,9 +1,9 @@
 ![Aero Go Logo](docs/images/aero.go.png)
 
-[![Godoc reference][godoc-image]][godoc-url]
-[![Go report card][goreportcard-image]][goreportcard-url]
+[![Godoc][godoc-image]][godoc-url]
+[![Report][report-image]][report-url]
 [![Tests][tests-image]][tests-url]
-[![Code coverage][codecov-image]][codecov-url]
+[![Coverage][coverage-image]][coverage-url]
 [![License][license-image]][license-url]
 
 Aero is a high-performance web server with a clean API for web development.
@@ -75,14 +75,12 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 
 [godoc-image]: https://godoc.org/github.com/aerogo/aero?status.svg
 [godoc-url]: https://godoc.org/github.com/aerogo/aero
-[goreportcard-image]: https://goreportcard.com/badge/github.com/aerogo/aero
-[goreportcard-url]: https://goreportcard.com/report/github.com/aerogo/aero
+[report-image]: https://goreportcard.com/badge/github.com/aerogo/aero
+[report-url]: https://goreportcard.com/report/github.com/aerogo/aero
 [tests-image]: https://cloud.drone.io/api/badges/aerogo/aero/status.svg
 [tests-url]: https://cloud.drone.io/aerogo/aero
-[codecov-image]: https://codecov.io/gh/aerogo/aero/branch/master/graph/badge.svg
-[codecov-url]: https://codecov.io/gh/aerogo/aero
-[sourcegraph-image]: https://sourcegraph.com/github.com/aerogo/aero/-/badge.svg
-[sourcegraph-url]: https://sourcegraph.com/github.com/aerogo/aero?badge
+[coverage-image]: https://codecov.io/gh/aerogo/aero/graph/badge.svg
+[coverage-url]: https://codecov.io/gh/aerogo/aero
 [license-image]: https://img.shields.io/badge/license-MIT-blue.svg
 [license-url]: https://github.com/aerogo/aero/blob/master/LICENSE
 [discord-image]: https://img.shields.io/badge/discord-aero-738bd7.svg

@@ -99,13 +99,13 @@ func New() *Application {
 // Get registers your function to be called when a certain GET path has been requested.
 func (app *Application) Get(path string, handle Handle) {
 	app.routes.GET = append(app.routes.GET, path)
-	app.Router.GET(path, app.createRouteHandler(path, handle))
+	app.Router.GET(path, app.createRouteHandler(handle))
 }
 
 // Post registers your function to be called when a certain POST path has been requested.
 func (app *Application) Post(path string, handle Handle) {
 	app.routes.POST = append(app.routes.POST, path)
-	app.Router.POST(path, app.createRouteHandler(path, handle))
+	app.Router.POST(path, app.createRouteHandler(handle))
 }
 
 // Run starts your application.
@@ -294,7 +294,7 @@ func (app *Application) TestRoute(route string, uri string) {
 }
 
 // createRouteHandler creates a handler function for httprouter.
-func (app *Application) createRouteHandler(path string, handle Handle) httprouter.Handle {
+func (app *Application) createRouteHandler(handle Handle) httprouter.Handle {
 	return func(response http.ResponseWriter, request *http.Request, params httprouter.Params) {
 		// Create context.
 		ctx := Context{
