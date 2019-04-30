@@ -4,12 +4,12 @@ go 1.12
 
 require (
 	github.com/OneOfOne/xxhash v1.2.5
-	github.com/aerogo/csp v0.1.3
-	github.com/aerogo/http v1.0.1
+	github.com/aerogo/csp v0.1.4
+	github.com/aerogo/http v1.0.2
 	github.com/aerogo/linter-performance v1.0.1
-	github.com/aerogo/session v0.1.1
-	github.com/aerogo/session-store-memory v0.1.2
-	github.com/akyoto/color v1.8.2
+	github.com/aerogo/session v0.1.2
+	github.com/aerogo/session-store-memory v0.1.3
+	github.com/akyoto/color v1.8.3
 	github.com/json-iterator/go v1.1.6
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/stretchr/testify v1.3.0

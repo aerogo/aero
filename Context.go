@@ -1,7 +1,6 @@
 package aero
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -358,7 +357,7 @@ func (ctx *Context) Error(statusCode int, errors ...interface{}) string {
 	ctx.StatusCode = statusCode
 	ctx.response.Header().Set(contentTypeHeader, contentTypeHTML)
 
-	message := bytes.Buffer{}
+	message := strings.Builder{}
 
 	if len(errors) == 0 {
 		message.WriteString(fmt.Sprintf("Unknown error: %d", statusCode))
