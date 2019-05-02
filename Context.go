@@ -1,6 +1,7 @@
 package aero
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -256,7 +257,10 @@ func (ctx *Context) EventStream(stream *EventStream) string {
 	}
 
 	// Catch disconnect events
-	disconnected := ctx.request.Context().Done()
+	disconnectedContext := ctx.request.Context()
+	disconnectedContext, cancel := context.WithDeadline(disconnectedContext, time.Now().Add(2*time.Hour))
+	disconnected := disconnectedContext.Done()
+	defer cancel()
 
 	// Send headers
 	header := ctx.response.Header()
@@ -280,7 +284,12 @@ func (ctx *Context) EventStream(stream *EventStream) string {
 				case string, []byte:
 					// Do nothing with the data if it's already a string or byte slice.
 				default:
-					data, _ = jsoniter.Marshal(data)
+					var err error
+					data, err = jsoniter.Marshal(data)
+
+					if err != nil {
+						color.Red("Failed encoding event data as JSON: %v", data)
+					}
 				}
 
 				fmt.Fprintf(ctx.response, "event: %s\ndata: %s\n\n", event.Name, data)
