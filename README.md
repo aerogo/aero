@@ -5,6 +5,8 @@
 [![Tests][tests-image]][tests-url]
 [![Coverage][coverage-image]][coverage-url]
 [![License][license-image]][license-url]
+[![Patreon][patreon-image]][patreon-url]
+[![PayPal][paypal-image]][paypal-url]
 
 Aero is a high-performance web server with a clean API for web development.
 
@@ -85,3 +87,7 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 [license-url]: https://github.com/aerogo/aero/blob/master/LICENSE
 [discord-image]: https://img.shields.io/badge/discord-aero-738bd7.svg
 [discord-url]: https://discord.gg/vyk2MnK
+[patreon-image]: https://img.shields.io/badge/patreon-donate-green.svg
+[patreon-url]: https://www.patreon.com/eduardurbach
+[paypal-image]: https://img.shields.io/badge/paypal-donate-green.svg
+[paypal-url]: https://paypal.me/blitzprog
