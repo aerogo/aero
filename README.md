@@ -6,7 +6,6 @@
 [![Coverage][coverage-image]][coverage-url]
 [![License][license-image]][license-url]
 [![Patreon][patreon-image]][patreon-url]
-[![PayPal][paypal-image]][paypal-url]
 
 Aero is a high-performance web server with a clean API for web development.
 
@@ -68,6 +67,14 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 - [Discord community][discord-url]
 - [Twitter account](https://twitter.com/aeroframework)
 - [Facebook page](https://www.facebook.com/aeroframework/)
+
+## Patrons
+
+| [![Scott Rayapoullé](https://avatars3.githubusercontent.com/u/11772084?s=70&v=4)](https://www.patreon.com/user/creators?u=4711522) |
+|---|
+| [Scott Rayapoullé](https://www.patreon.com/user/creators?u=4711522) |
+
+Want to see [your own name here?](https://www.patreon.com/eduardurbach)
 
 ## Author
 
