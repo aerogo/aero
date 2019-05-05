@@ -70,9 +70,9 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 
 ## Patrons
 
-| [![Scott Rayapoullé](https://avatars3.githubusercontent.com/u/11772084?s=70&v=4)](https://www.patreon.com/user/creators?u=4711522) |
+| [![Scott Rayapoullé](https://avatars3.githubusercontent.com/u/11772084?s=70&v=4)](https://github.com/soulcramer) |
 |---|
-| [Scott Rayapoullé](https://www.patreon.com/user/creators?u=4711522) |
+| [Scott Rayapoullé](https://github.com/soulcramer) |
 
 Want to see [your own name here?](https://www.patreon.com/eduardurbach)
 
