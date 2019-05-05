@@ -1,11 +1,11 @@
 github.com/OneOfOne/xxhash v1.2.5 h1:zl/OfRA6nftbBK9qTohYBJ5xvw6C/oNKizR7cZGl3cI=
 github.com/OneOfOne/xxhash v1.2.5/go.mod h1:eZbhyaAYD41SGSSsnmcpxVoRiQ/MPUTjUdIIOT9Um7Q=
-github.com/aerogo/csp v0.1.4 h1:81ZK/uoHk61PKnqBO1lvX8+ldUScQox3RKnLoDjzpng=
-github.com/aerogo/csp v0.1.4/go.mod h1:KNqnTFffuDwIPJxBEFTl3baBx+x3Vw+9kcMfu5APFJA=
+github.com/aerogo/csp v0.1.5 h1:4l8AaMWndSb0t/03onf4lc0th2zoaapmtKgysDIznW4=
+github.com/aerogo/csp v0.1.5/go.mod h1:KNqnTFffuDwIPJxBEFTl3baBx+x3Vw+9kcMfu5APFJA=
 github.com/aerogo/http v1.0.1 h1:KTzYarhp5yougurxuAhJKFh3YvZ7R7CfaDVwJv5+xIs=
 github.com/aerogo/http v1.0.1/go.mod h1:B1igUmMLpE6KabMpc9reHCJJNUOJ2U/PR9s1fF3TpPQ=
-github.com/aerogo/http v1.0.2 h1:X2H/naJ00sLORT59I6g9r5Wjda1ViBYGauOjgDwDDHs=
-github.com/aerogo/http v1.0.2/go.mod h1:B1igUmMLpE6KabMpc9reHCJJNUOJ2U/PR9s1fF3TpPQ=
+github.com/aerogo/http v1.0.3 h1:vf6A+Igme5OHQPaP3a00uPDS0oxsx3puMA23d1NsWDM=
+github.com/aerogo/http v1.0.3/go.mod h1:B1igUmMLpE6KabMpc9reHCJJNUOJ2U/PR9s1fF3TpPQ=
 github.com/aerogo/linter-performance v1.0.1 h1:/1Hak+7sxpO2AkjdMVcpkyurmA4YD77EDi7FRnLqnwM=
 github.com/aerogo/linter-performance v1.0.1/go.mod h1:3ZXxPgQ0cEo0x6DCGZwXHrwKNYK86XvB5QRJR9s7Z6I=
 github.com/aerogo/session v0.1.2 h1:f0X3YJQJcFhtmw47U60jdSsH18/T51SkhkhAuXwnYI8=
