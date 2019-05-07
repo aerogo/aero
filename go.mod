@@ -16,5 +16,5 @@ require (
 	github.com/tdewolff/parse v2.3.4+incompatible
 	github.com/tdewolff/test v1.0.0 // indirect
 	github.com/tomasen/realip v0.0.0-20180522021738-f0c99a92ddce
-	golang.org/x/sys v0.0.0-20190502175342-a43fa875dd82 // indirect
+	golang.org/x/sys v0.0.0-20190507053917-2953c62de483 // indirect
 )

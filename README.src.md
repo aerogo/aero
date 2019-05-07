@@ -24,6 +24,7 @@ Now you can build your app with `go build` or use the more advanced [run](https:
 - Optimized for high latency environments (mobile networks)
 - Has a strict content security policy
 - Calculates E-Tags out of the box
+- Saves you a lot of bandwidth using browser cache validation
 - Finishes ongoing requests on a server shutdown
 - Supports HTTP/2, IPv6 and Web Manifest
 - Automatic HTTP/2 push of configured resources
