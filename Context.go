@@ -16,6 +16,7 @@ import (
 
 	"github.com/aerogo/session"
 	"github.com/akyoto/color"
+	"github.com/akyoto/stringutils/unsafe"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/julienschmidt/httprouter"
 	"github.com/tomasen/realip"
@@ -335,7 +336,7 @@ func (ctx *Context) ReadAll(reader io.Reader) string {
 		return ctx.Error(http.StatusInternalServerError, err)
 	}
 
-	return BytesToStringUnsafe(data)
+	return unsafe.BytesToString(data)
 }
 
 // Reader sends the contents of the io.Reader without creating an in-memory copy.
@@ -486,7 +487,7 @@ func (ctx *Context) respond(code string) {
 		return
 	}
 
-	ctx.respondBytes(StringToBytesUnsafe(code))
+	ctx.respondBytes(unsafe.StringToBytes(code))
 }
 
 // respondBytes responds either with raw code or gzipped if the
