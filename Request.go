@@ -11,8 +11,8 @@ type Request struct {
 }
 
 // Body represents the request body.
-func (request Request) Body() BodyReader {
-	return BodyReader{
+func (request Request) Body() Body {
+	return Body{
 		reader: request.inner.Body,
 	}
 }

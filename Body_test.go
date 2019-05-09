@@ -12,12 +12,13 @@ import (
 	"github.com/tdewolff/parse/buffer"
 )
 
-func TestBodyReader(t *testing.T) {
+func TestBody(t *testing.T) {
 	app := aero.New()
 
 	// Register route
 	app.Get("/", func(ctx *aero.Context) string {
 		body := ctx.Request().Body()
+		assert.NotNil(t, ctx.Request().Body().Reader())
 		bodyText, _ := body.String()
 		return ctx.Text(bodyText)
 	})
@@ -33,7 +34,7 @@ func TestBodyReader(t *testing.T) {
 	assert.Equal(t, helloWorld, response.Body.String())
 }
 
-func TestBodyReaderJSON(t *testing.T) {
+func TestBodyJSON(t *testing.T) {
 	app := aero.New()
 
 	// Register route
@@ -54,7 +55,7 @@ func TestBodyReaderJSON(t *testing.T) {
 	assert.Equal(t, "value", response.Body.String())
 }
 
-func TestBodyReaderErrors(t *testing.T) {
+func TestBodyErrors(t *testing.T) {
 	app := aero.New()
 
 	app.Get("/", func(ctx *aero.Context) string {

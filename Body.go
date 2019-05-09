@@ -8,13 +8,18 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-// BodyReader represents a request body.
-type BodyReader struct {
+// Body represents a request body.
+type Body struct {
 	reader io.ReadCloser
 }
 
+// Reader returns an io.Reader for the request body.
+func (body Body) Reader() io.ReadCloser {
+	return body.reader
+}
+
 // JSON parses the body as a JSON object.
-func (body BodyReader) JSON() (interface{}, error) {
+func (body Body) JSON() (interface{}, error) {
 	if body.reader == nil {
 		return nil, errors.New("Empty body")
 	}
@@ -33,7 +38,7 @@ func (body BodyReader) JSON() (interface{}, error) {
 }
 
 // JSONObject parses the body as a JSON object and returns a map[string]interface{}.
-func (body BodyReader) JSONObject() (map[string]interface{}, error) {
+func (body Body) JSONObject() (map[string]interface{}, error) {
 	json, err := body.JSON()
 
 	if err != nil {
@@ -50,7 +55,7 @@ func (body BodyReader) JSONObject() (map[string]interface{}, error) {
 }
 
 // Bytes returns a slice of bytes containing the request body.
-func (body BodyReader) Bytes() ([]byte, error) {
+func (body Body) Bytes() ([]byte, error) {
 	data, err := ioutil.ReadAll(body.reader)
 	defer body.reader.Close()
 
@@ -62,7 +67,7 @@ func (body BodyReader) Bytes() ([]byte, error) {
 }
 
 // String returns a string containing the request body.
-func (body BodyReader) String() (string, error) {
+func (body Body) String() (string, error) {
 	bytes, err := body.Bytes()
 
 	if err != nil {
