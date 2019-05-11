@@ -2,30 +2,22 @@
 
 ## Routing
 
-Very simple routing test using `Hello World` as output:
+Simple routing test on an Intel Core i7-8700 using `Hello World` as output:
 
-### AeroGo (go 1.9)
-
-```
-Running 2s test @ http://localhost:4000/hello
+```text
+λ wrk -t8 -c400 -d2s http://localhost:4000/
+Running 2s test @ http://localhost:4000/
   8 threads and 400 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     2.20ms    1.38ms  23.81ms   79.24%
-    Req/Sec    22.89k     5.67k   73.95k    98.77%
-  368755 requests in 2.10s, 61.19MB read
-Requests/sec: 175594.86
-Transfer/sec:     29.14MB
+    Latency     1.41ms    1.42ms  14.88ms   86.18%
+    Req/Sec    42.17k     5.43k   59.83k    71.25%
+  672784 requests in 2.05s, 102.66MB read
+Requests/sec: 327837.89
+Transfer/sec:     50.02MB
 ```
 
-### AeroJS (node.js 8.8)
+## Conclusion
 
-```
-Running 2s test @ http://localhost:4000
-  8 threads and 400 connections
-  Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     9.78ms    5.40ms 228.37ms   95.41%
-    Req/Sec     4.47k     1.68k   23.12k    93.79%
-  71622 requests in 2.10s, 52.73MB read
-Requests/sec:  34114.80
-Transfer/sec:     25.12MB
-```
+Considering that it's possible to reach over 300k requests per second on a decent CPU, Aero which is based on `net/http` from the standard library will not be the bottleneck of your website.
+
+Databases and complex application logic are usually the bigger factor in your web application performance.

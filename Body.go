@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 
+	"github.com/akyoto/stringutils/unsafe"
 	jsoniter "github.com/json-iterator/go"
 )
 
@@ -74,5 +75,5 @@ func (body Body) String() (string, error) {
 		return "", err
 	}
 
-	return string(bytes), nil
+	return unsafe.BytesToString(bytes), nil
 }

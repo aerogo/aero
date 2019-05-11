@@ -35,7 +35,6 @@ type Manifest struct {
 	Lang            string         `json:"lang,omitempty"`
 	ThemeColor      string         `json:"theme_color,omitempty"`
 	BackgroundColor string         `json:"background_color,omitempty"`
-	GCMSenderID     string         `json:"gcm_sender_id,omitempty"`
 }
 
 // ManifestIcon represents a single icon in the web manifest.

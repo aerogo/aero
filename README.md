@@ -1,4 +1,4 @@
-![Aero Go Logo](docs/images/aero.go.png)
+![Aero Go Logo](docs/media/aero.go.png)
 
 [![Godoc][godoc-image]][godoc-url]
 [![Report][report-image]][report-url]
@@ -16,7 +16,7 @@ go get -u github.com/aerogo/aero/...
 
 ## Usage
 
-![Aero usage](docs/usage.gif)
+![Aero usage](docs/media/usage.gif)
 
 Run this in an empty directory:
 

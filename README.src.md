@@ -1,4 +1,4 @@
-![Aero Go Logo](docs/images/aero.go.png)
+![Aero Go Logo](docs/media/aero.go.png)
 
 {go:header}
 
@@ -8,7 +8,7 @@ Aero is a high-performance web server with a clean API for web development.
 
 ## Usage
 
-![Aero usage](docs/usage.gif)
+![Aero usage](docs/media/usage.gif)
 
 Run this in an empty directory:
 
