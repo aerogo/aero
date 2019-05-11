@@ -268,7 +268,7 @@ func TestContextContentTypes(t *testing.T) {
 	responseCSS := getResponse(app, "/css")
 	responseJS := getResponse(app, "/js")
 	responseFile := getResponse(app, "/files/Application.go")
-	responseMediaFile := getResponse(app, "/files/docs/usage.gif")
+	responseMediaFile := getResponse(app, "/files/docs/media/usage.gif")
 
 	// Verify JSON response
 	json, _ := jsoniter.Marshal(app.Config)
@@ -303,7 +303,7 @@ func TestContextContentTypes(t *testing.T) {
 	assert.Contains(t, responseFile.Header().Get("Content-Type"), "text/plain")
 
 	// Verify media file response
-	imageData, _ := ioutil.ReadFile("docs/usage.gif")
+	imageData, _ := ioutil.ReadFile("docs/media/usage.gif")
 	assert.Equal(t, http.StatusOK, responseMediaFile.Code)
 	assert.Equal(t, imageData, responseMediaFile.Body.Bytes())
 	assert.Contains(t, responseMediaFile.Header().Get("Content-Type"), "image/gif")
