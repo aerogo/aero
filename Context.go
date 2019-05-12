@@ -420,7 +420,6 @@ func (ctx *Context) RealIP() string {
 
 // UserAgent retrieves the user agent for the given request.
 func (ctx *Context) UserAgent() string {
-	ctx.request.URL.Query()
 	return ctx.request.UserAgent()
 }
 
