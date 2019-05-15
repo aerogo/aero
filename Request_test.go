@@ -2,6 +2,7 @@ package aero_test
 
 import (
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/aerogo/aero"
@@ -26,4 +27,17 @@ func TestRequest(t *testing.T) {
 
 	response := getResponse(app, "/")
 	assert.Equal(t, http.StatusOK, response.Code)
+}
+
+func TestMultiRequest(t *testing.T) {
+	app := aero.New()
+
+	app.Get("/", func(ctx *aero.Context) string {
+		return ctx.Text(strings.Repeat(helloWorld, 1000))
+	})
+
+	// Repeating the request will trigger the gzip writer pool
+	for i := 0; i < 10; i++ {
+		getResponse(app, "/")
+	}
 }
