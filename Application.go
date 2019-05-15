@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/aerogo/csp"
-
 	"github.com/aerogo/http/client"
 	performance "github.com/aerogo/linter-performance"
 	"github.com/aerogo/session"
