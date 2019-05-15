@@ -91,10 +91,7 @@ func mainTestFile() {
 func config() {
 	config := aero.Configuration{}
 	config.Reset()
-	config.Styles = []string{}
-	config.Fonts = []string{}
-	config.Push = []string{}
-	config.Scripts.Main = "main"
+
 	bytes, err := json.MarshalIndent(config, "", "\t")
 	panicOnError(err)
 

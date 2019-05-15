@@ -8,21 +8,12 @@ import (
 
 // Configuration represents the data in your config.json file.
 type Configuration struct {
-	Domain   string               `json:"domain"`
-	Title    string               `json:"title"`
-	Fonts    []string             `json:"fonts"`
-	Styles   []string             `json:"styles"`
-	Scripts  ScriptsConfiguration `json:"scripts"`
-	Push     []string             `json:"push"`
-	Manifest Manifest             `json:"manifest"`
-	GZip     bool                 `json:"gzip"`
-	Ports    PortConfiguration    `json:"ports"`
-}
-
-// ScriptsConfiguration lets you configure your main entry script.
-type ScriptsConfiguration struct {
-	// Entry point for scripts
-	Main string `json:"main"`
+	Domain   string            `json:"domain"`
+	Title    string            `json:"title"`
+	Push     []string          `json:"push"`
+	Manifest Manifest          `json:"manifest"`
+	GZip     bool              `json:"gzip"`
+	Ports    PortConfiguration `json:"ports"`
 }
 
 // Manifest represents a web manifest
@@ -60,6 +51,7 @@ func (config *Configuration) Reset() {
 	config.Manifest.Lang = "en"
 	config.Manifest.ShortName = "Untitled"
 	config.Title = "Untitled site"
+	config.Push = []string{}
 }
 
 // LoadConfig loads the application configuration from the file system.
