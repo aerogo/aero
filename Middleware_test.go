@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/aerogo/aero"
-	"github.com/stretchr/testify/assert"
+	qt "github.com/frankban/quicktest"
 )
 
 func TestApplicationMiddleware(t *testing.T) {
@@ -26,8 +26,9 @@ func TestApplicationMiddleware(t *testing.T) {
 	response := getResponse(app, "/")
 
 	// Verify response
-	assert.Equal(t, http.StatusPermanentRedirect, response.Code)
-	assert.Equal(t, helloWorld, response.Body.String())
+	c := qt.New(t)
+	c.Assert(response.Code, qt.Equals, http.StatusPermanentRedirect)
+	c.Assert(response.Body.String(), qt.Equals, helloWorld)
 }
 
 func TestApplicationMiddlewareSkipNext(t *testing.T) {
@@ -47,5 +48,6 @@ func TestApplicationMiddlewareSkipNext(t *testing.T) {
 	response := getResponse(app, "/")
 
 	// Verify response
-	assert.Equal(t, "", response.Body.String())
+	c := qt.New(t)
+	c.Assert(response.Body.String(), qt.Equals, "")
 }

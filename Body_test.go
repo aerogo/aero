@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/aerogo/aero"
+	qt "github.com/frankban/quicktest"
 	"github.com/stretchr/testify/assert"
 	"github.com/tdewolff/parse/buffer"
 )
@@ -30,8 +31,9 @@ func TestBody(t *testing.T) {
 	app.Handler().ServeHTTP(response, request)
 
 	// Verify response
-	assert.Equal(t, http.StatusOK, response.Code)
-	assert.Equal(t, helloWorld, response.Body.String())
+	c := qt.New(t)
+	c.Assert(response.Code, qt.Equals, http.StatusOK)
+	c.Assert(response.Body.String(), qt.Equals, helloWorld)
 }
 
 func TestBodyJSON(t *testing.T) {
@@ -51,8 +53,9 @@ func TestBodyJSON(t *testing.T) {
 	app.Handler().ServeHTTP(response, request)
 
 	// Verify response
-	assert.Equal(t, http.StatusOK, response.Code)
-	assert.Equal(t, "value", response.Body.String())
+	c := qt.New(t)
+	c.Assert(response.Code, qt.Equals, http.StatusOK)
+	c.Assert(response.Body.String(), qt.Equals, "value")
 }
 
 func TestBodyErrors(t *testing.T) {
@@ -91,19 +94,20 @@ func TestBodyErrors(t *testing.T) {
 	response := httptest.NewRecorder()
 	app.Handler().ServeHTTP(response, request)
 
-	assert.Equal(t, http.StatusOK, response.Code)
+	c := qt.New(t)
+	c.Assert(response.Code, qt.Equals, http.StatusOK)
 
 	// Invalid JSON
 	request, _ = http.NewRequest("GET", "/", bytes.NewReader([]byte("{")))
 	response = httptest.NewRecorder()
 	app.Handler().ServeHTTP(response, request)
 
-	assert.Equal(t, http.StatusOK, response.Code)
+	c.Assert(response.Code, qt.Equals, http.StatusOK)
 
 	// Not a JSON object
 	request, _ = http.NewRequest("GET", "/json-object", bytes.NewReader([]byte("123")))
 	response = httptest.NewRecorder()
 	app.Handler().ServeHTTP(response, request)
 
-	assert.Equal(t, http.StatusOK, response.Code)
+	c.Assert(response.Code, qt.Equals, http.StatusOK)
 }

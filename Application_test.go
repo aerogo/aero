@@ -11,6 +11,7 @@ import (
 
 	"github.com/aerogo/aero"
 	"github.com/aerogo/http/client"
+	qt "github.com/frankban/quicktest"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -28,8 +29,9 @@ func TestApplicationGet(t *testing.T) {
 	response := getResponse(app, "/")
 
 	// Verify response
-	assert.Equal(t, http.StatusOK, response.Code)
-	assert.Equal(t, helloWorld, response.Body.String())
+	c := qt.New(t)
+	c.Assert(response.Code, qt.Equals, http.StatusOK)
+	c.Assert(response.Body.String(), qt.Equals, helloWorld)
 }
 
 func TestApplicationPost(t *testing.T) {
@@ -46,8 +48,9 @@ func TestApplicationPost(t *testing.T) {
 	app.Handler().ServeHTTP(response, request)
 
 	// Verify response
-	assert.Equal(t, http.StatusOK, response.Code)
-	assert.Equal(t, helloWorld, response.Body.String())
+	c := qt.New(t)
+	c.Assert(response.Code, qt.Equals, http.StatusOK)
+	c.Assert(response.Body.String(), qt.Equals, helloWorld)
 }
 
 func TestApplicationRewrite(t *testing.T) {
@@ -70,8 +73,9 @@ func TestApplicationRewrite(t *testing.T) {
 	response := getResponse(app, "/")
 
 	// Verify response
-	assert.Equal(t, http.StatusOK, response.Code)
-	assert.Equal(t, helloWorld, response.Body.String())
+	c := qt.New(t)
+	c.Assert(response.Code, qt.Equals, http.StatusOK)
+	c.Assert(response.Body.String(), qt.Equals, helloWorld)
 }
 
 func TestApplicationLoadConfig(t *testing.T) {
@@ -86,7 +90,8 @@ func TestApplicationLoadConfig(t *testing.T) {
 	err = os.Chdir(workingDirectory)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "Test title", app.Config.Title)
+	c := qt.New(t)
+	c.Assert(app.Config.Title, qt.Equals, "Test title")
 }
 
 func TestApplicationRun(t *testing.T) {
