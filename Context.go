@@ -58,11 +58,8 @@ const (
 	strictTransportSecurity       = "max-age=31536000; includeSubDomains; preload"
 	contentSecurityPolicyHeader   = "Content-Security-Policy"
 
-	// responseTimeHeader            = "X-Response-Time"
 	// xFrameOptionsHeader           = "X-Frame-Options"
 	// xFrameOptions                 = "SAMEORIGIN"
-	// serverHeader                  = "Server"
-	// server                        = "Aero"
 )
 
 // Push options describes the headers that are sent
