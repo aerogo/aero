@@ -19,7 +19,6 @@ import (
 	"github.com/akyoto/stringutils/unsafe"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/julienschmidt/httprouter"
-	"github.com/tomasen/realip"
 )
 
 // This should be close to the MTU size of a TCP packet.
@@ -57,9 +56,8 @@ const (
 	strictTransportSecurityHeader = "Strict-Transport-Security"
 	strictTransportSecurity       = "max-age=31536000; includeSubDomains; preload"
 	contentSecurityPolicyHeader   = "Content-Security-Policy"
-
-	// xFrameOptionsHeader           = "X-Frame-Options"
-	// xFrameOptions                 = "SAMEORIGIN"
+	forwardedForHeader            = "X-Forwarded-For"
+	realIPHeader                  = "X-Real-Ip"
 )
 
 // Push options describes the headers that are sent
@@ -412,7 +410,7 @@ func (ctx *Context) GetInt(param string) (int, error) {
 
 // RealIP tries to determine the real IP address of the request.
 func (ctx *Context) RealIP() string {
-	return strings.Trim(realip.RealIP(ctx.request), "[]")
+	return strings.Trim(realIP(ctx.request), "[]")
 }
 
 // UserAgent retrieves the user agent for the given request.
