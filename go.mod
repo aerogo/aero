@@ -16,6 +16,5 @@ require (
 	github.com/stretchr/testify v1.3.0
 	github.com/tdewolff/parse v2.3.4+incompatible
 	github.com/tdewolff/test v1.0.0 // indirect
-	github.com/tomasen/realip v0.0.0-20180522021738-f0c99a92ddce
-	golang.org/x/sys v0.0.0-20190516014833-cab07311ab81 // indirect
+	golang.org/x/sys v0.0.0-20190516110030-61b9204099cb // indirect
 )
