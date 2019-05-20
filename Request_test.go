@@ -6,27 +6,29 @@ import (
 	"testing"
 
 	"github.com/aerogo/aero"
+	qt "github.com/frankban/quicktest"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRequest(t *testing.T) {
 	app := aero.New()
+	c := qt.New(t)
 
 	app.Get("/", func(ctx *aero.Context) string {
 		request := ctx.Request()
 
 		assert.NotEmpty(t, request.Header())
 		assert.Empty(t, request.Host())
-		assert.Equal(t, "HTTP/1.1", request.Protocol())
-		assert.Equal(t, "GET", request.Method())
+		c.Assert(request.Protocol(), qt.Equals, "HTTP/1.1")
+		c.Assert(request.Method(), qt.Equals, "GET")
 		assert.NotNil(t, request.URL())
-		assert.Equal(t, "/", request.URL().Path)
+		c.Assert(request.URL().Path, qt.Equals, "/")
 
 		return ctx.Text(helloWorld)
 	})
 
 	response := getResponse(app, "/")
-	assert.Equal(t, http.StatusOK, response.Code)
+	c.Assert(response.Code, qt.Equals, http.StatusOK)
 }
 
 func TestMultiRequest(t *testing.T) {

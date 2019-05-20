@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/aerogo/session"
+	qt "github.com/frankban/quicktest"
 	jsoniter "github.com/json-iterator/go"
 
 	"github.com/aerogo/aero"
@@ -32,9 +33,10 @@ func TestContextResponseHeader(t *testing.T) {
 	response := getResponse(app, "/")
 
 	// Verify response
-	assert.Equal(t, http.StatusOK, response.Code)
-	assert.Equal(t, helloWorld, response.Body.String())
-	assert.Equal(t, "42", response.Header().Get("X-Custom"))
+	c := qt.New(t)
+	c.Assert(response.Code, qt.Equals, http.StatusOK)
+	c.Assert(response.Body.String(), qt.Equals, helloWorld)
+	c.Assert(response.Header().Get("X-Custom"), qt.Equals, "42")
 }
 
 func TestContextError(t *testing.T) {
@@ -54,18 +56,19 @@ func TestContextError(t *testing.T) {
 	})
 
 	// Verify response with known error
+	c := qt.New(t)
 	response := getResponse(app, "/")
-	assert.Equal(t, http.StatusUnauthorized, response.Code)
+	c.Assert(response.Code, qt.Equals, http.StatusUnauthorized)
 	assert.Contains(t, response.Body.String(), "Not logged in")
 
 	// Verify response with explanation only
 	response = getResponse(app, "/explanation-only")
-	assert.Equal(t, http.StatusUnauthorized, response.Code)
+	c.Assert(response.Code, qt.Equals, http.StatusUnauthorized)
 	assert.Contains(t, response.Body.String(), "Not authorized")
 
 	// Verify response with unknown error
 	response = getResponse(app, "/unknown-error")
-	assert.Equal(t, http.StatusUnauthorized, response.Code)
+	c.Assert(response.Code, qt.Equals, http.StatusUnauthorized)
 	assert.Contains(t, response.Body.String(), "Unknown error")
 }
 
@@ -83,13 +86,14 @@ func TestContextURI(t *testing.T) {
 	})
 
 	// Verify response with read-only URI
+	c := qt.New(t)
 	response := getResponse(app, "/uri")
-	assert.Equal(t, http.StatusOK, response.Code)
+	c.Assert(response.Code, qt.Equals, http.StatusOK)
 	assert.Contains(t, response.Body.String(), "/uri")
 
 	// Verify response with modified URI
 	response = getResponse(app, "/set-uri")
-	assert.Equal(t, http.StatusOK, response.Code)
+	c.Assert(response.Code, qt.Equals, http.StatusOK)
 	assert.Contains(t, response.Body.String(), "/hello")
 }
 
@@ -105,18 +109,20 @@ func TestContextRealIP(t *testing.T) {
 	response := getResponse(app, "/ip")
 
 	// Verify response
-	assert.Equal(t, http.StatusOK, response.Code)
+	c := qt.New(t)
+	c.Assert(response.Code, qt.Equals, http.StatusOK)
 	assert.Contains(t, response.Body.String(), "")
 }
 
 func TestContextSession(t *testing.T) {
 	app := aero.New()
+	c := qt.New(t)
 
 	// Register route
 	app.Get("/", func(ctx *aero.Context) string {
-		assert.Equal(t, false, ctx.HasSession())
+		c.Assert(ctx.HasSession(), qt.Equals, false)
 		ctx.Session().Set("custom", helloWorld)
-		assert.Equal(t, true, ctx.HasSession())
+		c.Assert(ctx.HasSession(), qt.Equals, true)
 
 		return ctx.Text(ctx.Session().GetString("custom"))
 	})
@@ -125,18 +131,19 @@ func TestContextSession(t *testing.T) {
 	response := getResponse(app, "/")
 
 	// Verify response
-	assert.Equal(t, http.StatusOK, response.Code)
-	assert.Equal(t, helloWorld, response.Body.String())
+	c.Assert(response.Code, qt.Equals, http.StatusOK)
+	c.Assert(response.Body.String(), qt.Equals, helloWorld)
 }
 
 func TestContextSessionInvalidCookie(t *testing.T) {
 	app := aero.New()
+	c := qt.New(t)
 
 	// Register route
 	app.Get("/", func(ctx *aero.Context) string {
-		assert.Equal(t, false, ctx.HasSession())
+		c.Assert(ctx.HasSession(), qt.Equals, false)
 		ctx.Session().Set("custom", helloWorld)
-		assert.Equal(t, true, ctx.HasSession())
+		c.Assert(ctx.HasSession(), qt.Equals, true)
 
 		return ctx.Text(ctx.Session().GetString("custom"))
 	})
@@ -151,32 +158,33 @@ func TestContextSessionInvalidCookie(t *testing.T) {
 	app.Handler().ServeHTTP(response, request)
 
 	// Verify response
-	assert.Equal(t, http.StatusOK, response.Code)
-	assert.Equal(t, helloWorld, response.Body.String())
+	c.Assert(response.Code, qt.Equals, http.StatusOK)
+	c.Assert(response.Body.String(), qt.Equals, helloWorld)
 }
 
 func TestContextSessionValidCookie(t *testing.T) {
 	app := aero.New()
+	c := qt.New(t)
 
 	// Register routes
 	app.Get("/1", func(ctx *aero.Context) string {
-		assert.Equal(t, false, ctx.HasSession())
+		c.Assert(ctx.HasSession(), qt.Equals, false)
 		ctx.Session().Set("custom", helloWorld)
-		assert.Equal(t, true, ctx.HasSession())
-		assert.Equal(t, ctx.Session().GetString("sid"), ctx.Session().ID())
+		c.Assert(ctx.HasSession(), qt.Equals, true)
+		c.Assert(ctx.Session().ID(), qt.Equals, ctx.Session().GetString("sid"))
 
 		return ctx.Text(ctx.Session().GetString("custom"))
 	})
 
 	app.Get("/2", func(ctx *aero.Context) string {
-		assert.Equal(t, true, ctx.HasSession())
-		assert.Equal(t, ctx.Session().GetString("sid"), ctx.Session().ID())
+		c.Assert(ctx.HasSession(), qt.Equals, true)
+		c.Assert(ctx.Session().ID(), qt.Equals, ctx.Session().GetString("sid"))
 
 		return ctx.Text(ctx.Session().GetString("custom"))
 	})
 
 	app.Get("/3", func(ctx *aero.Context) string {
-		assert.Equal(t, ctx.Session().GetString("sid"), ctx.Session().ID())
+		c.Assert(ctx.Session().ID(), qt.Equals, ctx.Session().GetString("sid"))
 
 		return ctx.Text(ctx.Session().GetString("custom"))
 	})
@@ -189,8 +197,8 @@ func TestContextSessionValidCookie(t *testing.T) {
 	app.Handler().ServeHTTP(response1, request1)
 
 	// Verify response 1
-	assert.Equal(t, http.StatusOK, response1.Code)
-	assert.Equal(t, helloWorld, response1.Body.String())
+	c.Assert(response1.Code, qt.Equals, http.StatusOK)
+	c.Assert(response1.Body.String(), qt.Equals, helloWorld)
 
 	setCookie := response1.Header().Get("Set-Cookie")
 	assert.NotEmpty(t, setCookie)
@@ -214,8 +222,8 @@ func TestContextSessionValidCookie(t *testing.T) {
 	app.Handler().ServeHTTP(response2, request2)
 
 	// Verify response 2
-	assert.Equal(t, http.StatusOK, response2.Code)
-	assert.Equal(t, helloWorld, response2.Body.String())
+	c.Assert(response2.Code, qt.Equals, http.StatusOK)
+	c.Assert(response2.Body.String(), qt.Equals, helloWorld)
 
 	// Create request 3
 	request3, _ := http.NewRequest("GET", "/3", nil)
@@ -229,8 +237,8 @@ func TestContextSessionValidCookie(t *testing.T) {
 	app.Handler().ServeHTTP(response3, request3)
 
 	// Verify response 3
-	assert.Equal(t, http.StatusOK, response3.Code)
-	assert.Equal(t, helloWorld, response3.Body.String())
+	c.Assert(response3.Code, qt.Equals, http.StatusOK)
+	c.Assert(response3.Body.String(), qt.Equals, helloWorld)
 }
 
 func TestContextContentTypes(t *testing.T) {
@@ -271,47 +279,53 @@ func TestContextContentTypes(t *testing.T) {
 	responseMediaFile := getResponse(app, "/files/docs/media/usage.gif")
 
 	// Verify JSON response
-	json, _ := jsoniter.Marshal(app.Config)
-	assert.Equal(t, http.StatusOK, responseJSON.Code)
-	assert.Equal(t, json, responseJSON.Body.Bytes())
-	assert.Contains(t, responseJSON.Header().Get("Content-Type"), "application/json")
+	c := qt.New(t)
+	json, err := jsoniter.Marshal(app.Config)
+	c.Assert(err, qt.IsNil)
+	c.Assert(responseJSON.Code, qt.Equals, http.StatusOK)
+	c.Assert(responseJSON.Body.Bytes(), qt.DeepEquals, json)
+	c.Assert(responseJSON.Header().Get("Content-Type"), qt.Matches, `application/json.*`)
 
 	// Verify JSON+LD response
-	assert.Equal(t, http.StatusOK, responseJSONLD.Code)
-	assert.Equal(t, json, responseJSONLD.Body.Bytes())
-	assert.Contains(t, responseJSONLD.Header().Get("Content-Type"), "application/ld+json")
+	c.Assert(responseJSONLD.Code, qt.Equals, http.StatusOK)
+	c.Assert(responseJSONLD.Body.Bytes(), qt.DeepEquals, json)
+	c.Assert(responseJSONLD.Header().Get("Content-Type"), qt.Matches, `application/ld\+json.*`)
 
 	// Verify HTML response
-	assert.Equal(t, http.StatusOK, responseHTML.Code)
-	assert.Equal(t, "<html></html>", responseHTML.Body.String())
-	assert.Contains(t, responseHTML.Header().Get("Content-Type"), "text/html")
+	c.Assert(responseHTML.Code, qt.Equals, http.StatusOK)
+	c.Assert(responseHTML.Body.String(), qt.Equals, "<html></html>")
+	c.Assert(responseHTML.Header().Get("Content-Type"), qt.Matches, `text/html.*`)
 
 	// Verify CSS response
-	assert.Equal(t, http.StatusOK, responseCSS.Code)
-	assert.Equal(t, "body{}", responseCSS.Body.String())
-	assert.Contains(t, responseCSS.Header().Get("Content-Type"), "text/css")
+	c.Assert(responseCSS.Code, qt.Equals, http.StatusOK)
+	c.Assert(responseCSS.Body.String(), qt.Equals, "body{}")
+	c.Assert(responseCSS.Header().Get("Content-Type"), qt.Matches, `text/css.*`)
 
 	// Verify JS response
-	assert.Equal(t, http.StatusOK, responseJS.Code)
-	assert.Equal(t, "console.log(42)", responseJS.Body.String())
-	assert.Contains(t, responseJS.Header().Get("Content-Type"), "application/javascript")
+	c.Assert(responseJS.Code, qt.Equals, http.StatusOK)
+	c.Assert(responseJS.Body.String(), qt.Equals, "console.log(42)")
+	c.Assert(responseJS.Header().Get("Content-Type"), qt.Matches, `application/javascript.*`)
 
 	// Verify file response
-	appSourceCode, _ := ioutil.ReadFile("Application.go")
-	assert.Equal(t, http.StatusOK, responseFile.Code)
-	assert.Equal(t, appSourceCode, responseFile.Body.Bytes())
-	assert.Contains(t, responseFile.Header().Get("Content-Type"), "text/plain")
+	appSourceCode, err := ioutil.ReadFile("Application.go")
+	c.Assert(err, qt.IsNil)
+	c.Assert(responseFile.Code, qt.Equals, http.StatusOK)
+	c.Assert(responseFile.Body.Bytes(), qt.DeepEquals, appSourceCode)
+	c.Assert(responseFile.Header().Get("Content-Type"), qt.Matches, `text/plain.*`)
 
 	// Verify media file response
-	imageData, _ := ioutil.ReadFile("docs/media/usage.gif")
-	assert.Equal(t, http.StatusOK, responseMediaFile.Code)
-	assert.Equal(t, imageData, responseMediaFile.Body.Bytes())
-	assert.Contains(t, responseMediaFile.Header().Get("Content-Type"), "image/gif")
+	imageData, err := ioutil.ReadFile("docs/media/usage.gif")
+	c.Assert(err, qt.IsNil)
+	c.Assert(responseMediaFile.Code, qt.Equals, http.StatusOK)
+	c.Assert(responseMediaFile.Body.Bytes(), qt.DeepEquals, imageData)
+	c.Assert(responseMediaFile.Header().Get("Content-Type"), qt.Matches, `image/gif.*`)
 }
 
 func TestContextReader(t *testing.T) {
 	app := aero.New()
-	config, _ := jsoniter.MarshalToString(app.Config)
+	config, err := jsoniter.MarshalToString(app.Config)
+	c := qt.New(t)
+	c.Assert(err, qt.Equals, nil)
 
 	// ReadAll
 	app.Get("/readall", func(ctx *aero.Context) string {
@@ -355,8 +369,8 @@ func TestContextReader(t *testing.T) {
 	for _, route := range routes {
 		// Verify response
 		response := getResponse(app, route)
-		assert.Equal(t, http.StatusOK, response.Code)
-		assert.Equal(t, config, strings.TrimSpace(response.Body.String()))
+		c.Assert(response.Code, qt.Equals, http.StatusOK)
+		c.Assert(strings.TrimSpace(response.Body.String()), qt.Equals, config)
 	}
 }
 
@@ -382,8 +396,9 @@ func TestContextHTTP2Push(t *testing.T) {
 	response := getResponse(app, "/")
 
 	// Verify response
-	assert.Equal(t, http.StatusOK, response.Code)
-	assert.Equal(t, "<html></html>", response.Body.String())
+	c := qt.New(t)
+	c.Assert(response.Code, qt.Equals, http.StatusOK)
+	c.Assert(response.Body.String(), qt.Equals, "<html></html>")
 }
 
 func TestContextGetInt(t *testing.T) {
@@ -402,8 +417,9 @@ func TestContextGetInt(t *testing.T) {
 	response := getResponse(app, "/21")
 
 	// Verify response
-	assert.Equal(t, http.StatusOK, response.Code)
-	assert.Equal(t, "42", response.Body.String())
+	c := qt.New(t)
+	c.Assert(response.Code, qt.Equals, http.StatusOK)
+	c.Assert(response.Body.String(), qt.Equals, "42")
 }
 
 func TestContextUserAgent(t *testing.T) {
@@ -425,12 +441,14 @@ func TestContextUserAgent(t *testing.T) {
 	app.Handler().ServeHTTP(response, request)
 
 	// Verify response
-	assert.Equal(t, http.StatusOK, response.Code)
-	assert.Equal(t, agent, response.Body.String())
+	c := qt.New(t)
+	c.Assert(response.Code, qt.Equals, http.StatusOK)
+	c.Assert(response.Body.String(), qt.Equals, agent)
 }
 
 func TestContextRedirect(t *testing.T) {
 	app := aero.New()
+	c := qt.New(t)
 
 	// Register routes
 	app.Get("/permanent", func(ctx *aero.Context) string {
@@ -445,20 +463,21 @@ func TestContextRedirect(t *testing.T) {
 	response := getResponse(app, "/temporary")
 
 	// Verify response
-	assert.Equal(t, http.StatusFound, response.Code)
-	assert.Equal(t, "", response.Body.String())
+	c.Assert(response.Code, qt.Equals, http.StatusFound)
+	c.Assert(response.Body.String(), qt.Equals, "")
 
 	// Get permanent response
 	response = getResponse(app, "/permanent")
 
 	// Verify response
-	assert.Equal(t, http.StatusMovedPermanently, response.Code)
-	assert.Equal(t, "", response.Body.String())
+	c.Assert(response.Code, qt.Equals, http.StatusMovedPermanently)
+	c.Assert(response.Body.String(), qt.Equals, "")
 }
 
 func TestContextQuery(t *testing.T) {
 	app := aero.New()
 	search := "Luke Skywalker"
+	c := qt.New(t)
 
 	// Register route
 	app.Get("/", func(ctx *aero.Context) string {
@@ -474,8 +493,8 @@ func TestContextQuery(t *testing.T) {
 	app.Handler().ServeHTTP(response, request)
 
 	// Verify response
-	assert.Equal(t, http.StatusOK, response.Code)
-	assert.Equal(t, search, response.Body.String())
+	c.Assert(response.Code, qt.Equals, http.StatusOK)
+	c.Assert(response.Body.String(), qt.Equals, search)
 }
 
 func TestContextEventStream(t *testing.T) {
@@ -534,15 +553,17 @@ func TestContextEventStream(t *testing.T) {
 	app.Handler().ServeHTTP(response, request)
 
 	// Verify response
-	assert.Equal(t, http.StatusOK, response.Code)
+	c := qt.New(t)
+	c.Assert(response.Code, qt.Equals, http.StatusOK)
 }
 
 func TestBigResponse(t *testing.T) {
 	text := strings.Repeat("Hello World", 1000000)
 	app := aero.New()
+	c := qt.New(t)
 
 	// Make sure GZip is enabled
-	assert.Equal(t, true, app.Config.GZip)
+	c.Assert(app.Config.GZip, qt.Equals, true)
 
 	// Register route
 	app.Get("/", func(ctx *aero.Context) string {
@@ -553,8 +574,8 @@ func TestBigResponse(t *testing.T) {
 	response := getResponse(app, "/")
 
 	// Verify the response
-	assert.Equal(t, http.StatusOK, response.Code)
-	assert.Equal(t, "gzip", response.Header().Get("Content-Encoding"))
+	c.Assert(response.Code, qt.Equals, http.StatusOK)
+	c.Assert(response.Header().Get("Content-Encoding"), qt.Equals, "gzip")
 }
 
 func BenchmarkBigResponse(b *testing.B) {
@@ -599,13 +620,15 @@ func TestBigResponseNoGzip(t *testing.T) {
 	app.Handler().ServeHTTP(response, request)
 
 	// Verify the response
-	assert.Equal(t, http.StatusOK, response.Code)
-	assert.Equal(t, "", response.Header().Get("Content-Encoding"))
+	c := qt.New(t)
+	c.Assert(response.Code, qt.Equals, http.StatusOK)
+	c.Assert(response.Header().Get("Content-Encoding"), qt.Equals, "")
 }
 
 func TestBigResponse304(t *testing.T) {
 	text := strings.Repeat("Hello World", 1000000)
 	app := aero.New()
+	c := qt.New(t)
 
 	// Register route
 	app.Get("/", func(ctx *aero.Context) string {
@@ -619,7 +642,7 @@ func TestBigResponse304(t *testing.T) {
 	etag := response.Header().Get("ETag")
 
 	// Verify the response
-	assert.Equal(t, http.StatusOK, response.Code)
+	c.Assert(response.Code, qt.Equals, http.StatusOK)
 	assert.NotEmpty(t, response.Body.String())
 
 	// Set if-none-match to the etag we just received
@@ -629,6 +652,6 @@ func TestBigResponse304(t *testing.T) {
 	app.Handler().ServeHTTP(response, request)
 
 	// Verify the response
-	assert.Equal(t, 304, response.Code)
+	c.Assert(response.Code, qt.Equals, 304)
 	assert.Empty(t, response.Body.String())
 }
