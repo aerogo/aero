@@ -17,7 +17,6 @@ import (
 	jsoniter "github.com/json-iterator/go"
 
 	"github.com/aerogo/aero"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestContextResponseHeader(t *testing.T) {
@@ -59,17 +58,17 @@ func TestContextError(t *testing.T) {
 	c := qt.New(t)
 	response := getResponse(app, "/")
 	c.Assert(response.Code, qt.Equals, http.StatusUnauthorized)
-	assert.Contains(t, response.Body.String(), "Not logged in")
+	c.Assert(response.Body.String(), qt.Contains, "Not logged in")
 
 	// Verify response with explanation only
 	response = getResponse(app, "/explanation-only")
 	c.Assert(response.Code, qt.Equals, http.StatusUnauthorized)
-	assert.Contains(t, response.Body.String(), "Not authorized")
+	c.Assert(response.Body.String(), qt.Contains, "Not authorized")
 
 	// Verify response with unknown error
 	response = getResponse(app, "/unknown-error")
 	c.Assert(response.Code, qt.Equals, http.StatusUnauthorized)
-	assert.Contains(t, response.Body.String(), "Unknown error")
+	c.Assert(response.Body.String(), qt.Contains, "Unknown error")
 }
 
 func TestContextURI(t *testing.T) {
@@ -89,12 +88,12 @@ func TestContextURI(t *testing.T) {
 	c := qt.New(t)
 	response := getResponse(app, "/uri")
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
-	assert.Contains(t, response.Body.String(), "/uri")
+	c.Assert(response.Body.String(), qt.Contains, "/uri")
 
 	// Verify response with modified URI
 	response = getResponse(app, "/set-uri")
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
-	assert.Contains(t, response.Body.String(), "/hello")
+	c.Assert(response.Body.String(), qt.Contains, "/hello")
 }
 
 func TestContextRealIP(t *testing.T) {
@@ -111,7 +110,7 @@ func TestContextRealIP(t *testing.T) {
 	// Verify response
 	c := qt.New(t)
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
-	assert.Contains(t, response.Body.String(), "")
+	c.Assert(response.Body.String(), qt.Contains, "")
 }
 
 func TestContextSession(t *testing.T) {
@@ -201,14 +200,14 @@ func TestContextSessionValidCookie(t *testing.T) {
 	c.Assert(response1.Body.String(), qt.Equals, helloWorld)
 
 	setCookie := response1.Header().Get("Set-Cookie")
-	assert.NotEmpty(t, setCookie)
-	assert.Contains(t, setCookie, "sid=")
+	c.Assert(setCookie, qt.Not(qt.Equals), "")
+	c.Assert(setCookie, qt.Contains, "sid=")
 
 	cookieParts := strings.Split(setCookie, ";")
 	sidLine := strings.TrimSpace(cookieParts[0])
 	sidParts := strings.Split(sidLine, "=")
 	sid := sidParts[1]
-	assert.True(t, session.IsValidID(sid))
+	c.Assert(session.IsValidID(sid), qt.Equals, true)
 
 	// Create request 2
 	request2, _ := http.NewRequest("GET", "/2", nil)
@@ -325,7 +324,7 @@ func TestContextReader(t *testing.T) {
 	app := aero.New()
 	config, err := jsoniter.MarshalToString(app.Config)
 	c := qt.New(t)
-	c.Assert(err, qt.Equals, nil)
+	c.Assert(err, qt.IsNil)
 
 	// ReadAll
 	app.Get("/readall", func(ctx *aero.Context) string {
@@ -335,7 +334,7 @@ func TestContextReader(t *testing.T) {
 			defer writer.Close()
 			encoder := jsoniter.NewEncoder(writer)
 			err := encoder.Encode(app.Config)
-			assert.NoError(t, err)
+			c.Assert(err, qt.IsNil)
 		}()
 
 		return ctx.ReadAll(reader)
@@ -349,7 +348,7 @@ func TestContextReader(t *testing.T) {
 			defer writer.Close()
 			encoder := jsoniter.NewEncoder(writer)
 			err := encoder.Encode(app.Config)
-			assert.NoError(t, err)
+			c.Assert(err, qt.IsNil)
 		}()
 
 		return ctx.Reader(reader)
@@ -403,12 +402,13 @@ func TestContextHTTP2Push(t *testing.T) {
 
 func TestContextGetInt(t *testing.T) {
 	app := aero.New()
+	c := qt.New(t)
 
 	// Register route
 	app.Get("/:number", func(ctx *aero.Context) string {
 		number, err := ctx.GetInt("number")
-		assert.NoError(t, err)
-		assert.NotZero(t, number)
+		c.Assert(err, qt.IsNil)
+		c.Assert(number, qt.Not(qt.Equals), 0)
 
 		return ctx.Text(strconv.Itoa(number * 2))
 	})
@@ -417,7 +417,6 @@ func TestContextGetInt(t *testing.T) {
 	response := getResponse(app, "/21")
 
 	// Verify response
-	c := qt.New(t)
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
 	c.Assert(response.Body.String(), qt.Equals, "42")
 }
@@ -643,7 +642,7 @@ func TestBigResponse304(t *testing.T) {
 
 	// Verify the response
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
-	assert.NotEmpty(t, response.Body.String())
+	c.Assert(response.Body.String(), qt.Not(qt.Equals), "")
 
 	// Set if-none-match to the etag we just received
 	request, _ = http.NewRequest("GET", "/", nil)
@@ -653,5 +652,5 @@ func TestBigResponse304(t *testing.T) {
 
 	// Verify the response
 	c.Assert(response.Code, qt.Equals, 304)
-	assert.Empty(t, response.Body.String())
+	c.Assert(response.Body.String(), qt.Equals, "")
 }

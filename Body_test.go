@@ -1,25 +1,25 @@
 package aero_test
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/aerogo/aero"
 	qt "github.com/frankban/quicktest"
-	"github.com/stretchr/testify/assert"
 	"github.com/tdewolff/parse/buffer"
 )
 
 func TestBody(t *testing.T) {
 	app := aero.New()
+	c := qt.New(t)
 
 	// Register route
 	app.Get("/", func(ctx *aero.Context) string {
 		body := ctx.Request().Body()
-		assert.NotNil(t, ctx.Request().Body().Reader())
+		c.Assert(ctx.Request().Body().Reader(), qt.Not(qt.IsNil))
 		bodyText, _ := body.String()
 		return ctx.Text(bodyText)
 	})
@@ -31,7 +31,6 @@ func TestBody(t *testing.T) {
 	app.Handler().ServeHTTP(response, request)
 
 	// Verify response
-	c := qt.New(t)
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
 	c.Assert(response.Body.String(), qt.Equals, helloWorld)
 }
@@ -60,21 +59,14 @@ func TestBodyJSON(t *testing.T) {
 
 func TestBodyErrors(t *testing.T) {
 	app := aero.New()
+	c := qt.New(t)
 
 	app.Get("/", func(ctx *aero.Context) string {
 		body := ctx.Request().Body()
-
-		// JSON
 		bodyJSON, err := body.JSON()
 
-		assert.Error(t, err)
-		assert.Nil(t, bodyJSON)
-
-		// JSON object
-		bodyJSONObject, err := body.JSONObject()
-
-		assert.Error(t, err)
-		assert.Nil(t, bodyJSONObject)
+		c.Assert(err, qt.Not(qt.IsNil))
+		c.Assert(bodyJSON, qt.IsNil)
 
 		return ctx.Text(helloWorld)
 	})
@@ -83,8 +75,8 @@ func TestBodyErrors(t *testing.T) {
 		body := ctx.Request().Body()
 		bodyJSONObject, err := body.JSONObject()
 
-		assert.Error(t, err)
-		assert.Nil(t, bodyJSONObject)
+		c.Assert(err, qt.Not(qt.IsNil))
+		c.Assert(bodyJSONObject, qt.IsNil)
 
 		return ctx.Text(helloWorld)
 	})
@@ -93,21 +85,17 @@ func TestBodyErrors(t *testing.T) {
 	request, _ := http.NewRequest("GET", "/", nil)
 	response := httptest.NewRecorder()
 	app.Handler().ServeHTTP(response, request)
-
-	c := qt.New(t)
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
 
 	// Invalid JSON
-	request, _ = http.NewRequest("GET", "/", bytes.NewReader([]byte("{")))
+	request, _ = http.NewRequest("GET", "/", strings.NewReader("{"))
 	response = httptest.NewRecorder()
 	app.Handler().ServeHTTP(response, request)
-
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
 
 	// Not a JSON object
-	request, _ = http.NewRequest("GET", "/json-object", bytes.NewReader([]byte("123")))
+	request, _ = http.NewRequest("GET", "/json-object", strings.NewReader("{"))
 	response = httptest.NewRecorder()
 	app.Handler().ServeHTTP(response, request)
-
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
 }

@@ -7,7 +7,6 @@ import (
 
 	"github.com/aerogo/aero"
 	qt "github.com/frankban/quicktest"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestRequest(t *testing.T) {
@@ -17,11 +16,11 @@ func TestRequest(t *testing.T) {
 	app.Get("/", func(ctx *aero.Context) string {
 		request := ctx.Request()
 
-		assert.NotEmpty(t, request.Header())
-		assert.Empty(t, request.Host())
+		c.Assert(request.Header(), qt.Not(qt.Equals), "")
+		c.Assert(request.Host(), qt.Equals, "")
 		c.Assert(request.Protocol(), qt.Equals, "HTTP/1.1")
 		c.Assert(request.Method(), qt.Equals, "GET")
-		assert.NotNil(t, request.URL())
+		c.Assert(request.URL(), qt.Not(qt.IsNil))
 		c.Assert(request.URL().Path, qt.Equals, "/")
 
 		return ctx.Text(helloWorld)

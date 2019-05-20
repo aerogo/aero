@@ -12,7 +12,6 @@ import (
 	"github.com/aerogo/aero"
 	"github.com/aerogo/http/client"
 	qt "github.com/frankban/quicktest"
-	"github.com/stretchr/testify/assert"
 )
 
 const helloWorld = "Hello World"
@@ -81,21 +80,21 @@ func TestApplicationRewrite(t *testing.T) {
 func TestApplicationLoadConfig(t *testing.T) {
 	app := aero.New()
 	workingDirectory, _ := os.Getwd()
+	c := qt.New(t)
 
 	err := os.Chdir("testdata")
-	assert.NoError(t, err)
+	c.Assert(err, qt.IsNil)
 
 	app.Load()
 
 	err = os.Chdir(workingDirectory)
-	assert.NoError(t, err)
-
-	c := qt.New(t)
+	c.Assert(err, qt.IsNil)
 	c.Assert(app.Config.Title, qt.Equals, "Test title")
 }
 
 func TestApplicationRun(t *testing.T) {
 	app := aero.New()
+	c := qt.New(t)
 
 	// When frontpage is requested, kill the server
 	app.Get("/", func(ctx *aero.Context) string {
@@ -105,16 +104,16 @@ func TestApplicationRun(t *testing.T) {
 	// When the server is started, we request the frontpage
 	app.OnStart(func() {
 		_, err := client.Get(fmt.Sprintf("http://localhost:%d/", app.Config.Ports.HTTP)).End()
-		assert.NoError(t, err)
+		c.Assert(err, qt.IsNil)
 
 		err = syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
-		assert.NoError(t, err)
+		c.Assert(err, qt.IsNil)
 	})
 
 	// When the server ends, check elapsed time
 	app.OnEnd(func() {
 		elapsed := time.Since(app.StartTime())
-		assert.True(t, elapsed < 2*time.Second)
+		c.Assert(elapsed < 2*time.Second, qt.Equals, true)
 	})
 
 	// Run
@@ -124,6 +123,7 @@ func TestApplicationRun(t *testing.T) {
 func TestApplicationRunHTTPS(t *testing.T) {
 	app := aero.New()
 	app.Security.Load("testdata/fullchain.pem", "testdata/privkey.pem")
+	c := qt.New(t)
 
 	// Register route
 	app.Get("/", func(ctx *aero.Context) string {
@@ -133,14 +133,14 @@ func TestApplicationRunHTTPS(t *testing.T) {
 	// When the server is started, we request the frontpage
 	app.OnStart(func() {
 		_, err := client.Get(fmt.Sprintf("http://localhost:%d/", app.Config.Ports.HTTP)).End()
-		assert.NoError(t, err)
+		c.Assert(err, qt.IsNil)
 
 		_, err = client.Get(fmt.Sprintf("https://localhost:%d/", app.Config.Ports.HTTPS)).End()
-		assert.NoError(t, err)
+		c.Assert(err, qt.IsNil)
 
 		go func() {
 			err = syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
-			assert.NoError(t, err)
+			c.Assert(err, qt.IsNil)
 		}()
 	})
 
@@ -151,8 +151,8 @@ func TestApplicationRunHTTPS(t *testing.T) {
 func TestApplicationUnavailablePort(t *testing.T) {
 	defer func() {
 		_ = recover()
-		// assert.NotNil(t, r)
-		// assert.Contains(t, r.(error).Error(), "bind: permission denied")
+		// c.Assert(r, qt.Not(qt.IsNil))
+		// c.Assert(r.(error).Error(), qt.Contains, "bind: permission denied")
 	}()
 
 	app := aero.New()
