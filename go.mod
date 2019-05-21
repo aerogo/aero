@@ -16,5 +16,5 @@ require (
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/tdewolff/parse v2.3.4+incompatible
 	github.com/tdewolff/test v1.0.0 // indirect
-	golang.org/x/sys v0.0.0-20190516110030-61b9204099cb // indirect
+	golang.org/x/sys v0.0.0-20190520201301-c432e742b0af // indirect
 )
