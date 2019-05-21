@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/aerogo/aero"
-
 	"github.com/akyoto/color"
 )
 
@@ -17,7 +17,7 @@ var newApp bool
 
 // Shell flags
 func init() {
-	flag.BoolVar(&newApp, "newapp", false, "Creates the basic structure of a new app in an empty directory")
+	flag.BoolVar(&newApp, "new", false, "Creates the basic structure of a new app in an empty directory")
 }
 
 // Main
@@ -29,63 +29,38 @@ func main() {
 		return
 	}
 
-	faint := color.New(color.Faint).SprintFunc()
+	color.Yellow("Creating new app...\n\n")
+	icon := color.GreenString(" ✔ ")
 
-	color.Yellow("Creating new app...")
-	println()
-
-	fmt.Println(color.GreenString(" ✔ "), ".gitignore")
+	fmt.Println(icon, ".gitignore")
 	gitignore()
 
-	fmt.Println(color.GreenString(" ✔ "), "config.json")
+	fmt.Println(icon, "config.json")
 	config()
 
-	fmt.Println(color.GreenString(" ✔ "), "tsconfig.json")
+	fmt.Println(icon, "tsconfig.json")
 	tsconfig()
 
-	fmt.Println(color.GreenString(" ✔ "), "main.go")
+	fmt.Println(icon, "main.go")
 	mainFile()
 
-	fmt.Println(color.GreenString(" ✔ "), "main_test.go")
+	fmt.Println(icon, "main_test.go")
 	mainTestFile()
 
-	fmt.Println(color.GreenString(" ✔ "), faint("layout"))
-	createDirectory("layout")
+	fmt.Println(icon, "go.mod")
+	makeModule()
 
-	fmt.Println(color.GreenString(" ✔ "), faint("pages"))
-	createDirectory("pages")
-
-	fmt.Println(color.GreenString(" ✔ "), faint("scripts"))
-	createDirectory("scripts")
-	panicOnError(ioutil.WriteFile("scripts/main.ts", []byte(`console.log("Hello World")`), 0644))
-
-	fmt.Println(color.GreenString(" ✔ "), faint("security"))
-	createDirectory("security")
-	gitignoreAll("security")
-
-	fmt.Println(color.GreenString(" ✔ "), faint("styles"))
-	createDirectory("styles")
-
-	println()
-	color.Green("Finished.")
-}
-
-func createDirectory(name string) {
-	err := os.Mkdir(name, 0777)
-
-	if err != nil && !os.IsExist(err) {
-		panic(err)
-	}
+	color.Green("\nFinished.")
 }
 
 func mainFile() {
 	err := ioutil.WriteFile("main.go", []byte(mainCode), 0644)
-	panicOnError(err)
+	check(err)
 }
 
 func mainTestFile() {
 	err := ioutil.WriteFile("main_test.go", []byte(mainTestCode), 0644)
-	panicOnError(err)
+	check(err)
 }
 
 func config() {
@@ -93,33 +68,37 @@ func config() {
 	config.Reset()
 
 	bytes, err := json.MarshalIndent(config, "", "\t")
-	panicOnError(err)
+	check(err)
 
 	err = ioutil.WriteFile("config.json", bytes, 0644)
-	panicOnError(err)
+	check(err)
 }
 
 func tsconfig() {
 	err := ioutil.WriteFile("tsconfig.json", []byte(tsconfigText), 0644)
-	panicOnError(err)
-}
-
-func gitignoreAll(directory string) {
-	err := ioutil.WriteFile(directory+"/.gitignore", []byte("*"), 0644)
-	panicOnError(err)
+	check(err)
 }
 
 func gitignore() {
 	// Ignore current directory name as binary
 	wd, err := os.Getwd()
-	panicOnError(err)
+	check(err)
 
 	binaryName := "/" + filepath.Base(wd)
 	err = ioutil.WriteFile(".gitignore", []byte(gitignoreText+"\n"+binaryName+"\n"), 0644)
-	panicOnError(err)
+	check(err)
 }
 
-func panicOnError(err error) {
+func makeModule() {
+	wd, err := os.Getwd()
+	check(err)
+
+	cmd := exec.Command("go", "mod", "init", "example.com/"+filepath.Base(wd))
+	err = cmd.Run()
+	check(err)
+}
+
+func check(err error) {
 	if err != nil {
 		panic(err)
 	}

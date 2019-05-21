@@ -8,15 +8,15 @@ Aero is a high-performance web server with a clean API for web development.
 
 ## Usage
 
-![Aero usage](docs/media/usage.gif)
+![Aero usage](docs/media/usage.apng)
 
 Run this in an empty directory:
 
 ```bash
-aero -newapp
+aero -new
 ```
 
-Now you can build your app with `go build` or use the more advanced [run](https://github.com/aerogo/run) tool.
+Now you can build your app with `go build` or use the [run](https://github.com/aerogo/run) development server (recommended).
 
 ## Features
 

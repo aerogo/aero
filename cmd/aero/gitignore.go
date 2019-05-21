@@ -1,35 +1,22 @@
 package main
 
-const gitignoreText = `# Aero: Folders
-/components
-/security
-/db
-
-# Aero: Files
-*.log
-
-# Aero: TypeScript
-*.js
-
-# Folders
-_obj
-_test
-vendor
-
-# Files
-*.o
-*.a
-*.so
-*.cgo1.go
-*.cgo2.c
+const gitignoreText = `# Binaries for programs and plugins
 *.exe
-*.test
-*.prof
+*.exe~
+*.dll
+*.so
+*.dylib
 
-# Special files
-_testmain.go
-_cgo_defun.c
-_cgo_gotypes.go
-_cgo_export.*
+# Test binaries
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Pack
+/components
+
+# TypeScript
+*.js
 
 # Project specific`

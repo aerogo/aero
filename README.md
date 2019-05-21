@@ -16,12 +16,12 @@ go get -u github.com/aerogo/aero/...
 
 ## Usage
 
-![Aero usage](docs/media/usage.gif)
+![Aero usage](docs/media/usage.apng)
 
 Run this in an empty directory:
 
 ```bash
-aero -newapp
+aero -new
 ```
 
 Now you can build your app with `go build` or use the more advanced [run](https://github.com/aerogo/run) tool.

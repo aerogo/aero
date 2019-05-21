@@ -51,6 +51,6 @@ func TestNewApp(t *testing.T) {
 
 	err = os.Chdir(projectPath)
 	c.Assert(err, qt.IsNil)
-	os.Args = append(os.Args, "-newapp")
+	os.Args = append(os.Args, "-new")
 	main()
 }

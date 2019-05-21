@@ -11,8 +11,8 @@ type Configuration struct {
 	Domain   string            `json:"domain"`
 	Title    string            `json:"title"`
 	Push     []string          `json:"push"`
-	Manifest Manifest          `json:"manifest"`
 	GZip     bool              `json:"gzip"`
+	Manifest Manifest          `json:"manifest"`
 	Ports    PortConfiguration `json:"ports"`
 }
 
