@@ -24,7 +24,7 @@ Run this in an empty directory:
 aero -new
 ```
 
-Now you can build your app with `go build` or use the more advanced [run](https://github.com/aerogo/run) tool.
+Now you can build your app with `go build` or use the [run](https://github.com/aerogo/run) development server (recommended).
 
 ## Features
 
