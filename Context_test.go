@@ -275,7 +275,7 @@ func TestContextContentTypes(t *testing.T) {
 	responseCSS := getResponse(app, "/css")
 	responseJS := getResponse(app, "/js")
 	responseFile := getResponse(app, "/files/Application.go")
-	responseMediaFile := getResponse(app, "/files/docs/media/usage.gif")
+	responseMediaFile := getResponse(app, "/files/docs/media/usage.apng")
 
 	// Verify JSON response
 	c := qt.New(t)
@@ -313,11 +313,11 @@ func TestContextContentTypes(t *testing.T) {
 	c.Assert(responseFile.Header().Get("Content-Type"), qt.Matches, `text/plain.*`)
 
 	// Verify media file response
-	imageData, err := ioutil.ReadFile("docs/media/usage.gif")
+	imageData, err := ioutil.ReadFile("docs/media/usage.apng")
 	c.Assert(err, qt.IsNil)
 	c.Assert(responseMediaFile.Code, qt.Equals, http.StatusOK)
 	c.Assert(responseMediaFile.Body.Bytes(), qt.DeepEquals, imageData)
-	c.Assert(responseMediaFile.Header().Get("Content-Type"), qt.Matches, `image/gif.*`)
+	c.Assert(responseMediaFile.Header().Get("Content-Type"), qt.Matches, `image/.*apng`)
 }
 
 func TestContextReader(t *testing.T) {
