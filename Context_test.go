@@ -317,7 +317,7 @@ func TestContextContentTypes(t *testing.T) {
 	c.Assert(err, qt.IsNil)
 	c.Assert(responseMediaFile.Code, qt.Equals, http.StatusOK)
 	c.Assert(responseMediaFile.Body.Bytes(), qt.DeepEquals, imageData)
-	c.Assert(responseMediaFile.Header().Get("Content-Type"), qt.Matches, `image/.*apng`)
+	c.Assert(responseMediaFile.Header().Get("Content-Type"), qt.Equals, `image/apng`)
 }
 
 func TestContextReader(t *testing.T) {

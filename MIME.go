@@ -12,4 +12,11 @@ func init() {
 	if err != nil {
 		os.Stderr.WriteString("Failed adding image/webp MIME extension")
 	}
+
+	// Set mime type for APNG because the one in Go differs
+	err = mime.AddExtensionType(".apng", "image/apng")
+
+	if err != nil {
+		os.Stderr.WriteString("Failed adding image/apng MIME extension")
+	}
 }
