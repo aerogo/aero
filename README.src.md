@@ -26,7 +26,6 @@ Now you can build your app with `go build` or use the [run](https://github.com/a
 - Calculates E-Tags out of the box
 - Saves you a lot of bandwidth using browser cache validation
 - Finishes ongoing requests on a server shutdown
-- Supports HTTP/2, IPv6 and Web Manifest
 - Automatic HTTP/2 push of configured resources
 - Supports session data with custom stores
 - Allows pushing live data to the client via SSE
