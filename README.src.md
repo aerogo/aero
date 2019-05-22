@@ -35,14 +35,16 @@ Now you can build your app with `go build` or use the [run](https://github.com/a
 
 ## Optional
 
-- [layout](https://github.com/aerogo/layout) as a layout system
 - [pack](https://github.com/aerogo/pack) to compile Pixy, Scarlet and JS assets in record time
 - [run](https://github.com/aerogo/run) which automatically restarts your server on code/template/style changes
 - [pixy](https://github.com/aerogo/pixy) as a high-performance template engine similar to Jade/Pug
 - [scarlet](https://github.com/aerogo/scarlet) as an aggressively compressing stylesheet preprocessor
 - [nano](https://github.com/aerogo/nano) as a fast, decentralized and git-trackable database
-- [api](https://github.com/aerogo/api) to automatically implement your REST API routes
+- [layout](https://github.com/aerogo/layout) as a layout system
+- [manifest](https://github.com/aerogo/manifest) to load and manipulate web manifests
 - [markdown](https://github.com/aerogo/markdown) as an overly simplified markdown wrapper
+- [graphql](https://github.com/aerogo/graphql) to automatically implement your GraphQL API
+- [packet](https://github.com/aerogo/packet) as a way to send TCP/UDP messages between nodes
 - [http](https://github.com/aerogo/http) as an HTTP client with a simple and clean API
 - [log](https://github.com/aerogo/log) for simple & performant logging
 
