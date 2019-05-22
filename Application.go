@@ -115,7 +115,6 @@ func (app *Application) Run() {
 		callback()
 	}
 
-	app.TestManifest()
 	app.TestRoutes()
 	app.Wait()
 	app.Shutdown()
@@ -227,17 +226,6 @@ func (app *Application) Handler() http.Handler {
 // Test tests the given URI paths when the application starts.
 func (app *Application) Test(route string, paths []string) {
 	app.routeTests[route] = paths
-}
-
-// TestManifest tests your application's manifest.
-func (app *Application) TestManifest() {
-	manifest := app.Config.Manifest
-
-	// Warn about short name length (Google Lighthouse)
-	// https://developer.chrome.com/apps/manifest/name#short_name
-	if len(manifest.ShortName) >= 12 {
-		color.Yellow("The short name of your application should have less than 12 characters")
-	}
 }
 
 // TestRoutes tests your application's routes.
