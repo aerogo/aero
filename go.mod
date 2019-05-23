@@ -14,7 +14,8 @@ require (
 	github.com/frankban/quicktest v1.4.0
 	github.com/json-iterator/go v1.1.6
 	github.com/julienschmidt/httprouter v1.2.0
+	github.com/mattn/go-isatty v0.0.8 // indirect
 	github.com/tdewolff/parse v2.3.4+incompatible
 	github.com/tdewolff/test v1.0.0 // indirect
-	golang.org/x/sys v0.0.0-20190520201301-c432e742b0af // indirect
+	golang.org/x/sys v0.0.0-20190522044717-8097e1b27ff5 // indirect
 )
