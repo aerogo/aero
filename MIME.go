@@ -2,7 +2,8 @@ package aero
 
 import (
 	"mime"
-	"os"
+
+	"github.com/akyoto/color"
 )
 
 func init() {
@@ -10,13 +11,13 @@ func init() {
 	err := mime.AddExtensionType(".webp", "image/webp")
 
 	if err != nil {
-		os.Stderr.WriteString("Failed adding image/webp MIME extension")
+		color.Red("Failed adding image/webp MIME extension")
 	}
 
 	// Set mime type for APNG because the one in Go differs
 	err = mime.AddExtensionType(".apng", "image/apng")
 
 	if err != nil {
-		os.Stderr.WriteString("Failed adding image/apng MIME extension")
+		color.Red("Failed adding image/apng MIME extension")
 	}
 }

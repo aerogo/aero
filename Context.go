@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"mime"
 	"net/http"
 	"os"
@@ -113,20 +112,6 @@ func (ctx *Context) Session() *session.Session {
 	return ctx.session
 }
 
-// createSessionCookie creates a session cookie in the client.
-func (ctx *Context) createSessionCookie() {
-	sessionCookie := http.Cookie{
-		Name:     "sid",
-		Value:    ctx.session.ID(),
-		HttpOnly: true,
-		Secure:   true,
-		MaxAge:   ctx.App.Sessions.Duration,
-		Path:     "/",
-	}
-
-	http.SetCookie(ctx.response, &sessionCookie)
-}
-
 // HasSession indicates whether the client has a valid session or not.
 func (ctx *Context) HasSession() bool {
 	if ctx.session != nil {
@@ -148,10 +133,23 @@ func (ctx *Context) HasSession() bool {
 	return ctx.session != nil
 }
 
+// createSessionCookie creates a session cookie in the client.
+func (ctx *Context) createSessionCookie() {
+	sessionCookie := http.Cookie{
+		Name:     "sid",
+		Value:    ctx.session.ID(),
+		HttpOnly: true,
+		Secure:   true,
+		MaxAge:   ctx.App.Sessions.Duration,
+		Path:     "/",
+	}
+
+	http.SetCookie(ctx.response, &sessionCookie)
+}
+
 // JSON encodes the object to a JSON string and responds.
 func (ctx *Context) JSON(value interface{}) string {
 	ctx.response.Header().Set(contentTypeHeader, contentTypeJSON)
-
 	bytes, err := jsoniter.Marshal(value)
 
 	if err != nil {
@@ -165,7 +163,6 @@ func (ctx *Context) JSON(value interface{}) string {
 // JSONLinkedData encodes the object to a JSON linked data string and responds.
 func (ctx *Context) JSONLinkedData(value interface{}) string {
 	ctx.response.Header().Set(contentTypeHeader, contentTypeJSONLD)
-
 	bytes, err := jsoniter.Marshal(value)
 
 	if err != nil {
@@ -178,15 +175,15 @@ func (ctx *Context) JSONLinkedData(value interface{}) string {
 
 // HTML sends a HTML string.
 func (ctx *Context) HTML(html string) string {
-	ctx.response.Header().Set(contentTypeHeader, contentTypeHTML)
-	ctx.response.Header().Set(contentTypeOptionsHeader, contentTypeOptions)
-	ctx.response.Header().Set(xssProtectionHeader, xssProtection)
-	// ctx.response.Header().Set(xFrameOptionsHeader, xFrameOptions)
-	ctx.response.Header().Set(referrerPolicyHeader, referrerPolicySameOrigin)
+	header := ctx.response.Header()
+	header.Set(contentTypeHeader, contentTypeHTML)
+	header.Set(contentTypeOptionsHeader, contentTypeOptions)
+	header.Set(xssProtectionHeader, xssProtection)
+	header.Set(referrerPolicyHeader, referrerPolicySameOrigin)
 
 	if ctx.App.Security.Certificate != "" {
-		ctx.response.Header().Set(strictTransportSecurityHeader, strictTransportSecurity)
-		ctx.response.Header().Set(contentSecurityPolicyHeader, ctx.App.ContentSecurityPolicy.String())
+		header.Set(strictTransportSecurityHeader, strictTransportSecurity)
+		header.Set(contentSecurityPolicyHeader, ctx.App.ContentSecurityPolicy.String())
 	}
 
 	return html
@@ -260,17 +257,6 @@ func (ctx *Context) EventStream(stream *EventStream) string {
 				fmt.Fprintf(ctx.response, "event: %s\ndata: %s\n\n", event.Name, data)
 				flusher.Flush()
 			}
-
-			// case <-time.After(5 * time.Second):
-			// 	// Send one byte to keep alive the connection
-			// 	// which will also check for disconnection.
-			// 	_, err := ctx.response.Write([]byte("\n"))
-
-			// 	if err != nil {
-
-			// 	}
-
-			// 	flusher.Flush()
 		}
 	}
 }
@@ -334,7 +320,7 @@ func (ctx *Context) Error(statusCode int, errors ...interface{}) string {
 	message := strings.Builder{}
 
 	if len(errors) == 0 {
-		message.WriteString(fmt.Sprintf("Unknown error: %d", statusCode))
+		fmt.Fprintf(&message, "Unknown error: %d", statusCode)
 	} else {
 		for index, param := range errors {
 			switch err := param.(type) {
@@ -420,11 +406,6 @@ func (ctx *Context) pushResources() {
 		}
 	}
 
-	// OnPush callbacks
-	for _, callback := range ctx.App.onPush {
-		callback(ctx)
-	}
-
 	// Check if we can push
 	pusher, ok := ctx.response.(http.Pusher)
 
@@ -432,10 +413,15 @@ func (ctx *Context) pushResources() {
 		return
 	}
 
+	// OnPush callbacks
+	for _, callback := range ctx.App.onPush {
+		callback(ctx)
+	}
+
 	// Push every resource defined in config.json
 	for _, resource := range ctx.App.Config.Push {
 		if err := pusher.Push(resource, &pushOptions); err != nil {
-			log.Printf("Failed to push %s: %v", resource, err)
+			color.Red("Failed to push %s: %v", resource, err)
 		}
 	}
 }
@@ -480,7 +466,7 @@ func (ctx *Context) respondBytes(b []byte) {
 		_, err := response.Write(b)
 
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error writing %s response to %s (%d bytes)", contentType, ctx.RealIP(), len(b))
+			color.Red("Error writing %s response to %s (%d bytes)", contentType, ctx.RealIP(), len(b))
 		}
 
 		return
@@ -509,7 +495,7 @@ func (ctx *Context) respondBytes(b []byte) {
 		_, err := response.Write(b)
 
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error writing %s response to %s (%d bytes)", contentType, ctx.RealIP(), len(b))
+			color.Red("Error writing %s response to %s (%d bytes)", contentType, ctx.RealIP(), len(b))
 		}
 
 		return
@@ -524,7 +510,7 @@ func (ctx *Context) respondBytes(b []byte) {
 	_, err := writer.Write(b)
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error writing %s response using gzip to %s (%d bytes)", contentType, ctx.RealIP(), len(b))
+		color.Red("Error writing %s response using gzip to %s (%d bytes)", contentType, ctx.RealIP(), len(b))
 	}
 
 	writer.Close()

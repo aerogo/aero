@@ -23,11 +23,11 @@ type PortConfiguration struct {
 
 // Reset resets all fields to the default configuration.
 func (config *Configuration) Reset() {
+	config.Title = "Untitled site"
+	config.Push = []string{}
 	config.GZip = true
 	config.Ports.HTTP = 4000
 	config.Ports.HTTPS = 4001
-	config.Title = "Untitled site"
-	config.Push = []string{}
 }
 
 // LoadConfig loads the application configuration from the file system.
