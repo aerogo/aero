@@ -143,21 +143,13 @@ func (app *Application) Load() {
 func (app *Application) ListenAndServe() {
 	if app.Security.Key != "" && app.Security.Certificate != "" {
 		listener := app.listen(":" + strconv.Itoa(app.Config.Ports.HTTPS))
-
-		go func() {
-			app.serveHTTPS(listener)
-		}()
-
+		go app.serveHTTPS(listener)
 		fmt.Println("Server running on:", color.GreenString("https://localhost:"+strconv.Itoa(app.Config.Ports.HTTPS)))
-	} else {
-		fmt.Println("Server running on:", color.GreenString("http://localhost:"+strconv.Itoa(app.Config.Ports.HTTP)))
 	}
 
 	listener := app.listen(":" + strconv.Itoa(app.Config.Ports.HTTP))
-
-	go func() {
-		app.serveHTTP(listener)
-	}()
+	go app.serveHTTP(listener)
+	fmt.Println("Server running on:", color.GreenString("http://localhost:"+strconv.Itoa(app.Config.Ports.HTTP)))
 }
 
 // Wait will make the process wait until it is killed.
