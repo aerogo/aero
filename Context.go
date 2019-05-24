@@ -39,14 +39,6 @@ var pushOptions = http.PushOptions{
 
 // Context represents a single request & response.
 type Context struct {
-	// net/http
-	request  *http.Request
-	response http.ResponseWriter
-	params   httprouter.Params
-
-	// Responded tells if the request has been dealt with already
-	responded bool
-
 	// A pointer to the application this request occurred on.
 	App *Application
 
@@ -57,7 +49,16 @@ type Context struct {
 	ErrorMessage string
 
 	// Custom data
+	// TODO: Find a cleaner solution to deal with this?
 	Data interface{}
+
+	// net/http
+	request  *http.Request
+	response http.ResponseWriter
+	params   httprouter.Params
+
+	// Responded tells if the request has been dealt with already
+	responded bool
 
 	// User session
 	session *session.Session
