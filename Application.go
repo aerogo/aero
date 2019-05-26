@@ -359,9 +359,11 @@ func (app *Application) serveHTTP(listener Listener) {
 	app.serversMutex.Unlock()
 
 	// This will block the calling goroutine until the server shuts down.
+	// The returned error is never nil and in case of a normal shutdown
+	// it will be `http.ErrServerClosed`.
 	err := server.Serve(listener)
 
-	if err != nil && !strings.Contains(err.Error(), "closed") {
+	if err != http.ErrServerClosed {
 		panic(err)
 	}
 }
@@ -375,9 +377,11 @@ func (app *Application) serveHTTPS(listener Listener) {
 	app.serversMutex.Unlock()
 
 	// This will block the calling goroutine until the server shuts down.
+	// The returned error is never nil and in case of a normal shutdown
+	// it will be `http.ErrServerClosed`.
 	err := server.ServeTLS(listener, app.Security.Certificate, app.Security.Key)
 
-	if err != nil && !strings.Contains(err.Error(), "closed") {
+	if err != http.ErrServerClosed {
 		panic(err)
 	}
 }
