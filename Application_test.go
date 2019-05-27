@@ -52,6 +52,25 @@ func TestApplicationPost(t *testing.T) {
 	c.Assert(response.Body.String(), qt.Equals, helloWorld)
 }
 
+func TestApplicationDelete(t *testing.T) {
+	app := aero.New()
+
+	// Register route
+	app.Delete("/", func(ctx *aero.Context) string {
+		return ctx.Text(helloWorld)
+	})
+
+	// Get response
+	request, _ := http.NewRequest("DELETE", "/", nil)
+	response := httptest.NewRecorder()
+	app.Handler().ServeHTTP(response, request)
+
+	// Verify response
+	c := qt.New(t)
+	c.Assert(response.Code, qt.Equals, http.StatusOK)
+	c.Assert(response.Body.String(), qt.Equals, helloWorld)
+}
+
 func TestApplicationRewrite(t *testing.T) {
 	app := aero.New()
 

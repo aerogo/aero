@@ -45,8 +45,9 @@ type Application struct {
 	stop           chan os.Signal
 
 	routes struct {
-		GET  []string
-		POST []string
+		GET    []string
+		POST   []string
+		DELETE []string
 	}
 }
 
@@ -95,16 +96,22 @@ func New() *Application {
 	return app
 }
 
-// Get registers your function to be called when a certain GET path has been requested.
+// Get registers your function to be called when the given GET path has been requested.
 func (app *Application) Get(path string, handle Handle) {
 	app.routes.GET = append(app.routes.GET, path)
 	app.Router.GET(path, app.createRouteHandler(handle))
 }
 
-// Post registers your function to be called when a certain POST path has been requested.
+// Post registers your function to be called when the given POST path has been requested.
 func (app *Application) Post(path string, handle Handle) {
 	app.routes.POST = append(app.routes.POST, path)
 	app.Router.POST(path, app.createRouteHandler(handle))
+}
+
+// Delete registers your function to be called when the given DELETE path has been requested.
+func (app *Application) Delete(path string, handle Handle) {
+	app.routes.DELETE = append(app.routes.DELETE, path)
+	app.Router.DELETE(path, app.createRouteHandler(handle))
 }
 
 // Run starts your application.
