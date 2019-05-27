@@ -9,8 +9,8 @@ require (
 	github.com/aerogo/session v0.1.4
 	github.com/aerogo/session-store-memory v0.1.5
 	github.com/akyoto/color v1.8.5
-	github.com/akyoto/hash v0.3.2
-	github.com/akyoto/stringutils v0.2.0
+	github.com/akyoto/hash v0.3.3
+	github.com/akyoto/stringutils v0.2.1
 	github.com/frankban/quicktest v1.4.0
 	github.com/json-iterator/go v1.1.6
 	github.com/julienschmidt/httprouter v1.2.0
