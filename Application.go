@@ -229,7 +229,7 @@ func (app *Application) Handler() http.Handler {
 }
 
 // Test tests the given URI paths when the application starts.
-func (app *Application) Test(route string, paths []string) {
+func (app *Application) Test(route string, paths ...string) {
 	app.routeTests[route] = paths
 }
 

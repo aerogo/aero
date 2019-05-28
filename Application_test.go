@@ -166,6 +166,22 @@ func TestApplicationRunHTTPS(t *testing.T) {
 	app.Run()
 }
 
+func TestApplicationRouteTests(t *testing.T) {
+	app := aero.New()
+
+	app.Get("/user/:id", func(ctx *aero.Context) error {
+		return ctx.Text(ctx.Get("id"))
+	})
+
+	app.Get("/untested/:untested", func(ctx *aero.Context) error {
+		return ctx.Text(ctx.Get("untested"))
+	})
+
+	// Specify a test route explicitly
+	app.Test("/user/:id", "/user/123")
+	app.TestRoutes()
+}
+
 func TestApplicationUnavailablePort(t *testing.T) {
 	defer func() {
 		_ = recover()
