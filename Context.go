@@ -420,19 +420,17 @@ func (ctx *Context) pushResources() {
 // respond responds either with raw code or gzipped if the
 // code length is greater than the gzip threshold.
 func (ctx *Context) respond(code string) error {
-	// If the request has been dealt with already,
-	// or if the request has been canceled by the client,
-	// there's nothing to do here.
-	if ctx.request.Context().Err() != nil {
-		return errors.New("Request interrupted by the client")
-	}
-
 	return ctx.respondBytes(unsafe.StringToBytes(code))
 }
 
 // respondBytes responds either with raw code or gzipped if the
 // code length is greater than the gzip threshold. Requires a byte slice.
 func (ctx *Context) respondBytes(b []byte) error {
+	// If the request has been canceled by the client, stop.
+	if ctx.request.Context().Err() != nil {
+		return errors.New("Request interrupted by the client")
+	}
+
 	response := ctx.response
 	header := response.Header()
 	contentType := header.Get(contentTypeHeader)

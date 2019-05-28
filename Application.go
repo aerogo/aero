@@ -299,6 +299,8 @@ func (app *Application) createRouteHandler(handle Handle) httprouter.Handle {
 			err := handle(&ctx)
 
 			if err != nil {
+				color.Red(err.Error())
+
 				for _, callback := range app.onError {
 					callback(err)
 				}
