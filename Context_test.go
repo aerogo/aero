@@ -577,8 +577,34 @@ func TestBigResponse(t *testing.T) {
 	c.Assert(response.Header().Get("Content-Encoding"), qt.Equals, "gzip")
 }
 
+func BenchmarkHelloWorld(b *testing.B) {
+	text := "Hello World"
+	app := aero.New()
+
+	// Register route
+	app.Get("/", func(ctx *aero.Context) error {
+		return ctx.Text(text)
+	})
+
+	// Create request
+	request, _ := http.NewRequest("GET", "/", nil)
+	handler := app.Handler()
+
+	// Benchmark settings
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	// Run the benchmark
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			response := httptest.NewRecorder()
+			handler.ServeHTTP(response, request)
+		}
+	})
+}
+
 func BenchmarkBigResponse(b *testing.B) {
-	text := strings.Repeat("Hello World", 1000)
+	text := strings.Repeat("HelloWorld", 1000)
 	app := aero.New()
 
 	// Register route
@@ -605,7 +631,7 @@ func BenchmarkBigResponse(b *testing.B) {
 }
 
 func TestBigResponseNoGzip(t *testing.T) {
-	text := strings.Repeat("Hello World", 1000000)
+	text := strings.Repeat("HelloWorld", 1000000)
 	app := aero.New()
 
 	// Register route
@@ -625,7 +651,7 @@ func TestBigResponseNoGzip(t *testing.T) {
 }
 
 func TestBigResponse304(t *testing.T) {
-	text := strings.Repeat("Hello World", 1000000)
+	text := strings.Repeat("HelloWorld", 1000000)
 	app := aero.New()
 	c := qt.New(t)
 

@@ -44,6 +44,7 @@ type Application struct {
 	onPush         []func(*Context)
 	onError        []func(error)
 	stop           chan os.Signal
+	contextPool    sync.Pool
 
 	routes struct {
 		GET    []string
@@ -83,6 +84,10 @@ func New() *Application {
 		"base-uri":     "'self'",
 		"form-action":  "'self'",
 	})
+
+	app.contextPool.New = func() interface{} {
+		return &Context{}
+	}
 
 	// Configuration
 	app.Config.Reset()
@@ -286,17 +291,18 @@ func (app *Application) TestRoute(route string, uri string) {
 func (app *Application) createRouteHandler(handle Handle) httprouter.Handle {
 	return func(response http.ResponseWriter, request *http.Request, params httprouter.Params) {
 		// Create context.
-		ctx := Context{
-			App:        app,
-			StatusCode: http.StatusOK,
-			request:    request,
-			response:   response,
-			params:     params,
-		}
+		ctx := app.contextPool.Get().(*Context)
+		ctx.App = app
+		ctx.StatusCode = http.StatusOK
+		ctx.Data = nil
+		ctx.request = request
+		ctx.response = response
+		ctx.params = params
+		ctx.session = nil
 
 		// The last part of the call chain will send the actual response.
 		lastPartOfCallChain := func() {
-			err := handle(&ctx)
+			err := handle(ctx)
 
 			if err != nil {
 				color.Red(err.Error())
@@ -318,12 +324,15 @@ func (app *Application) createRouteHandler(handle Handle) httprouter.Handle {
 			}
 
 			return func() {
-				app.middleware[index](&ctx, generateNext(index+1))
+				app.middleware[index](ctx, generateNext(index+1))
 			}
 		}
 
 		// Start the call chain
 		generateNext(0)()
+
+		// Put it back into the pool for reuse
+		app.contextPool.Put(ctx)
 	}
 }
 
