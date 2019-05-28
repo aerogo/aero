@@ -11,7 +11,7 @@ app := aero.New()
 ## Routing
 
 ```go
-app.Get("/hello", func(ctx *aero.Context) string {
+app.Get("/hello", func(ctx *aero.Context) error {
 	return ctx.Text("Hello World")
 })
 ```
@@ -19,7 +19,7 @@ app.Get("/hello", func(ctx *aero.Context) string {
 ## Routing with parameters
 
 ```go
-app.Get("/hello/:person", func(ctx *aero.Context) string {
+app.Get("/hello/:person", func(ctx *aero.Context) error {
 	return ctx.Text("Hello " + ctx.Get("person"))
 })
 ```
@@ -27,7 +27,7 @@ app.Get("/hello/:person", func(ctx *aero.Context) string {
 ## Shortcuts for different content types
 
 ```go
-app.Get("/", func(ctx *aero.Context) string {
+app.Get("/", func(ctx *aero.Context) error {
 	// Choose one:
 	return ctx.HTML("<html></html>")
 	return ctx.CSS("body{}")
@@ -89,7 +89,7 @@ l.Render = func(ctx *aero.Context, content string) string {
 
 // Register the /hello page.
 // The page without the page frame will be available under /_/hello
-l.Page("/hello", func(ctx *aero.Context) string {
+l.Page("/hello", func(ctx *aero.Context) error {
 	return ctx.HTML("<h1>Hello</h1>")
 })
 ```
@@ -134,7 +134,7 @@ app.OnEnd(func() {
 ## Sessions
 
 ```go
-app.Get("/", func(ctx *aero.Context) string {
+app.Get("/", func(ctx *aero.Context) error {
 	// Load number of views
 	views := 0
 	storedViews := ctx.Session().Get("views")
@@ -161,7 +161,7 @@ app.Get("/", func(ctx *aero.Context) string {
 Using an event stream, you can push data from your server at any time to your client.
 
 ```go
-app.Get("/events/live", func(ctx *aero.Context) string {
+app.Get("/events/live", func(ctx *aero.Context) error {
 	stream := aero.NewEventStream()
 
 	go func() {

@@ -23,7 +23,7 @@ func TestContextResponseHeader(t *testing.T) {
 	app := aero.New()
 
 	// Register route
-	app.Get("/", func(ctx *aero.Context) string {
+	app.Get("/", func(ctx *aero.Context) error {
 		ctx.Response().Header().Set("X-Custom", "42")
 		return ctx.Text(helloWorld)
 	})
@@ -42,15 +42,15 @@ func TestContextError(t *testing.T) {
 	app := aero.New()
 
 	// Register route
-	app.Get("/", func(ctx *aero.Context) string {
+	app.Get("/", func(ctx *aero.Context) error {
 		return ctx.Error(http.StatusUnauthorized, "Not authorized", errors.New("Not logged in"))
 	})
 
-	app.Get("/explanation-only", func(ctx *aero.Context) string {
+	app.Get("/explanation-only", func(ctx *aero.Context) error {
 		return ctx.Error(http.StatusUnauthorized, "Not authorized", nil)
 	})
 
-	app.Get("/unknown-error", func(ctx *aero.Context) string {
+	app.Get("/unknown-error", func(ctx *aero.Context) error {
 		return ctx.Error(http.StatusUnauthorized)
 	})
 
@@ -68,20 +68,20 @@ func TestContextError(t *testing.T) {
 	// Verify response with unknown error
 	response = getResponse(app, "/unknown-error")
 	c.Assert(response.Code, qt.Equals, http.StatusUnauthorized)
-	c.Assert(response.Body.String(), qt.Contains, "Unknown error")
+	c.Assert(response.Body.String(), qt.Contains, http.StatusText(http.StatusUnauthorized))
 }
 
 func TestContextURI(t *testing.T) {
 	app := aero.New()
 
 	// Register route
-	app.Get("/uri", func(ctx *aero.Context) string {
-		return ctx.URI()
+	app.Get("/uri", func(ctx *aero.Context) error {
+		return ctx.Text(ctx.URI())
 	})
 
-	app.Get("/set-uri", func(ctx *aero.Context) string {
+	app.Get("/set-uri", func(ctx *aero.Context) error {
 		ctx.SetURI("/hello")
-		return ctx.URI()
+		return ctx.Text(ctx.URI())
 	})
 
 	// Verify response with read-only URI
@@ -100,8 +100,8 @@ func TestContextRealIP(t *testing.T) {
 	app := aero.New()
 
 	// Register route
-	app.Get("/ip", func(ctx *aero.Context) string {
-		return ctx.RealIP()
+	app.Get("/ip", func(ctx *aero.Context) error {
+		return ctx.Text(ctx.RealIP())
 	})
 
 	// Get response
@@ -118,7 +118,7 @@ func TestContextSession(t *testing.T) {
 	c := qt.New(t)
 
 	// Register route
-	app.Get("/", func(ctx *aero.Context) string {
+	app.Get("/", func(ctx *aero.Context) error {
 		c.Assert(ctx.HasSession(), qt.Equals, false)
 		ctx.Session().Set("custom", helloWorld)
 		c.Assert(ctx.HasSession(), qt.Equals, true)
@@ -139,7 +139,7 @@ func TestContextSessionInvalidCookie(t *testing.T) {
 	c := qt.New(t)
 
 	// Register route
-	app.Get("/", func(ctx *aero.Context) string {
+	app.Get("/", func(ctx *aero.Context) error {
 		c.Assert(ctx.HasSession(), qt.Equals, false)
 		ctx.Session().Set("custom", helloWorld)
 		c.Assert(ctx.HasSession(), qt.Equals, true)
@@ -166,7 +166,7 @@ func TestContextSessionValidCookie(t *testing.T) {
 	c := qt.New(t)
 
 	// Register routes
-	app.Get("/1", func(ctx *aero.Context) string {
+	app.Get("/1", func(ctx *aero.Context) error {
 		c.Assert(ctx.HasSession(), qt.Equals, false)
 		ctx.Session().Set("custom", helloWorld)
 		c.Assert(ctx.HasSession(), qt.Equals, true)
@@ -175,14 +175,14 @@ func TestContextSessionValidCookie(t *testing.T) {
 		return ctx.Text(ctx.Session().GetString("custom"))
 	})
 
-	app.Get("/2", func(ctx *aero.Context) string {
+	app.Get("/2", func(ctx *aero.Context) error {
 		c.Assert(ctx.HasSession(), qt.Equals, true)
 		c.Assert(ctx.Session().ID(), qt.Equals, ctx.Session().GetString("sid"))
 
 		return ctx.Text(ctx.Session().GetString("custom"))
 	})
 
-	app.Get("/3", func(ctx *aero.Context) string {
+	app.Get("/3", func(ctx *aero.Context) error {
 		c.Assert(ctx.Session().ID(), qt.Equals, ctx.Session().GetString("sid"))
 
 		return ctx.Text(ctx.Session().GetString("custom"))
@@ -244,27 +244,27 @@ func TestContextContentTypes(t *testing.T) {
 	app := aero.New()
 
 	// Register routes
-	app.Get("/json", func(ctx *aero.Context) string {
+	app.Get("/json", func(ctx *aero.Context) error {
 		return ctx.JSON(app.Config)
 	})
 
-	app.Get("/jsonld", func(ctx *aero.Context) string {
+	app.Get("/jsonld", func(ctx *aero.Context) error {
 		return ctx.JSONLinkedData(app.Config)
 	})
 
-	app.Get("/html", func(ctx *aero.Context) string {
+	app.Get("/html", func(ctx *aero.Context) error {
 		return ctx.HTML("<html></html>")
 	})
 
-	app.Get("/css", func(ctx *aero.Context) string {
+	app.Get("/css", func(ctx *aero.Context) error {
 		return ctx.CSS("body{}")
 	})
 
-	app.Get("/js", func(ctx *aero.Context) string {
+	app.Get("/js", func(ctx *aero.Context) error {
 		return ctx.JavaScript("console.log(42)")
 	})
 
-	app.Get("/files/*file", func(ctx *aero.Context) string {
+	app.Get("/files/*file", func(ctx *aero.Context) error {
 		return ctx.File(ctx.Get("file"))
 	})
 
@@ -327,7 +327,7 @@ func TestContextReader(t *testing.T) {
 	c.Assert(err, qt.IsNil)
 
 	// ReadAll
-	app.Get("/readall", func(ctx *aero.Context) string {
+	app.Get("/readall", func(ctx *aero.Context) error {
 		reader, writer := io.Pipe()
 
 		go func() {
@@ -341,7 +341,7 @@ func TestContextReader(t *testing.T) {
 	})
 
 	// Reader
-	app.Get("/reader", func(ctx *aero.Context) string {
+	app.Get("/reader", func(ctx *aero.Context) error {
 		reader, writer := io.Pipe()
 
 		go func() {
@@ -355,7 +355,7 @@ func TestContextReader(t *testing.T) {
 	})
 
 	// ReadSeeker
-	app.Get("/readseeker", func(ctx *aero.Context) string {
+	app.Get("/readseeker", func(ctx *aero.Context) error {
 		return ctx.ReadSeeker(strings.NewReader(config))
 	})
 
@@ -378,11 +378,11 @@ func TestContextHTTP2Push(t *testing.T) {
 	app.Config.Push = append(app.Config.Push, "/pushed.css")
 
 	// Register routes
-	app.Get("/", func(ctx *aero.Context) string {
+	app.Get("/", func(ctx *aero.Context) error {
 		return ctx.HTML("<html></html>")
 	})
 
-	app.Get("/pushed.css", func(ctx *aero.Context) string {
+	app.Get("/pushed.css", func(ctx *aero.Context) error {
 		return ctx.CSS("body{}")
 	})
 
@@ -405,7 +405,7 @@ func TestContextGetInt(t *testing.T) {
 	c := qt.New(t)
 
 	// Register route
-	app.Get("/:number", func(ctx *aero.Context) string {
+	app.Get("/:number", func(ctx *aero.Context) error {
 		number, err := ctx.GetInt("number")
 		c.Assert(err, qt.IsNil)
 		c.Assert(number, qt.Not(qt.Equals), 0)
@@ -426,7 +426,7 @@ func TestContextUserAgent(t *testing.T) {
 	agent := "Luke Skywalker"
 
 	// Register route
-	app.Get("/", func(ctx *aero.Context) string {
+	app.Get("/", func(ctx *aero.Context) error {
 		userAgent := ctx.UserAgent()
 		return ctx.Text(userAgent)
 	})
@@ -450,11 +450,11 @@ func TestContextRedirect(t *testing.T) {
 	c := qt.New(t)
 
 	// Register routes
-	app.Get("/permanent", func(ctx *aero.Context) string {
+	app.Get("/permanent", func(ctx *aero.Context) error {
 		return ctx.RedirectPermanently("/target")
 	})
 
-	app.Get("/temporary", func(ctx *aero.Context) string {
+	app.Get("/temporary", func(ctx *aero.Context) error {
 		return ctx.Redirect("/target")
 	})
 
@@ -479,7 +479,7 @@ func TestContextQuery(t *testing.T) {
 	c := qt.New(t)
 
 	// Register route
-	app.Get("/", func(ctx *aero.Context) string {
+	app.Get("/", func(ctx *aero.Context) error {
 		search := ctx.Query("search")
 		return ctx.Text(search)
 	})
@@ -500,7 +500,7 @@ func TestContextEventStream(t *testing.T) {
 	app := aero.New()
 
 	// Register route
-	app.Get("/", func(ctx *aero.Context) string {
+	app.Get("/", func(ctx *aero.Context) error {
 		stream := aero.NewEventStream()
 
 		go func() {
@@ -565,7 +565,7 @@ func TestBigResponse(t *testing.T) {
 	c.Assert(app.Config.GZip, qt.Equals, true)
 
 	// Register route
-	app.Get("/", func(ctx *aero.Context) string {
+	app.Get("/", func(ctx *aero.Context) error {
 		return ctx.Text(text)
 	})
 
@@ -582,7 +582,7 @@ func BenchmarkBigResponse(b *testing.B) {
 	app := aero.New()
 
 	// Register route
-	app.Get("/", func(ctx *aero.Context) string {
+	app.Get("/", func(ctx *aero.Context) error {
 		return ctx.Text(text)
 	})
 
@@ -609,7 +609,7 @@ func TestBigResponseNoGzip(t *testing.T) {
 	app := aero.New()
 
 	// Register route
-	app.Get("/", func(ctx *aero.Context) string {
+	app.Get("/", func(ctx *aero.Context) error {
 		return ctx.Text(text)
 	})
 
@@ -630,7 +630,7 @@ func TestBigResponse304(t *testing.T) {
 	c := qt.New(t)
 
 	// Register route
-	app.Get("/", func(ctx *aero.Context) string {
+	app.Get("/", func(ctx *aero.Context) error {
 		return ctx.Text(text)
 	})
 

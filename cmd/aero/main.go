@@ -38,9 +38,6 @@ func main() {
 	fmt.Println(icon, "config.json")
 	config()
 
-	fmt.Println(icon, "tsconfig.json")
-	tsconfig()
-
 	fmt.Println(icon, "main.go")
 	mainFile()
 
@@ -71,11 +68,6 @@ func config() {
 	check(err)
 
 	err = ioutil.WriteFile("config.json", bytes, 0644)
-	check(err)
-}
-
-func tsconfig() {
-	err := ioutil.WriteFile("tsconfig.json", []byte(tsconfigText), 0644)
 	check(err)
 }
 

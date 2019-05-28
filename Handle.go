@@ -1,4 +1,4 @@
 package aero
 
-// Handle is a function that returns a string response for a given context.
-type Handle func(*Context) string
+// Handle is a function that deals with the given request/response context.
+type Handle func(*Context) error

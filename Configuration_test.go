@@ -14,5 +14,4 @@ func TestLoadConfig(t *testing.T) {
 	c := qt.New(t)
 	c.Assert(err, qt.IsNil)
 	c.Assert(config, qt.Not(qt.IsNil))
-	c.Assert(config.Title, qt.Not(qt.Equals), "")
 }

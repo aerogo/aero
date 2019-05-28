@@ -16,7 +16,4 @@ const gitignoreText = `# Binaries for programs and plugins
 # Pack
 /components
 
-# TypeScript
-*.js
-
 # Project specific`

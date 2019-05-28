@@ -2,12 +2,12 @@ package aero
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"mime"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -45,9 +45,6 @@ type Context struct {
 	// Status code
 	StatusCode int
 
-	// Error message
-	ErrorMessage string
-
 	// Custom data
 	// TODO: Find a cleaner solution to deal with this?
 	Data interface{}
@@ -56,9 +53,6 @@ type Context struct {
 	request  *http.Request
 	response http.ResponseWriter
 	params   httprouter.Params
-
-	// Responded tells if the request has been dealt with already
-	responded bool
 
 	// User session
 	session *session.Session
@@ -149,33 +143,31 @@ func (ctx *Context) createSessionCookie() {
 }
 
 // JSON encodes the object to a JSON string and responds.
-func (ctx *Context) JSON(value interface{}) string {
+func (ctx *Context) JSON(value interface{}) error {
 	ctx.response.Header().Set(contentTypeHeader, contentTypeJSON)
 	bytes, err := jsoniter.Marshal(value)
 
 	if err != nil {
-		ctx.StatusCode = http.StatusInternalServerError
-		return `{"error": "Could not encode object to JSON"}`
+		return err
 	}
 
-	return string(bytes)
+	return ctx.respondBytes(bytes)
 }
 
 // JSONLinkedData encodes the object to a JSON linked data string and responds.
-func (ctx *Context) JSONLinkedData(value interface{}) string {
+func (ctx *Context) JSONLinkedData(value interface{}) error {
 	ctx.response.Header().Set(contentTypeHeader, contentTypeJSONLD)
 	bytes, err := jsoniter.Marshal(value)
 
 	if err != nil {
-		ctx.StatusCode = http.StatusInternalServerError
-		return `{"error": "Could not encode object to JSON"}`
+		return err
 	}
 
-	return string(bytes)
+	return ctx.respondBytes(bytes)
 }
 
 // HTML sends a HTML string.
-func (ctx *Context) HTML(html string) string {
+func (ctx *Context) HTML(html string) error {
 	header := ctx.response.Header()
 	header.Set(contentTypeHeader, contentTypeHTML)
 	header.Set(contentTypeOptionsHeader, contentTypeOptions)
@@ -187,29 +179,33 @@ func (ctx *Context) HTML(html string) string {
 		header.Set(contentSecurityPolicyHeader, ctx.App.ContentSecurityPolicy.String())
 	}
 
-	return html
+	if len(ctx.App.Config.Push) > 0 {
+		ctx.pushResources()
+	}
+
+	return ctx.respond(html)
 }
 
 // Text sends a plain text string.
-func (ctx *Context) Text(text string) string {
+func (ctx *Context) Text(text string) error {
 	ctx.response.Header().Set(contentTypeHeader, contentTypePlainText)
-	return text
+	return ctx.respond(text)
 }
 
 // CSS sends a style sheet.
-func (ctx *Context) CSS(text string) string {
+func (ctx *Context) CSS(text string) error {
 	ctx.response.Header().Set(contentTypeHeader, contentTypeCSS)
-	return text
+	return ctx.respond(text)
 }
 
 // JavaScript sends a script.
-func (ctx *Context) JavaScript(code string) string {
+func (ctx *Context) JavaScript(code string) error {
 	ctx.response.Header().Set(contentTypeHeader, contentTypeJavaScript)
-	return code
+	return ctx.respond(code)
 }
 
 // EventStream sends server events to the client.
-func (ctx *Context) EventStream(stream *EventStream) string {
+func (ctx *Context) EventStream(stream *EventStream) error {
 	defer close(stream.Closed)
 
 	// Flush
@@ -232,12 +228,11 @@ func (ctx *Context) EventStream(stream *EventStream) string {
 	header.Set("Connection", "keep-alive")
 	header.Set("Access-Control-Allow-Origin", "*")
 	ctx.response.WriteHeader(200)
-	ctx.responded = true
 
 	for {
 		select {
 		case <-disconnected:
-			return ""
+			return nil
 
 		case event := <-stream.Events:
 			if event != nil {
@@ -263,7 +258,7 @@ func (ctx *Context) EventStream(stream *EventStream) string {
 }
 
 // File sends the contents of a local file and determines its mime type by extension.
-func (ctx *Context) File(file string) string {
+func (ctx *Context) File(file string) error {
 	extension := filepath.Ext(file)
 	contentType := mime.TypeByExtension(extension)
 
@@ -273,75 +268,68 @@ func (ctx *Context) File(file string) string {
 	}
 
 	http.ServeFile(ctx.response, ctx.request, file)
-	ctx.responded = true
-	return ""
+	return nil
 }
 
 // ReadAll returns the contents of the reader.
 // This will create an in-memory copy and calculate the E-Tag before sending the data.
 // Compression will be applied if necessary.
-func (ctx *Context) ReadAll(reader io.Reader) string {
+func (ctx *Context) ReadAll(reader io.Reader) error {
 	data, err := ioutil.ReadAll(reader)
 
 	if err != nil {
-		return ctx.Error(http.StatusInternalServerError, err)
+		return err
 	}
 
-	return unsafe.BytesToString(data)
+	return ctx.respondBytes(data)
 }
 
 // Reader sends the contents of the io.Reader without creating an in-memory copy.
 // E-Tags will not be generated for the content and compression will not be applied.
 // Use this function if your reader contains huge amounts of data.
-func (ctx *Context) Reader(reader io.Reader) string {
+func (ctx *Context) Reader(reader io.Reader) error {
 	_, err := io.Copy(ctx.response, reader)
-
-	if err != nil {
-		os.Stderr.WriteString("Error reading from io.Reader")
-	}
-
-	ctx.responded = true
-	return ""
+	return err
 }
 
 // ReadSeeker sends the contents of the io.ReadSeeker without creating an in-memory copy.
 // E-Tags will not be generated for the content and compression will not be applied.
 // Use this function if your reader contains huge amounts of data.
-func (ctx *Context) ReadSeeker(reader io.ReadSeeker) string {
+func (ctx *Context) ReadSeeker(reader io.ReadSeeker) error {
 	http.ServeContent(ctx.response, ctx.request, "", time.Time{}, reader)
-	ctx.responded = true
-	return ""
+	return nil
 }
 
-// Error should be used for sending error messages to the user.
-func (ctx *Context) Error(statusCode int, errors ...interface{}) string {
+// Error should be used for sending error messages to the client.
+func (ctx *Context) Error(statusCode int, errorList ...interface{}) error {
 	ctx.StatusCode = statusCode
-	ctx.response.Header().Set(contentTypeHeader, contentTypeHTML)
 
-	message := strings.Builder{}
+	if len(errorList) == 0 {
+		message := http.StatusText(statusCode)
+		_ = ctx.respond(message)
+		return errors.New(message)
+	}
 
-	if len(errors) == 0 {
-		fmt.Fprintf(&message, "Unknown error: %d", statusCode)
-	} else {
-		for index, param := range errors {
-			switch err := param.(type) {
-			case string:
-				message.WriteString(err)
-			case error:
-				message.WriteString(err.Error())
-			default:
-				continue
-			}
+	messageBuffer := strings.Builder{}
 
-			if index != len(errors)-1 {
-				message.WriteString(": ")
-			}
+	for index, param := range errorList {
+		switch err := param.(type) {
+		case string:
+			messageBuffer.WriteString(err)
+		case error:
+			messageBuffer.WriteString(err.Error())
+		default:
+			continue
+		}
+
+		if index != len(errorList)-1 {
+			messageBuffer.WriteString(": ")
 		}
 	}
 
-	ctx.ErrorMessage = message.String()
-	color.Red(ctx.ErrorMessage)
-	return ctx.ErrorMessage
+	message := messageBuffer.String()
+	_ = ctx.respond(message)
+	return errors.New(message)
 }
 
 // URI returns the relative path, e.g. /blog/post/123.
@@ -380,17 +368,19 @@ func (ctx *Context) Query(param string) string {
 }
 
 // Redirect redirects to the given URL using status code 302.
-func (ctx *Context) Redirect(url string) string {
+func (ctx *Context) Redirect(url string) error {
 	ctx.StatusCode = http.StatusFound
 	ctx.response.Header().Set("Location", url)
-	return ""
+	ctx.response.WriteHeader(ctx.StatusCode)
+	return nil
 }
 
 // RedirectPermanently redirects to the given URL and indicates that this is a permanent change using status code 301.
-func (ctx *Context) RedirectPermanently(url string) string {
+func (ctx *Context) RedirectPermanently(url string) error {
 	ctx.StatusCode = http.StatusMovedPermanently
 	ctx.response.Header().Set("Location", url)
-	return ""
+	ctx.response.WriteHeader(ctx.StatusCode)
+	return nil
 }
 
 // IsMediaType returns whether the given content type is a media type.
@@ -429,20 +419,20 @@ func (ctx *Context) pushResources() {
 
 // respond responds either with raw code or gzipped if the
 // code length is greater than the gzip threshold.
-func (ctx *Context) respond(code string) {
+func (ctx *Context) respond(code string) error {
 	// If the request has been dealt with already,
 	// or if the request has been canceled by the client,
 	// there's nothing to do here.
-	if ctx.responded || ctx.request.Context().Err() != nil {
-		return
+	if ctx.request.Context().Err() != nil {
+		return errors.New("Request interrupted by the client")
 	}
 
-	ctx.respondBytes(unsafe.StringToBytes(code))
+	return ctx.respondBytes(unsafe.StringToBytes(code))
 }
 
 // respondBytes responds either with raw code or gzipped if the
 // code length is greater than the gzip threshold. Requires a byte slice.
-func (ctx *Context) respondBytes(b []byte) {
+func (ctx *Context) respondBytes(b []byte) error {
 	response := ctx.response
 	header := response.Header()
 	contentType := header.Get(contentTypeHeader)
@@ -455,22 +445,12 @@ func (ctx *Context) respondBytes(b []byte) {
 		header.Set(cacheControlHeader, cacheControlAlwaysValidate)
 	}
 
-	// Push
-	if contentType == contentTypeHTML && len(ctx.App.Config.Push) > 0 {
-		ctx.pushResources()
-	}
-
 	// Small response
 	if len(b) < gzipThreshold {
 		header.Set(contentLengthHeader, strconv.Itoa(len(b)))
 		response.WriteHeader(ctx.StatusCode)
 		_, err := response.Write(b)
-
-		if err != nil {
-			color.Red("Error writing %s response to %s (%d bytes)", contentType, ctx.RealIP(), len(b))
-		}
-
-		return
+		return err
 	}
 
 	// ETag generation
@@ -481,7 +461,7 @@ func (ctx *Context) respondBytes(b []byte) {
 
 	if etag == clientETag {
 		response.WriteHeader(304)
-		return
+		return nil
 	}
 
 	// Set ETag
@@ -494,12 +474,7 @@ func (ctx *Context) respondBytes(b []byte) {
 		header.Set(contentLengthHeader, strconv.Itoa(len(b)))
 		response.WriteHeader(ctx.StatusCode)
 		_, err := response.Write(b)
-
-		if err != nil {
-			color.Red("Error writing %s response to %s (%d bytes)", contentType, ctx.RealIP(), len(b))
-		}
-
-		return
+		return err
 	}
 
 	// GZip
@@ -509,14 +484,12 @@ func (ctx *Context) respondBytes(b []byte) {
 	// Write response body
 	writer := acquireGZipWriter(response)
 	_, err := writer.Write(b)
-
-	if err != nil {
-		color.Red("Error writing %s response using gzip to %s (%d bytes)", contentType, ctx.RealIP(), len(b))
-	}
-
 	writer.Close()
 
 	// Put the writer back into the pool
 	// so we can reuse it in another request.
 	gzipWriterPool.Put(writer)
+
+	// Return the error value of the last Write call
+	return err
 }

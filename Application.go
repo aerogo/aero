@@ -42,6 +42,7 @@ type Application struct {
 	onStart        []func()
 	onShutdown     []func()
 	onPush         []func(*Context)
+	onError        []func(error)
 	stop           chan os.Signal
 
 	routes struct {
@@ -192,6 +193,11 @@ func (app *Application) OnPush(callback func(*Context)) {
 	app.onPush = append(app.onPush, callback)
 }
 
+// OnError registers a callback to be executed on server errors.
+func (app *Application) OnError(callback func(error)) {
+	app.onError = append(app.onError, callback)
+}
+
 // AddPushCondition registers a callback to be executed when an HTTP/2 push happens.
 func (app *Application) AddPushCondition(test func(*Context) bool) {
 	app.pushConditions = append(app.pushConditions, test)
@@ -260,9 +266,6 @@ func (app *Application) TestRoutes() {
 			// Test the static route without parameters
 			app.TestRoute(route, route)
 		}
-
-		// json, _ := Post("https://html5.validator.nu/?out=json").Header("Content-Type", "text/html; charset=utf-8").Header("Content-Encoding", "gzip").Body(body).Send()
-		// fmt.Println(json)
 	}()
 }
 
@@ -293,8 +296,13 @@ func (app *Application) createRouteHandler(handle Handle) httprouter.Handle {
 
 		// The last part of the call chain will send the actual response.
 		lastPartOfCallChain := func() {
-			data := handle(&ctx)
-			ctx.respond(data)
+			err := handle(&ctx)
+
+			if err != nil {
+				for _, callback := range app.onError {
+					callback(err)
+				}
+			}
 		}
 
 		// Declare the type of generateNext so that we can define it recursively in the next part.

@@ -12,7 +12,7 @@ func TestApplicationMiddleware(t *testing.T) {
 	app := aero.New()
 
 	// Register route
-	app.Get("/", func(ctx *aero.Context) string {
+	app.Get("/", func(ctx *aero.Context) error {
 		return ctx.Text(helloWorld)
 	})
 
@@ -35,7 +35,7 @@ func TestApplicationMiddlewareSkipNext(t *testing.T) {
 	app := aero.New()
 
 	// Register route
-	app.Get("/", func(ctx *aero.Context) string {
+	app.Get("/", func(ctx *aero.Context) error {
 		return ctx.Text(helloWorld)
 	})
 

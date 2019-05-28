@@ -20,7 +20,7 @@ func TestApplicationGet(t *testing.T) {
 	app := aero.New()
 
 	// Register route
-	app.Get("/", func(ctx *aero.Context) string {
+	app.Get("/", func(ctx *aero.Context) error {
 		return ctx.Text(helloWorld)
 	})
 
@@ -37,7 +37,7 @@ func TestApplicationPost(t *testing.T) {
 	app := aero.New()
 
 	// Register route
-	app.Post("/", func(ctx *aero.Context) string {
+	app.Post("/", func(ctx *aero.Context) error {
 		return ctx.Text(helloWorld)
 	})
 
@@ -56,7 +56,7 @@ func TestApplicationDelete(t *testing.T) {
 	app := aero.New()
 
 	// Register route
-	app.Delete("/", func(ctx *aero.Context) string {
+	app.Delete("/", func(ctx *aero.Context) error {
 		return ctx.Text(helloWorld)
 	})
 
@@ -75,7 +75,7 @@ func TestApplicationRewrite(t *testing.T) {
 	app := aero.New()
 
 	// Register route
-	app.Get("/hello", func(ctx *aero.Context) string {
+	app.Get("/hello", func(ctx *aero.Context) error {
 		return ctx.Text(helloWorld)
 	})
 
@@ -108,7 +108,6 @@ func TestApplicationLoadConfig(t *testing.T) {
 
 	err = os.Chdir(workingDirectory)
 	c.Assert(err, qt.IsNil)
-	c.Assert(app.Config.Title, qt.Equals, "Test title")
 }
 
 func TestApplicationRun(t *testing.T) {
@@ -116,7 +115,7 @@ func TestApplicationRun(t *testing.T) {
 	c := qt.New(t)
 
 	// When frontpage is requested, kill the server
-	app.Get("/", func(ctx *aero.Context) string {
+	app.Get("/", func(ctx *aero.Context) error {
 		return ctx.HTML(helloWorld)
 	})
 
@@ -145,7 +144,7 @@ func TestApplicationRunHTTPS(t *testing.T) {
 	c := qt.New(t)
 
 	// Register route
-	app.Get("/", func(ctx *aero.Context) string {
+	app.Get("/", func(ctx *aero.Context) error {
 		return ctx.HTML(helloWorld)
 	})
 

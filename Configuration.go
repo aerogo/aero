@@ -8,11 +8,9 @@ import (
 
 // Configuration represents the data in your config.json file.
 type Configuration struct {
-	Domain string            `json:"domain"`
-	Title  string            `json:"title"`
-	Push   []string          `json:"push"`
-	GZip   bool              `json:"gzip"`
-	Ports  PortConfiguration `json:"ports"`
+	Push  []string          `json:"push"`
+	GZip  bool              `json:"gzip"`
+	Ports PortConfiguration `json:"ports"`
 }
 
 // PortConfiguration lets you configure the ports that Aero will listen on.
@@ -23,7 +21,6 @@ type PortConfiguration struct {
 
 // Reset resets all fields to the default configuration.
 func (config *Configuration) Reset() {
-	config.Title = "Untitled site"
 	config.Push = []string{}
 	config.GZip = true
 	config.Ports.HTTP = 4000
