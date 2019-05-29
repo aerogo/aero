@@ -15,9 +15,7 @@ import (
 
 	"github.com/aerogo/session"
 	"github.com/akyoto/color"
-	"github.com/akyoto/stringutils/unsafe"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/julienschmidt/httprouter"
 )
 
 // This should be close to the MTU size of a TCP packet.
@@ -27,6 +25,9 @@ import (
 // in server speed under high load. Therefore in this case
 // we're trying to optimize for performance, not bandwidth.
 const gzipThreshold = 1450
+
+// This defines the maximum number of parameters per route.
+const maxParams = 16
 
 // Push options describes the headers that are sent
 // to our server to retrieve the push response.
@@ -52,7 +53,10 @@ type Context struct {
 	// net/http
 	request  *http.Request
 	response http.ResponseWriter
-	params   httprouter.Params
+
+	// Parameters
+	paramNames  [maxParams]string
+	paramValues [maxParams]string
 
 	// User session
 	session *session.Session
@@ -344,7 +348,9 @@ func (ctx *Context) SetURI(b string) {
 
 // Get retrieves an URL parameter.
 func (ctx *Context) Get(param string) string {
-	return strings.TrimPrefix(ctx.params.ByName(param), "/")
+	// TODO: ...
+	return ""
+	// return strings.TrimPrefix(ctx.params.ByName(param), "/")
 }
 
 // GetInt retrieves an URL parameter as an integer.
@@ -419,75 +425,90 @@ func (ctx *Context) pushResources() {
 
 // respond responds either with raw code or gzipped if the
 // code length is greater than the gzip threshold.
-func (ctx *Context) respond(code string) error {
-	return ctx.respondBytes(unsafe.StringToBytes(code))
+func (ctx *Context) respond(body string) error {
+	response := ctx.response
+	// header := response.Header()
+	// header.Set(contentLengthHeader, strconv.Itoa(len(b)))
+	response.WriteHeader(ctx.StatusCode)
+	// _, err := response.(io.StringWriter).WriteString(body)
+	_, err := response.Write(hello)
+	return err
+
+	// return ctx.respondBytes(unsafe.StringToBytes(body))
 }
 
 // respondBytes responds either with raw code or gzipped if the
 // code length is greater than the gzip threshold. Requires a byte slice.
-func (ctx *Context) respondBytes(b []byte) error {
+func (ctx *Context) respondBytes(body []byte) error {
 	// If the request has been canceled by the client, stop.
-	if ctx.request.Context().Err() != nil {
-		return errors.New("Request interrupted by the client")
-	}
+	// if ctx.request.Context().Err() != nil {
+	// 	return errors.New("Request interrupted by the client")
+	// }
 
 	response := ctx.response
-	header := response.Header()
-	contentType := header.Get(contentTypeHeader)
-	isMedia := IsMediaType(contentType)
-
-	// Cache control header
-	if isMedia {
-		header.Set(cacheControlHeader, cacheControlMedia)
-	} else {
-		header.Set(cacheControlHeader, cacheControlAlwaysValidate)
-	}
-
-	// Small response
-	if len(b) < gzipThreshold {
-		header.Set(contentLengthHeader, strconv.Itoa(len(b)))
-		response.WriteHeader(ctx.StatusCode)
-		_, err := response.Write(b)
-		return err
-	}
-
-	// ETag generation
-	etag := ETag(b)
-
-	// If client cache is up to date, send 304 with no response body.
-	clientETag := ctx.request.Header.Get(ifNoneMatchHeader)
-
-	if etag == clientETag {
-		response.WriteHeader(304)
-		return nil
-	}
-
-	// Set ETag
-	header.Set(etagHeader, etag)
-
-	// No GZip?
-	supportsGZip := strings.Contains(ctx.request.Header.Get(acceptEncodingHeader), "gzip")
-
-	if !ctx.App.Config.GZip || !supportsGZip || isMedia {
-		header.Set(contentLengthHeader, strconv.Itoa(len(b)))
-		response.WriteHeader(ctx.StatusCode)
-		_, err := response.Write(b)
-		return err
-	}
-
-	// GZip
-	header.Set(contentEncodingHeader, contentEncodingGzip)
+	// header := response.Header()
+	// header.Set(contentLengthHeader, strconv.Itoa(len(b)))
 	response.WriteHeader(ctx.StatusCode)
-
-	// Write response body
-	writer := acquireGZipWriter(response)
-	_, err := writer.Write(b)
-	writer.Close()
-
-	// Put the writer back into the pool
-	// so we can reuse it in another request.
-	gzipWriterPool.Put(writer)
-
-	// Return the error value of the last Write call
+	_, err := response.Write(body)
 	return err
+
+	// response := ctx.response
+	// header := response.Header()
+	// contentType := header.Get(contentTypeHeader)
+	// isMedia := IsMediaType(contentType)
+
+	// // Cache control header
+	// if isMedia {
+	// 	header.Set(cacheControlHeader, cacheControlMedia)
+	// } else {
+	// 	header.Set(cacheControlHeader, cacheControlAlwaysValidate)
+	// }
+
+	// // Small response
+	// if len(b) < gzipThreshold {
+	// 	header.Set(contentLengthHeader, strconv.Itoa(len(b)))
+	// 	response.WriteHeader(ctx.StatusCode)
+	// 	_, err := response.Write(b)
+	// 	return err
+	// }
+
+	// // ETag generation
+	// etag := ETag(b)
+
+	// // If client cache is up to date, send 304 with no response body.
+	// clientETag := ctx.request.Header.Get(ifNoneMatchHeader)
+
+	// if etag == clientETag {
+	// 	response.WriteHeader(304)
+	// 	return nil
+	// }
+
+	// // Set ETag
+	// header.Set(etagHeader, etag)
+
+	// // No GZip?
+	// supportsGZip := strings.Contains(ctx.request.Header.Get(acceptEncodingHeader), "gzip")
+
+	// if !ctx.App.Config.GZip || !supportsGZip || isMedia {
+	// 	header.Set(contentLengthHeader, strconv.Itoa(len(b)))
+	// 	response.WriteHeader(ctx.StatusCode)
+	// 	_, err := response.Write(b)
+	// 	return err
+	// }
+
+	// // GZip
+	// header.Set(contentEncodingHeader, contentEncodingGzip)
+	// response.WriteHeader(ctx.StatusCode)
+
+	// // Write response body
+	// writer := acquireGZipWriter(response)
+	// _, err := writer.Write(b)
+	// writer.Close()
+
+	// // Put the writer back into the pool
+	// // so we can reuse it in another request.
+	// gzipWriterPool.Put(writer)
+
+	// // Return the error value of the last Write call
+	// return err
 }

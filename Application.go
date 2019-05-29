@@ -1,8 +1,10 @@
 package aero
 
 import (
+	"compress/gzip"
 	"context"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -20,7 +22,6 @@ import (
 	"github.com/aerogo/session"
 	memstore "github.com/aerogo/session-store-memory"
 	"github.com/akyoto/color"
-	"github.com/julienschmidt/httprouter"
 )
 
 // Application represents a single web service.
@@ -29,7 +30,7 @@ type Application struct {
 	Sessions              session.Manager
 	Security              ApplicationSecurity
 	Linters               []Linter
-	Router                *httprouter.Router
+	Router                Router
 	ContentSecurityPolicy *csp.ContentSecurityPolicy
 
 	servers        [2]*http.Server
@@ -45,11 +46,10 @@ type Application struct {
 	onError        []func(error)
 	stop           chan os.Signal
 	contextPool    sync.Pool
+	gzipWriterPool sync.Pool
 
 	routes struct {
-		GET    []string
-		POST   []string
-		DELETE []string
+		GET []string
 	}
 }
 
@@ -60,7 +60,6 @@ func New() *Application {
 		stop:                  make(chan os.Signal, 1),
 		routeTests:            make(map[string][]string),
 		Config:                &Configuration{},
-		Router:                httprouter.New(),
 		ContentSecurityPolicy: csp.New(),
 
 		// Default linters
@@ -86,7 +85,9 @@ func New() *Application {
 	})
 
 	app.contextPool.New = func() interface{} {
-		return &Context{}
+		return &Context{
+			App: app,
+		}
 	}
 
 	// Configuration
@@ -105,19 +106,17 @@ func New() *Application {
 // Get registers your function to be called when the given GET path has been requested.
 func (app *Application) Get(path string, handle Handle) {
 	app.routes.GET = append(app.routes.GET, path)
-	app.Router.GET(path, app.createRouteHandler(handle))
+	app.Router.Add(http.MethodGet, path, handle)
 }
 
 // Post registers your function to be called when the given POST path has been requested.
 func (app *Application) Post(path string, handle Handle) {
-	app.routes.POST = append(app.routes.POST, path)
-	app.Router.POST(path, app.createRouteHandler(handle))
+	app.Router.Add(http.MethodPost, path, handle)
 }
 
 // Delete registers your function to be called when the given DELETE path has been requested.
 func (app *Application) Delete(path string, handle Handle) {
-	app.routes.DELETE = append(app.routes.DELETE, path)
-	app.Router.DELETE(path, app.createRouteHandler(handle))
+	app.Router.Add(http.MethodDelete, path, handle)
 }
 
 // Run starts your application.
@@ -218,19 +217,85 @@ func (app *Application) StartTime() time.Time {
 	return app.start
 }
 
-// Handler returns the request handler used by the application.
-func (app *Application) Handler() http.Handler {
-	router := app.Router
-	rewrite := app.rewrite
+var hello = []byte("Hello World")
 
-	if rewrite != nil {
-		return &rewriteHandler{
-			rewrite: rewrite,
-			router:  router,
-		}
+type responseWriter struct {
+	writer io.Writer
+	header http.Header
+}
+
+// ServeHTTP responds to the given request.
+func (app *Application) ServeHTTP(response http.ResponseWriter, request *http.Request) {
+	// Create context.
+	ctx := app.contextPool.Get().(*Context)
+	ctx.StatusCode = http.StatusOK
+	ctx.Data = nil
+	ctx.request = request
+	ctx.response = response
+	ctx.session = nil
+
+	// app.Router.Exec(request.Method, request.RequestURI, ctx)
+	handle := app.Router.Find(request.Method, request.RequestURI)
+
+	if handle == nil {
+		response.WriteHeader(http.StatusNotFound)
+		app.contextPool.Put(ctx)
+		return
 	}
 
-	return router
+	handle(ctx)
+	app.contextPool.Put(ctx)
+
+	// handle := app.Router.Find(request.Method, request.RequestURI)
+
+	// if len(app.middleware) == 0 {
+	// 	err := handle(ctx)
+
+	// 	if err != nil {
+	// 		color.Red(err.Error())
+
+	// 		for _, callback := range app.onError {
+	// 			callback(err)
+	// 		}
+	// 	}
+
+	// 	app.contextPool.Put(ctx)
+	// 	return
+	// }
+
+	// // The last part of the call chain will send the actual response.
+	// lastPartOfCallChain := func() {
+	// 	err := handle(ctx)
+
+	// 	if err != nil {
+	// 		color.Red(err.Error())
+
+	// 		for _, callback := range app.onError {
+	// 			callback(err)
+	// 		}
+	// 	}
+	// }
+
+	// // Declare the type of generateNext so that we can define it recursively in the next part.
+	// var generateNext func(index int) func()
+
+	// // Create a function that returns a bound function next()
+	// // which can be used as the 2nd parameter in the call chain.
+	// generateNext = func(index int) func() {
+	// 	if index == len(app.middleware) {
+	// 		return lastPartOfCallChain
+	// 	}
+
+	// 	return func() {
+	// 		app.middleware[index](ctx, generateNext(index+1))
+	// 	}
+	// }
+
+	// // Start the call chain
+	// generateNext(0)()
+
+	// // // Put it back into the pool for reuse
+	// app.contextPool.Put(ctx)
 }
 
 // Test tests the given URI paths when the application starts.
@@ -287,53 +352,19 @@ func (app *Application) TestRoute(route string, uri string) {
 	}
 }
 
-// createRouteHandler creates a handler function for httprouter.
-func (app *Application) createRouteHandler(handle Handle) httprouter.Handle {
-	return func(response http.ResponseWriter, request *http.Request, params httprouter.Params) {
-		// Create context.
-		ctx := app.contextPool.Get().(*Context)
-		ctx.App = app
-		ctx.StatusCode = http.StatusOK
-		ctx.Data = nil
-		ctx.request = request
-		ctx.response = response
-		ctx.params = params
-		ctx.session = nil
+// acquireGZipWriter will return a clean gzip writer from the pool.
+func (app *Application) acquireGZipWriter(response io.Writer) *gzip.Writer {
+	var writer *gzip.Writer
+	obj := app.gzipWriterPool.Get()
 
-		// The last part of the call chain will send the actual response.
-		lastPartOfCallChain := func() {
-			err := handle(ctx)
-
-			if err != nil {
-				color.Red(err.Error())
-
-				for _, callback := range app.onError {
-					callback(err)
-				}
-			}
-		}
-
-		// Declare the type of generateNext so that we can define it recursively in the next part.
-		var generateNext func(index int) func()
-
-		// Create a function that returns a bound function next()
-		// which can be used as the 2nd parameter in the call chain.
-		generateNext = func(index int) func() {
-			if index == len(app.middleware) {
-				return lastPartOfCallChain
-			}
-
-			return func() {
-				app.middleware[index](ctx, generateNext(index+1))
-			}
-		}
-
-		// Start the call chain
-		generateNext(0)()
-
-		// Put it back into the pool for reuse
-		app.contextPool.Put(ctx)
+	if obj == nil {
+		writer, _ = gzip.NewWriterLevel(response, gzip.BestCompression)
+		return writer
 	}
+
+	writer = obj.(*gzip.Writer)
+	writer.Reset(response)
+	return writer
 }
 
 // shutdown will gracefully shut down the server.
@@ -357,7 +388,7 @@ func shutdown(server *http.Server) {
 // createServer creates an http server instance.
 func (app *Application) createServer() *http.Server {
 	return &http.Server{
-		Handler:           app.Handler(),
+		Handler:           app,
 		ReadHeaderTimeout: 5 * time.Second,
 		WriteTimeout:      180 * time.Second,
 		IdleTimeout:       120 * time.Second,

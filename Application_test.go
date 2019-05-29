@@ -44,7 +44,7 @@ func TestApplicationPost(t *testing.T) {
 	// Get response
 	request, _ := http.NewRequest("POST", "/", nil)
 	response := httptest.NewRecorder()
-	app.Handler().ServeHTTP(response, request)
+	app.ServeHTTP(response, request)
 
 	// Verify response
 	c := qt.New(t)
@@ -63,7 +63,7 @@ func TestApplicationDelete(t *testing.T) {
 	// Get response
 	request, _ := http.NewRequest("DELETE", "/", nil)
 	response := httptest.NewRecorder()
-	app.Handler().ServeHTTP(response, request)
+	app.ServeHTTP(response, request)
 
 	// Verify response
 	c := qt.New(t)
@@ -203,7 +203,7 @@ func getResponse(app *aero.Application, route string) *httptest.ResponseRecorder
 
 	// Get response
 	response := httptest.NewRecorder()
-	app.Handler().ServeHTTP(response, request)
+	app.ServeHTTP(response, request)
 
 	return response
 }

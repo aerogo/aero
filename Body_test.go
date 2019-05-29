@@ -28,7 +28,7 @@ func TestBody(t *testing.T) {
 	requestBody := []byte(helloWorld)
 	request, _ := http.NewRequest("GET", "/", buffer.NewReader(requestBody))
 	response := httptest.NewRecorder()
-	app.Handler().ServeHTTP(response, request)
+	app.ServeHTTP(response, request)
 
 	// Verify response
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
@@ -49,7 +49,7 @@ func TestBodyJSON(t *testing.T) {
 	requestBody := []byte(`{"key":"value"}`)
 	request, _ := http.NewRequest("GET", "/", buffer.NewReader(requestBody))
 	response := httptest.NewRecorder()
-	app.Handler().ServeHTTP(response, request)
+	app.ServeHTTP(response, request)
 
 	// Verify response
 	c := qt.New(t)
@@ -84,18 +84,18 @@ func TestBodyErrors(t *testing.T) {
 	// No body
 	request, _ := http.NewRequest("GET", "/", nil)
 	response := httptest.NewRecorder()
-	app.Handler().ServeHTTP(response, request)
+	app.ServeHTTP(response, request)
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
 
 	// Invalid JSON
 	request, _ = http.NewRequest("GET", "/", strings.NewReader("{"))
 	response = httptest.NewRecorder()
-	app.Handler().ServeHTTP(response, request)
+	app.ServeHTTP(response, request)
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
 
 	// Not a JSON object
 	request, _ = http.NewRequest("GET", "/json-object", strings.NewReader("{"))
 	response = httptest.NewRecorder()
-	app.Handler().ServeHTTP(response, request)
+	app.ServeHTTP(response, request)
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
 }

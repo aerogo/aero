@@ -154,7 +154,7 @@ func TestContextSessionInvalidCookie(t *testing.T) {
 
 	// Get response
 	response := httptest.NewRecorder()
-	app.Handler().ServeHTTP(response, request)
+	app.ServeHTTP(response, request)
 
 	// Verify response
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
@@ -193,7 +193,7 @@ func TestContextSessionValidCookie(t *testing.T) {
 
 	// Get response 1
 	response1 := httptest.NewRecorder()
-	app.Handler().ServeHTTP(response1, request1)
+	app.ServeHTTP(response1, request1)
 
 	// Verify response 1
 	c.Assert(response1.Code, qt.Equals, http.StatusOK)
@@ -218,7 +218,7 @@ func TestContextSessionValidCookie(t *testing.T) {
 
 	// Get response 2
 	response2 := httptest.NewRecorder()
-	app.Handler().ServeHTTP(response2, request2)
+	app.ServeHTTP(response2, request2)
 
 	// Verify response 2
 	c.Assert(response2.Code, qt.Equals, http.StatusOK)
@@ -233,7 +233,7 @@ func TestContextSessionValidCookie(t *testing.T) {
 
 	// Get response 3
 	response3 := httptest.NewRecorder()
-	app.Handler().ServeHTTP(response3, request3)
+	app.ServeHTTP(response3, request3)
 
 	// Verify response 3
 	c.Assert(response3.Code, qt.Equals, http.StatusOK)
@@ -437,7 +437,7 @@ func TestContextUserAgent(t *testing.T) {
 
 	// Get response
 	response := httptest.NewRecorder()
-	app.Handler().ServeHTTP(response, request)
+	app.ServeHTTP(response, request)
 
 	// Verify response
 	c := qt.New(t)
@@ -489,7 +489,7 @@ func TestContextQuery(t *testing.T) {
 
 	// Get response
 	response := httptest.NewRecorder()
-	app.Handler().ServeHTTP(response, request)
+	app.ServeHTTP(response, request)
 
 	// Verify response
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
@@ -549,7 +549,7 @@ func TestContextEventStream(t *testing.T) {
 
 	// Get response
 	response := httptest.NewRecorder()
-	app.Handler().ServeHTTP(response, request)
+	app.ServeHTTP(response, request)
 
 	// Verify response
 	c := qt.New(t)
@@ -588,7 +588,7 @@ func BenchmarkHelloWorld(b *testing.B) {
 
 	// Create request
 	request, _ := http.NewRequest("GET", "/", nil)
-	handler := app.Handler()
+	handler := app
 
 	// Benchmark settings
 	b.ReportAllocs()
@@ -615,7 +615,7 @@ func BenchmarkBigResponse(b *testing.B) {
 	// Create request
 	request, _ := http.NewRequest("GET", "/", nil)
 	request.Header.Set("Accept-Encoding", "gzip")
-	handler := app.Handler()
+	handler := app
 
 	// Benchmark settings
 	b.ReportAllocs()
@@ -642,7 +642,7 @@ func TestBigResponseNoGzip(t *testing.T) {
 	// Create request and record response
 	request, _ := http.NewRequest("GET", "/", nil)
 	response := httptest.NewRecorder()
-	app.Handler().ServeHTTP(response, request)
+	app.ServeHTTP(response, request)
 
 	// Verify the response
 	c := qt.New(t)
@@ -663,7 +663,7 @@ func TestBigResponse304(t *testing.T) {
 	// Create request and record response
 	request, _ := http.NewRequest("GET", "/", nil)
 	response := httptest.NewRecorder()
-	app.Handler().ServeHTTP(response, request)
+	app.ServeHTTP(response, request)
 	etag := response.Header().Get("ETag")
 
 	// Verify the response
@@ -674,7 +674,7 @@ func TestBigResponse304(t *testing.T) {
 	request, _ = http.NewRequest("GET", "/", nil)
 	request.Header.Set("If-None-Match", etag)
 	response = httptest.NewRecorder()
-	app.Handler().ServeHTTP(response, request)
+	app.ServeHTTP(response, request)
 
 	// Verify the response
 	c.Assert(response.Code, qt.Equals, 304)
