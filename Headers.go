@@ -19,6 +19,7 @@ const (
 	contentTypeJSONLD             = "application/ld+json; charset=utf-8"
 	contentTypePlainText          = "text/plain; charset=utf-8"
 	contentTypeEventStream        = "text/event-stream; charset=utf-8"
+	contentTypeSVG                = "image/svg+xml"
 	contentEncodingHeader         = "Content-Encoding"
 	contentEncodingGzip           = "gzip"
 	acceptEncodingHeader          = "Accept-Encoding"

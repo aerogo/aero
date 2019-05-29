@@ -15,6 +15,7 @@ import (
 
 	"github.com/aerogo/session"
 	"github.com/akyoto/color"
+	"github.com/akyoto/stringutils/unsafe"
 	jsoniter "github.com/json-iterator/go"
 )
 
@@ -155,7 +156,7 @@ func (ctx *Context) JSON(value interface{}) error {
 		return err
 	}
 
-	return ctx.respondBytes(bytes)
+	return ctx.Bytes(bytes)
 }
 
 // JSONLinkedData encodes the object to a JSON linked data string and responds.
@@ -167,7 +168,7 @@ func (ctx *Context) JSONLinkedData(value interface{}) error {
 		return err
 	}
 
-	return ctx.respondBytes(bytes)
+	return ctx.Bytes(bytes)
 }
 
 // HTML sends a HTML string.
@@ -187,25 +188,26 @@ func (ctx *Context) HTML(html string) error {
 		ctx.pushResources()
 	}
 
-	return ctx.respond(html)
+	return ctx.String(html)
 }
 
 // Text sends a plain text string.
 func (ctx *Context) Text(text string) error {
-	ctx.response.Header().Set(contentTypeHeader, contentTypePlainText)
-	return ctx.respond(text)
+	// Don't set text/plain as a content type here
+	// because it's actually faster to let net/http do it.
+	return ctx.String(text)
 }
 
 // CSS sends a style sheet.
 func (ctx *Context) CSS(text string) error {
 	ctx.response.Header().Set(contentTypeHeader, contentTypeCSS)
-	return ctx.respond(text)
+	return ctx.String(text)
 }
 
 // JavaScript sends a script.
 func (ctx *Context) JavaScript(code string) error {
 	ctx.response.Header().Set(contentTypeHeader, contentTypeJavaScript)
-	return ctx.respond(code)
+	return ctx.String(code)
 }
 
 // EventStream sends server events to the client.
@@ -267,7 +269,7 @@ func (ctx *Context) File(file string) error {
 	contentType := mime.TypeByExtension(extension)
 
 	// Cache control header
-	if IsMediaType(contentType) {
+	if isMedia(contentType) {
 		ctx.response.Header().Set(cacheControlHeader, cacheControlMedia)
 	}
 
@@ -285,7 +287,7 @@ func (ctx *Context) ReadAll(reader io.Reader) error {
 		return err
 	}
 
-	return ctx.respondBytes(data)
+	return ctx.Bytes(data)
 }
 
 // Reader sends the contents of the io.Reader without creating an in-memory copy.
@@ -310,7 +312,7 @@ func (ctx *Context) Error(statusCode int, errorList ...interface{}) error {
 
 	if len(errorList) == 0 {
 		message := http.StatusText(statusCode)
-		_ = ctx.respond(message)
+		_ = ctx.String(message)
 		return errors.New(message)
 	}
 
@@ -332,7 +334,7 @@ func (ctx *Context) Error(statusCode int, errorList ...interface{}) error {
 	}
 
 	message := messageBuffer.String()
-	_ = ctx.respond(message)
+	_ = ctx.String(message)
 	return errors.New(message)
 }
 
@@ -389,9 +391,32 @@ func (ctx *Context) RedirectPermanently(url string) error {
 	return nil
 }
 
-// IsMediaType returns whether the given content type is a media type.
-func IsMediaType(contentType string) bool {
-	return strings.HasPrefix(contentType, "image/") || strings.HasPrefix(contentType, "video/") || strings.HasPrefix(contentType, "audio/")
+// isMedia returns whether the given content type is a media type.
+func isMedia(contentType string) bool {
+	switch {
+	case strings.HasPrefix(contentType, "image/"):
+		return true
+	case strings.HasPrefix(contentType, "video/"):
+		return true
+	case strings.HasPrefix(contentType, "audio/"):
+		return true
+	default:
+		return false
+	}
+}
+
+// canCompress returns whether the given content type should be compressed via gzip.
+func canCompress(contentType string) bool {
+	switch {
+	case strings.HasPrefix(contentType, "image/") && contentType != contentTypeSVG:
+		return false
+	case strings.HasPrefix(contentType, "video/"):
+		return false
+	case strings.HasPrefix(contentType, "audio/"):
+		return false
+	default:
+		return true
+	}
 }
 
 // pushResources will push the given resources to the HTTP response.
@@ -423,92 +448,75 @@ func (ctx *Context) pushResources() {
 	}
 }
 
-// respond responds either with raw code or gzipped if the
-// code length is greater than the gzip threshold.
-func (ctx *Context) respond(body string) error {
-	response := ctx.response
-	// header := response.Header()
-	// header.Set(contentLengthHeader, strconv.Itoa(len(b)))
-	response.WriteHeader(ctx.StatusCode)
-	// _, err := response.(io.StringWriter).WriteString(body)
-	_, err := response.Write(hello)
-	return err
-
-	// return ctx.respondBytes(unsafe.StringToBytes(body))
+// String responds either with raw text or gzipped if the
+// text length is greater than the gzip threshold.
+func (ctx *Context) String(body string) error {
+	return ctx.Bytes(unsafe.StringToBytes(body))
 }
 
-// respondBytes responds either with raw code or gzipped if the
-// code length is greater than the gzip threshold. Requires a byte slice.
-func (ctx *Context) respondBytes(body []byte) error {
+// Bytes responds either with raw text or gzipped if the
+// text length is greater than the gzip threshold. Requires a byte slice.
+func (ctx *Context) Bytes(body []byte) error {
 	// If the request has been canceled by the client, stop.
-	// if ctx.request.Context().Err() != nil {
-	// 	return errors.New("Request interrupted by the client")
-	// }
+	if ctx.request.Context().Err() != nil {
+		return errors.New("Request interrupted by the client")
+	}
 
-	response := ctx.response
-	// header := response.Header()
-	// header.Set(contentLengthHeader, strconv.Itoa(len(b)))
-	response.WriteHeader(ctx.StatusCode)
-	_, err := response.Write(body)
+	// Small response
+	if len(body) < gzipThreshold {
+		ctx.response.WriteHeader(ctx.StatusCode)
+		_, err := ctx.response.Write(body)
+		return err
+	}
+
+	// ETag generation
+	etag := ETag(body)
+
+	// If client cache is up to date, send 304 with no response body.
+	clientETag := ctx.request.Header.Get(ifNoneMatchHeader)
+
+	if etag == clientETag {
+		ctx.response.WriteHeader(304)
+		return nil
+	}
+
+	// Set ETag
+	header := ctx.response.Header()
+	header.Set(etagHeader, etag)
+
+	// Content type
+	contentType := header.Get(contentTypeHeader)
+	isMediaType := isMedia(contentType)
+
+	// Cache control header
+	if isMediaType {
+		header.Set(cacheControlHeader, cacheControlMedia)
+	} else {
+		header.Set(cacheControlHeader, cacheControlAlwaysValidate)
+	}
+
+	// No GZip?
+	clientSupportsGZip := strings.Contains(ctx.request.Header.Get(acceptEncodingHeader), "gzip")
+
+	if !ctx.App.Config.GZip || !clientSupportsGZip || !canCompress(contentType) {
+		header.Set(contentLengthHeader, strconv.Itoa(len(body)))
+		ctx.response.WriteHeader(ctx.StatusCode)
+		_, err := ctx.response.Write(body)
+		return err
+	}
+
+	// GZip
+	header.Set(contentEncodingHeader, contentEncodingGzip)
+	ctx.response.WriteHeader(ctx.StatusCode)
+
+	// Write response body
+	writer := ctx.App.acquireGZipWriter(ctx.response)
+	_, err := writer.Write(body)
+	writer.Close()
+
+	// Put the writer back into the pool
+	ctx.App.gzipWriterPool.Put(writer)
+
+	// Return the error value of the last Write call
 	return err
-
-	// response := ctx.response
-	// header := response.Header()
-	// contentType := header.Get(contentTypeHeader)
-	// isMedia := IsMediaType(contentType)
-
-	// // Cache control header
-	// if isMedia {
-	// 	header.Set(cacheControlHeader, cacheControlMedia)
-	// } else {
-	// 	header.Set(cacheControlHeader, cacheControlAlwaysValidate)
-	// }
-
-	// // Small response
-	// if len(b) < gzipThreshold {
-	// 	header.Set(contentLengthHeader, strconv.Itoa(len(b)))
-	// 	response.WriteHeader(ctx.StatusCode)
-	// 	_, err := response.Write(b)
-	// 	return err
-	// }
-
-	// // ETag generation
-	// etag := ETag(b)
-
-	// // If client cache is up to date, send 304 with no response body.
-	// clientETag := ctx.request.Header.Get(ifNoneMatchHeader)
-
-	// if etag == clientETag {
-	// 	response.WriteHeader(304)
-	// 	return nil
-	// }
-
-	// // Set ETag
-	// header.Set(etagHeader, etag)
-
-	// // No GZip?
-	// supportsGZip := strings.Contains(ctx.request.Header.Get(acceptEncodingHeader), "gzip")
-
-	// if !ctx.App.Config.GZip || !supportsGZip || isMedia {
-	// 	header.Set(contentLengthHeader, strconv.Itoa(len(b)))
-	// 	response.WriteHeader(ctx.StatusCode)
-	// 	_, err := response.Write(b)
-	// 	return err
-	// }
-
-	// // GZip
-	// header.Set(contentEncodingHeader, contentEncodingGzip)
-	// response.WriteHeader(ctx.StatusCode)
-
-	// // Write response body
-	// writer := acquireGZipWriter(response)
-	// _, err := writer.Write(b)
-	// writer.Close()
-
-	// // Put the writer back into the pool
-	// // so we can reuse it in another request.
-	// gzipWriterPool.Put(writer)
-
-	// // Return the error value of the last Write call
-	// return err
 }
