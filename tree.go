@@ -8,14 +8,23 @@ import (
 	"github.com/akyoto/color"
 )
 
+const (
+	separator = '/'
+	parameter = ':'
+	wildcard  = '*'
+)
+
 // dataType specifies which type of data we are going to save for each node.
 type dataType = interface{}
 
 // tree represents a radix tree.
 type tree struct {
-	prefix   string
-	data     dataType
-	children [256]*tree
+	prefix    string
+	data      dataType
+	children  [256]*tree
+	parameter *tree
+	wildcard  *tree
+	kind      byte
 }
 
 // add adds a new element to the tree.
@@ -58,6 +67,64 @@ func (node *tree) add(path string, data dataType) {
 			if node.prefix == "" {
 				node.prefix = path
 				node.data = data
+				return
+			}
+
+			// node: /user|
+			// path: /user|/:userid
+			if strings.Contains(path[i:], ":") || strings.Contains(path[i:], "*") {
+				parameterKind := byte(0)
+				start := i
+
+				handleParameters := func() {
+					// What was the parameter that we just scanned, if there were any?
+					switch parameterKind {
+					case parameter:
+						name := path[start+1 : i]
+						fmt.Println("PARAMETER NAME", name)
+						node.parameter = &tree{
+							prefix: name,
+							kind:   parameter,
+							data:   data,
+						}
+						node = node.parameter
+
+					case wildcard:
+						name := path[start+1 : i]
+						fmt.Println("WILDCARD NAME", name)
+						node.wildcard = &tree{
+							prefix: name,
+							kind:   wildcard,
+							data:   data,
+						}
+						node = node.wildcard
+					}
+				}
+
+				for i < len(path) {
+					switch path[i] {
+					case parameter, wildcard:
+						parameterKind = path[i]
+
+						child := &tree{
+							prefix: path[start:i],
+						}
+
+						node.children[path[start]] = child
+						node = child
+						start = i
+
+					case separator:
+						handleParameters()
+						parameterKind = 0
+					}
+
+					i++
+				}
+
+				// Trailing parameters
+				handleParameters()
+
 				return
 			}
 
@@ -128,11 +195,12 @@ func (node *tree) find(path string) dataType {
 	offset := 0
 
 	for {
+	beginning:
 		// We reached the end.
 		if i == len(path) {
 			// node: /blog|
 			// path: /blog|
-			if i-offset == len(node.prefix) {
+			if node.kind != 0 || i-offset == len(node.prefix) {
 				return node.data
 			}
 
@@ -151,6 +219,22 @@ func (node *tree) find(path string) dataType {
 				offset = i
 				node = child
 				goto next
+			}
+
+			// node: /|:id
+			// path: /|blog
+			if node.parameter != nil {
+				start := i
+
+				for i < len(path) && path[i] != separator {
+					i++
+				}
+
+				fmt.Printf("PARAMETER %s IS %s\n", node.parameter.prefix, path[start:i])
+
+				node = node.parameter
+				offset = i
+				goto beginning
 			}
 
 			return nil
@@ -181,7 +265,18 @@ func (node *tree) prettyPrint(writer io.Writer, level int) {
 		prefix = strings.Repeat("  ", level) + "|_ "
 	}
 
-	fmt.Fprintf(writer, "%s%s [%t]\n", prefix, color.CyanString(node.prefix), node.data != nil)
+	colorFunc := color.CyanString
+
+	switch node.kind {
+	case ':':
+		prefix += ":"
+		colorFunc = color.YellowString
+	case '*':
+		prefix += "*"
+		colorFunc = color.GreenString
+	}
+
+	fmt.Fprintf(writer, "%s%s [%t]\n", prefix, colorFunc(node.prefix), node.data != nil)
 
 	for _, child := range node.children {
 		if child == nil {
@@ -189,5 +284,13 @@ func (node *tree) prettyPrint(writer io.Writer, level int) {
 		}
 
 		child.prettyPrint(writer, level+1)
+	}
+
+	if node.parameter != nil {
+		node.parameter.prettyPrint(writer, level+1)
+	}
+
+	if node.wildcard != nil {
+		node.wildcard.prettyPrint(writer, level+1)
 	}
 }

@@ -2,6 +2,7 @@ package aero_test
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -9,6 +10,11 @@ import (
 	"github.com/aerogo/aero"
 	qt "github.com/frankban/quicktest"
 )
+
+type routeDefinition struct {
+	method string
+	path   string
+}
 
 func TestRouterBasics(t *testing.T) {
 	c := qt.New(t)
@@ -18,74 +24,59 @@ func TestRouterBasics(t *testing.T) {
 
 	router.Add("GET", "/", page)
 	c.Assert(router.Find("GET", "/"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/blog"), qt.IsNil)
-	c.Assert(router.Find("GET", "/blog/post"), qt.IsNil)
-	c.Assert(router.Find("GET", "/user"), qt.IsNil)
-	c.Assert(router.Find("GET", "/日本語"), qt.IsNil)
-
-	router.Add("GET", "/blog", page)
-	c.Assert(router.Find("GET", "/"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/blog"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/blog/post"), qt.IsNil)
-	c.Assert(router.Find("GET", "/user"), qt.IsNil)
-	c.Assert(router.Find("GET", "/日本語"), qt.IsNil)
-
-	router.Add("GET", "/blog/post", page)
-	c.Assert(router.Find("GET", "/"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/blog"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/blog/post"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/user"), qt.IsNil)
-	c.Assert(router.Find("GET", "/日本語"), qt.IsNil)
-
-	router.Add("GET", "/user", page)
-	c.Assert(router.Find("GET", "/"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/blog"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/blog/post"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/user"), qt.Not(qt.IsNil))
 	c.Assert(router.Find("GET", "/日本語"), qt.IsNil)
 
 	router.Add("GET", "/日本語", page)
 	c.Assert(router.Find("GET", "/"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/blog"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/blog/post"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/user"), qt.Not(qt.IsNil))
 	c.Assert(router.Find("GET", "/日本語"), qt.Not(qt.IsNil))
 }
 
-type routeDefinition struct {
-	method string
-	path   string
+func TestRouterParameters(t *testing.T) {
+	c := qt.New(t)
+	router := aero.Router{}
+	page := func(*aero.Context) error { return nil }
+
+	c.Assert(router.Find("GET", "/"), qt.IsNil)
+	c.Assert(router.Find("GET", "/user/123"), qt.IsNil)
+
+	router.Add("GET", "/", page)
+	router.Add("GET", "/user/:id", page)
+	fmt.Println(router.String())
+
+	c.Assert(router.Find("GET", "/"), qt.Not(qt.IsNil))
+	c.Assert(router.Find("GET", "/user/123"), qt.Not(qt.IsNil))
 }
 
-func loadRoutes(filePath string) []routeDefinition {
-	routes := []routeDefinition{}
-	f, err := os.Open(filePath)
+func TestStaticRoutes(t *testing.T) {
+	router := aero.Router{}
+	routes := loadRoutes("testdata/router/static.txt")
+	page := func(*aero.Context) error { return nil }
 
-	if err != nil {
-		panic(err)
+	for _, route := range routes {
+		router.Add(route.method, route.path, page)
 	}
 
-	bufferedReader := bufio.NewReader(f)
-
-	for {
-		line, err := bufferedReader.ReadString('\n')
-
-		if line != "" {
-			line = strings.TrimSpace(line)
-			parts := strings.Split(line, " ")
-			routes = append(routes, routeDefinition{
-				method: parts[0],
-				path:   parts[1],
-			})
-		}
-
-		if err != nil {
-			break
+	for _, route := range routes {
+		if router.Find(route.method, route.path) == nil {
+			t.Fatal(route.method + " " + route.path)
 		}
 	}
+}
 
-	f.Close()
-	return routes
+func TestGitHubRoutes(t *testing.T) {
+	router := aero.Router{}
+	routes := loadRoutes("testdata/router/github.txt")
+	page := func(*aero.Context) error { return nil }
+
+	for _, route := range routes {
+		router.Add(route.method, route.path, page)
+	}
+
+	for _, route := range routes {
+		if router.Find(route.method, route.path) == nil {
+			t.Fatal(route.method + " " + route.path)
+		}
+	}
 }
 
 func BenchmarkStaticRoutes(b *testing.B) {
@@ -130,4 +121,35 @@ func BenchmarkGitHubRoutes(b *testing.B) {
 			}
 		}
 	})
+}
+
+func loadRoutes(filePath string) []routeDefinition {
+	routes := []routeDefinition{}
+	f, err := os.Open(filePath)
+
+	if err != nil {
+		panic(err)
+	}
+
+	bufferedReader := bufio.NewReader(f)
+
+	for {
+		line, err := bufferedReader.ReadString('\n')
+
+		if line != "" {
+			line = strings.TrimSpace(line)
+			parts := strings.Split(line, " ")
+			routes = append(routes, routeDefinition{
+				method: parts[0],
+				path:   parts[1],
+			})
+		}
+
+		if err != nil {
+			break
+		}
+	}
+
+	f.Close()
+	return routes
 }
