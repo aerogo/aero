@@ -52,17 +52,17 @@ func TestRouterStaticRoutes(t *testing.T) {
 	c.Assert(router.Find("GET", "/日本語"), qt.Not(qt.IsNil))
 }
 
-func BenchmarkStaticRoutes(b *testing.B) {
-	type definition struct {
-		method string
-		path   string
-	}
+type routeDefinition struct {
+	method string
+	path   string
+}
 
-	routes := []definition{}
-	f, err := os.Open("testdata/router/static.txt")
+func loadRoutes(filePath string) []routeDefinition {
+	routes := []routeDefinition{}
+	f, err := os.Open(filePath)
 
 	if err != nil {
-		b.Fatal(err)
+		panic(err)
 	}
 
 	bufferedReader := bufio.NewReader(f)
@@ -73,7 +73,7 @@ func BenchmarkStaticRoutes(b *testing.B) {
 		if line != "" {
 			line = strings.TrimSpace(line)
 			parts := strings.Split(line, " ")
-			routes = append(routes, definition{
+			routes = append(routes, routeDefinition{
 				method: parts[0],
 				path:   parts[1],
 			})
@@ -85,7 +85,12 @@ func BenchmarkStaticRoutes(b *testing.B) {
 	}
 
 	f.Close()
+	return routes
+}
+
+func BenchmarkStaticRoutes(b *testing.B) {
 	router := aero.Router{}
+	routes := loadRoutes("testdata/router/static.txt")
 	page := func(*aero.Context) error { return nil }
 
 	for _, route := range routes {
@@ -94,7 +99,26 @@ func BenchmarkStaticRoutes(b *testing.B) {
 
 	b.ReportAllocs()
 	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			for _, route := range routes {
+				router.Find(route.method, route.path)
+			}
+		}
+	})
+}
 
+func BenchmarkGitHubRoutes(b *testing.B) {
+	router := aero.Router{}
+	routes := loadRoutes("testdata/router/github.txt")
+	page := func(*aero.Context) error { return nil }
+
+	for _, route := range routes {
+		router.Add(route.method, route.path, page)
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			for _, route := range routes {
