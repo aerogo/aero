@@ -3,6 +3,7 @@ package aero
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/akyoto/color"
 )
@@ -117,7 +118,7 @@ func (node *tree) split(index int, path string, data dataType) {
 	// Assign new child nodes
 	node.children = [256]*tree{}
 	node.children[splitNode.prefix[0]] = splitNode
-	node.children[newNode.prefix[0]] = splitNode
+	node.children[newNode.prefix[0]] = newNode
 }
 
 // find returns the data for the given path, if available.
@@ -167,12 +168,26 @@ func (node *tree) find(path string) dataType {
 	}
 }
 
+// PrettyPrint prints a human-readable form of the tree to the given writer.
+func (node *tree) PrettyPrint(writer io.Writer) {
+	node.prettyPrint(writer, -1)
+}
+
 // prettyPrint
-func (node *tree) prettyPrint(writer io.Writer) {
-	fmt.Fprintf(writer, "%s (%d) [%t]\n", color.CyanString(node.prefix), len(node.children), node.data != nil)
+func (node *tree) prettyPrint(writer io.Writer, level int) {
+	prefix := ""
+
+	if level >= 0 {
+		prefix = strings.Repeat("  ", level) + "|_ "
+	}
+
+	fmt.Fprintf(writer, "%s%s [%t]\n", prefix, color.CyanString(node.prefix), node.data != nil)
 
 	for _, child := range node.children {
-		fmt.Fprint(writer, "|_ ")
-		child.prettyPrint(writer)
+		if child == nil {
+			continue
+		}
+
+		child.prettyPrint(writer, level+1)
 	}
 }

@@ -10,7 +10,7 @@ import (
 	qt "github.com/frankban/quicktest"
 )
 
-func TestRouterStaticRoutes(t *testing.T) {
+func TestRouterBasics(t *testing.T) {
 	c := qt.New(t)
 	router := aero.Router{}
 	page := func(*aero.Context) error { return nil }
@@ -102,7 +102,9 @@ func BenchmarkStaticRoutes(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			for _, route := range routes {
-				router.Find(route.method, route.path)
+				if router.Find(route.method, route.path) == nil {
+					b.Fatal(route.method + " " + route.path)
+				}
 			}
 		}
 	})
@@ -122,7 +124,9 @@ func BenchmarkGitHubRoutes(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			for _, route := range routes {
-				router.Find(route.method, route.path)
+				if router.Find(route.method, route.path) == nil {
+					b.Fatal(route.method + " " + route.path)
+				}
 			}
 		}
 	})

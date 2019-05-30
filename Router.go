@@ -41,7 +41,7 @@ func (router *Router) Find(method string, path string) Handle {
 // String returns a pretty print of the GET routes.
 func (router *Router) String() string {
 	buffer := strings.Builder{}
-	router.get.prettyPrint(&buffer)
+	router.get.PrettyPrint(&buffer)
 	return buffer.String()
 }
 
