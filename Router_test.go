@@ -2,7 +2,6 @@ package aero_test
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -37,14 +36,24 @@ func TestRouterParameters(t *testing.T) {
 	page := func(*aero.Context) error { return nil }
 
 	c.Assert(router.Find("GET", "/"), qt.IsNil)
-	c.Assert(router.Find("GET", "/user/123"), qt.IsNil)
+	// c.Assert(router.Find("GET", "/user/123"), qt.IsNil)
+	// c.Assert(router.Find("GET", "/user/123/profile"), qt.IsNil)
 
 	router.Add("GET", "/", page)
+	router.Add("GET", "/user", page)
 	router.Add("GET", "/user/:id", page)
-	fmt.Println(router.String())
+	router.Add("GET", "/user/:id/profile", page)
+	router.Add("GET", "/user/:id/profile/:theme", page)
+	router.Add("GET", "/admin", page)
+
+	router.Print("GET")
 
 	c.Assert(router.Find("GET", "/"), qt.Not(qt.IsNil))
+	c.Assert(router.Find("GET", "/user"), qt.Not(qt.IsNil))
 	c.Assert(router.Find("GET", "/user/123"), qt.Not(qt.IsNil))
+	c.Assert(router.Find("GET", "/user/123/profile"), qt.Not(qt.IsNil))
+	c.Assert(router.Find("GET", "/user/123/profile/black"), qt.Not(qt.IsNil))
+	c.Assert(router.Find("GET", "/admin"), qt.Not(qt.IsNil))
 }
 
 func TestStaticRoutes(t *testing.T) {

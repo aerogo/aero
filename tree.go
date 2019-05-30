@@ -34,115 +34,101 @@ func (node *tree) add(path string, data dataType) {
 	offset := 0
 
 	for {
-		if i == len(path) {
-			// The path already exists.
-			// node: /blog|
-			// path: /blog|
+	begin:
+		switch node.kind {
+		case parameter:
+			// This only occurs when the same parameter based route is added twice.
+			if i == len(path) {
+				node.data = data
+				return
+			}
+
+			// When we hit a separator, we'll search for a fitting child.
+			if path[i] == separator {
+				child := node.children[path[i]]
+
+				if child != nil {
+					node = child
+					offset = i
+					goto next
+				}
+
+				// No fitting children found, does this node even contain a prefix yet?
+				// If no prefix is set, this is the starting node.
+				if node.prefix == "" {
+					node.prefix = path
+					node.data = data
+					return
+				}
+
+				// node: /user/|:id
+				// path: /user/|:id/profile
+				if node.parameter != nil {
+					node = node.parameter
+					offset = i
+					goto begin
+				}
+
+				node.make(path[i:], data)
+				return
+			}
+
+		default:
+			if i == len(path) {
+				// The path already exists.
+				// node: /blog|
+				// path: /blog|
+				if i-offset == len(node.prefix) {
+					node.data = data
+					return
+				}
+
+				// The path ended but the node prefix is longer.
+				// node: /blog|feed
+				// path: /blog|
+				node.split(i-offset, "", data)
+				return
+			}
+
+			// The node we just checked is entirely included in our path.
+			// node: /|
+			// path: /|blog
 			if i-offset == len(node.prefix) {
-				node.data = data
-				return
-			}
+				child := node.children[path[i]]
 
-			// The path ended but the node prefix is longer.
-			// node: /blog|feed
-			// path: /blog|
-			node.split(i-offset, "", data)
-			return
-		}
-
-		// The node we just checked is entirely included in our path.
-		// node: /|
-		// path: /|blog
-		if i-offset == len(node.prefix) {
-			child := node.children[path[i]]
-
-			if child != nil {
-				offset = i
-				node = child
-				goto next
-			}
-
-			// No fitting children found, does this node even contain a prefix yet?
-			// If no prefix is set, this is the starting node.
-			if node.prefix == "" {
-				node.prefix = path
-				node.data = data
-				return
-			}
-
-			// node: /user|
-			// path: /user|/:userid
-			if strings.Contains(path[i:], ":") || strings.Contains(path[i:], "*") {
-				parameterKind := byte(0)
-				start := i
-
-				handleParameters := func() {
-					// What was the parameter that we just scanned, if there were any?
-					switch parameterKind {
-					case parameter:
-						name := path[start+1 : i]
-						fmt.Println("PARAMETER NAME", name)
-						node.parameter = &tree{
-							prefix: name,
-							kind:   parameter,
-							data:   data,
-						}
-						node = node.parameter
-
-					case wildcard:
-						name := path[start+1 : i]
-						fmt.Println("WILDCARD NAME", name)
-						node.wildcard = &tree{
-							prefix: name,
-							kind:   wildcard,
-							data:   data,
-						}
-						node = node.wildcard
-					}
+				if child != nil {
+					node = child
+					offset = i
+					goto next
 				}
 
-				for i < len(path) {
-					switch path[i] {
-					case parameter, wildcard:
-						parameterKind = path[i]
-
-						child := &tree{
-							prefix: path[start:i],
-						}
-
-						node.children[path[start]] = child
-						node = child
-						start = i
-
-					case separator:
-						handleParameters()
-						parameterKind = 0
-					}
-
-					i++
+				// No fitting children found, does this node even contain a prefix yet?
+				// If no prefix is set, this is the starting node.
+				if node.prefix == "" {
+					node.prefix = path
+					node.data = data
+					return
 				}
 
-				// Trailing parameters
-				handleParameters()
+				// node: /user/|:id
+				// path: /user/|:id/profile
+				if node.parameter != nil {
+					node = node.parameter
+					offset = i
+					goto begin
+				}
 
+				node.make(path[i:], data)
 				return
 			}
 
-			// Otherwise, add a new child with the remaining string.
-			node.children[path[i]] = &tree{
-				prefix: path[i:],
-				data:   data,
+			// We got a conflict.
+			// node: /b|ag
+			// path: /b|riefcase
+			if path[i] != node.prefix[i-offset] {
+				node.split(i-offset, path[i:], data)
+				return
 			}
-
-			return
-		}
-
-		// We got a conflict.
-		// node: /b|ag
-		// path: /b|riefcase
-		if path[i] != node.prefix[i-offset] {
-			node.split(i-offset, path[i:], data)
-			return
 		}
 
 	next:
@@ -188,6 +174,71 @@ func (node *tree) split(index int, path string, data dataType) {
 	node.children[newNode.prefix[0]] = newNode
 }
 
+// make appends the given path to the tree.
+func (node *tree) make(path string, data dataType) {
+	// At this point, all we know is that somewhere
+	// in the remaining string we have parameters.
+	// node: /user|
+	// path: /user|/:userid
+	for {
+		if path == "" {
+			node.data = data
+			return
+		}
+
+		paramStart := strings.Index(path, ":")
+
+		if paramStart == -1 {
+			paramStart = strings.Index(path, "*")
+		}
+
+		// If it's a static route we are adding,
+		// just add the remainder as a normal node.
+		if paramStart == -1 {
+			node.children[path[0]] = &tree{
+				prefix: path,
+				data:   data,
+			}
+			return
+		}
+
+		// If we're directly in front of a parameter,
+		// add a parameter node.
+		if paramStart == 0 {
+			paramEnd := strings.Index(path, "/")
+
+			if paramEnd == -1 {
+				paramEnd = len(path)
+			}
+
+			child := &tree{
+				prefix: path[1:paramEnd],
+				kind:   parameter,
+			}
+
+			node.parameter = child
+			node = child
+			path = path[paramEnd:]
+			continue
+		}
+
+		// Add a normal node
+		child := &tree{
+			prefix: path[:paramStart],
+		}
+
+		// Allow trailing slashes to return
+		// the same content as their parent node.
+		if child.prefix == "/" {
+			child.data = node.data
+		}
+
+		node.children[path[0]] = child
+		node = child
+		path = path[paramStart:]
+	}
+}
+
 // find returns the data for the given path, if available.
 func (node *tree) find(path string) dataType {
 	// Search tree for equal parts until we can no longer proceed
@@ -195,56 +246,64 @@ func (node *tree) find(path string) dataType {
 	offset := 0
 
 	for {
-	beginning:
-		// We reached the end.
-		if i == len(path) {
-			// node: /blog|
-			// path: /blog|
-			if node.kind != 0 || i-offset == len(node.prefix) {
+	begin:
+		switch node.kind {
+		case parameter:
+			if i == len(path) {
+				fmt.Printf("PARAMETER %s IS %s\n", node.prefix, path[offset:i])
 				return node.data
 			}
 
-			// node: /blog|feed
-			// path: /blog|
-			return nil
-		}
-
-		// The node we just checked is entirely included in our path.
-		// node: /|
-		// path: /|blog
-		if i-offset == len(node.prefix) {
-			child := node.children[path[i]]
-
-			if child != nil {
+			if path[i] == separator {
+				fmt.Printf("PARAMETER %s IS %s\n", node.prefix, path[offset:i])
+				node = node.children[separator]
 				offset = i
-				node = child
 				goto next
 			}
 
-			// node: /|:id
-			// path: /|blog
-			if node.parameter != nil {
-				start := i
-
-				for i < len(path) && path[i] != separator {
-					i++
+		default:
+			// We reached the end.
+			if i == len(path) {
+				// node: /blog|
+				// path: /blog|
+				if i-offset == len(node.prefix) {
+					return node.data
 				}
 
-				fmt.Printf("PARAMETER %s IS %s\n", node.parameter.prefix, path[start:i])
-
-				node = node.parameter
-				offset = i
-				goto beginning
+				// node: /blog|feed
+				// path: /blog|
+				return nil
 			}
 
-			return nil
-		}
+			// The node we just checked is entirely included in our path.
+			// node: /|
+			// path: /|blog
+			if i-offset == len(node.prefix) {
+				child := node.children[path[i]]
 
-		// We got a conflict.
-		// node: /b|ag
-		// path: /b|riefcase
-		if path[i] != node.prefix[i-offset] {
-			return nil
+				if child != nil {
+					node = child
+					offset = i
+					goto next
+				}
+
+				// node: /|:id
+				// path: /|blog
+				if node.parameter != nil {
+					node = node.parameter
+					offset = i
+					goto begin
+				}
+
+				return nil
+			}
+
+			// We got a conflict.
+			// node: /b|ag
+			// path: /b|riefcase
+			if path[i] != node.prefix[i-offset] {
+				return nil
+			}
 		}
 
 	next:

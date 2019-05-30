@@ -2,7 +2,7 @@ package aero
 
 import (
 	"net/http"
-	"strings"
+	"os"
 )
 
 // Router is a high-performance router.
@@ -38,11 +38,10 @@ func (router *Router) Find(method string, path string) Handle {
 	return handle
 }
 
-// String returns a pretty print of the GET routes.
-func (router *Router) String() string {
-	buffer := strings.Builder{}
-	router.get.PrettyPrint(&buffer)
-	return buffer.String()
+// Print shows a pretty print of the routes.
+func (router *Router) Print(method string) {
+	tree := router.selectTree(method)
+	tree.PrettyPrint(os.Stdout)
 }
 
 // selectTree returns the tree by the given HTTP method.
