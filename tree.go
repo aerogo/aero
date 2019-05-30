@@ -7,15 +7,18 @@ import (
 	"github.com/akyoto/color"
 )
 
+// dataType specifies which type of data we are going to save for each node.
+type dataType = interface{}
+
 // tree represents a radix tree.
 type tree struct {
 	prefix   string
-	handle   Handle
+	data     dataType
 	children [256]*tree
 }
 
 // add adds a new element to the tree.
-func (node *tree) add(path string, handle Handle) {
+func (node *tree) add(path string, data dataType) {
 	// Search tree for equal parts until we can no longer proceed
 	i := 0
 	offset := 0
@@ -26,14 +29,14 @@ func (node *tree) add(path string, handle Handle) {
 			// node: /blog|
 			// path: /blog|
 			if i-offset == len(node.prefix) {
-				node.handle = handle
+				node.data = data
 				return
 			}
 
 			// The path ended but the node prefix is longer.
 			// node: /blog|feed
 			// path: /blog|
-			node.split(i-offset, "", handle)
+			node.split(i-offset, "", data)
 			return
 		}
 
@@ -53,14 +56,14 @@ func (node *tree) add(path string, handle Handle) {
 			// If no prefix is set, this is the starting node.
 			if node.prefix == "" {
 				node.prefix = path
-				node.handle = handle
+				node.data = data
 				return
 			}
 
 			// Otherwise, add a new child with the remaining string.
 			node.children[path[i]] = &tree{
 				prefix: path[i:],
-				handle: handle,
+				data:   data,
 			}
 
 			return
@@ -70,7 +73,7 @@ func (node *tree) add(path string, handle Handle) {
 		// node: /b|ag
 		// path: /b|riefcase
 		if path[i] != node.prefix[i-offset] {
-			node.split(i-offset, path[i:], handle)
+			node.split(i-offset, path[i:], data)
 			return
 		}
 
@@ -80,14 +83,14 @@ func (node *tree) add(path string, handle Handle) {
 }
 
 // split splits the node at the given index and inserts
-// a new child node with the given path and handle.
+// a new child node with the given path and data.
 // If path is empty, it will not create another child node
-// and instead assign the handle directly to the node.
-func (node *tree) split(index int, path string, handle Handle) {
+// and instead assign the data directly to the node.
+func (node *tree) split(index int, path string, data dataType) {
 	// Create split node with the remaining string
 	splitNode := &tree{
 		prefix:   node.prefix[index:],
-		handle:   node.handle,
+		data:     node.data,
 		children: node.children,
 	}
 
@@ -95,9 +98,9 @@ func (node *tree) split(index int, path string, handle Handle) {
 	node.prefix = node.prefix[:index]
 
 	// If the path is empty, it means we don't create a 2nd child node.
-	// Just assign the handle for the existing node and store a single child node.
+	// Just assign the data for the existing node and store a single child node.
 	if path == "" {
-		node.handle = handle
+		node.data = data
 		node.children[splitNode.prefix[0]] = splitNode
 		return
 	}
@@ -105,11 +108,11 @@ func (node *tree) split(index int, path string, handle Handle) {
 	// Create new node with the remaining string in the path
 	newNode := &tree{
 		prefix: path,
-		handle: handle,
+		data:   data,
 	}
 
-	// The existing handle must be removed
-	node.handle = nil
+	// The existing data must be removed
+	node.data = nil
 
 	// Assign new child nodes
 	node.children = [256]*tree{}
@@ -117,8 +120,8 @@ func (node *tree) split(index int, path string, handle Handle) {
 	node.children[newNode.prefix[0]] = splitNode
 }
 
-// find returns the handle for the given path, if available.
-func (node *tree) find(path string) Handle {
+// find returns the data for the given path, if available.
+func (node *tree) find(path string) dataType {
 	// Search tree for equal parts until we can no longer proceed
 	i := 0
 	offset := 0
@@ -129,7 +132,7 @@ func (node *tree) find(path string) Handle {
 			// node: /blog|
 			// path: /blog|
 			if i-offset == len(node.prefix) {
-				return node.handle
+				return node.data
 			}
 
 			// node: /blog|feed
@@ -166,7 +169,7 @@ func (node *tree) find(path string) Handle {
 
 // prettyPrint
 func (node *tree) prettyPrint(writer io.Writer) {
-	fmt.Fprintf(writer, "%s (%d) [%t]\n", color.CyanString(node.prefix), len(node.children), node.handle != nil)
+	fmt.Fprintf(writer, "%s (%d) [%t]\n", color.CyanString(node.prefix), len(node.children), node.data != nil)
 
 	for _, child := range node.children {
 		fmt.Fprint(writer, "|_ ")

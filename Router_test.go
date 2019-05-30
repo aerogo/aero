@@ -71,6 +71,7 @@ func BenchmarkStaticRoutes(b *testing.B) {
 		line, err := bufferedReader.ReadString('\n')
 
 		if line != "" {
+			line = strings.TrimSpace(line)
 			parts := strings.Split(line, " ")
 			routes = append(routes, definition{
 				method: parts[0],

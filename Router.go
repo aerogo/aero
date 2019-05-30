@@ -7,9 +7,15 @@ import (
 
 // Router is a high-performance router.
 type Router struct {
-	get    tree
-	post   tree
-	delete tree
+	get     tree
+	post    tree
+	delete  tree
+	put     tree
+	patch   tree
+	head    tree
+	connect tree
+	trace   tree
+	options tree
 }
 
 // Add registers a new handler for the given method and path.
@@ -24,10 +30,12 @@ func (router *Router) Find(method string, path string) Handle {
 
 	// Fast path for the root node
 	if tree.prefix == path {
-		return tree.handle
+		handle, _ := tree.data.(Handle)
+		return handle
 	}
 
-	return tree.find(path)
+	handle, _ := tree.find(path).(Handle)
+	return handle
 }
 
 // String returns a pretty print of the GET routes.
@@ -46,6 +54,18 @@ func (router *Router) selectTree(method string) *tree {
 		return &router.post
 	case http.MethodDelete:
 		return &router.delete
+	case http.MethodPut:
+		return &router.put
+	case http.MethodPatch:
+		return &router.patch
+	case http.MethodHead:
+		return &router.head
+	case http.MethodConnect:
+		return &router.connect
+	case http.MethodTrace:
+		return &router.trace
+	case http.MethodOptions:
+		return &router.options
 	default:
 		return nil
 	}
