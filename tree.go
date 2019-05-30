@@ -124,8 +124,6 @@ func (node *tree) find(path string) Handle {
 	offset := 0
 
 	for {
-		fmt.Println(i)
-
 		// We reached the end.
 		if i == len(path) {
 			// node: /blog|
