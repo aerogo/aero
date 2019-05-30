@@ -18,22 +18,33 @@ func TestRouterAdd(t *testing.T) {
 	c.Assert(router.Find("GET", "/blog"), qt.IsNil)
 	c.Assert(router.Find("GET", "/blog/post"), qt.IsNil)
 	c.Assert(router.Find("GET", "/user"), qt.IsNil)
+	c.Assert(router.Find("GET", "/日本語"), qt.IsNil)
 
 	router.Add("GET", "/blog", page)
 	c.Assert(router.Find("GET", "/"), qt.Not(qt.IsNil))
 	c.Assert(router.Find("GET", "/blog"), qt.Not(qt.IsNil))
 	c.Assert(router.Find("GET", "/blog/post"), qt.IsNil)
 	c.Assert(router.Find("GET", "/user"), qt.IsNil)
+	c.Assert(router.Find("GET", "/日本語"), qt.IsNil)
 
 	router.Add("GET", "/blog/post", page)
 	c.Assert(router.Find("GET", "/"), qt.Not(qt.IsNil))
 	c.Assert(router.Find("GET", "/blog"), qt.Not(qt.IsNil))
 	c.Assert(router.Find("GET", "/blog/post"), qt.Not(qt.IsNil))
 	c.Assert(router.Find("GET", "/user"), qt.IsNil)
+	c.Assert(router.Find("GET", "/日本語"), qt.IsNil)
 
 	router.Add("GET", "/user", page)
 	c.Assert(router.Find("GET", "/"), qt.Not(qt.IsNil))
 	c.Assert(router.Find("GET", "/blog"), qt.Not(qt.IsNil))
 	c.Assert(router.Find("GET", "/blog/post"), qt.Not(qt.IsNil))
 	c.Assert(router.Find("GET", "/user"), qt.Not(qt.IsNil))
+	c.Assert(router.Find("GET", "/日本語"), qt.IsNil)
+
+	router.Add("GET", "/日本語", page)
+	c.Assert(router.Find("GET", "/"), qt.Not(qt.IsNil))
+	c.Assert(router.Find("GET", "/blog"), qt.Not(qt.IsNil))
+	c.Assert(router.Find("GET", "/blog/post"), qt.Not(qt.IsNil))
+	c.Assert(router.Find("GET", "/user"), qt.Not(qt.IsNil))
+	c.Assert(router.Find("GET", "/日本語"), qt.Not(qt.IsNil))
 }

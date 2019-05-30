@@ -11,7 +11,7 @@ import (
 type tree struct {
 	prefix   string
 	handle   Handle
-	children []*tree
+	children [256]*tree
 }
 
 // add adds a new element to the tree.
@@ -41,13 +41,12 @@ func (node *tree) add(path string, handle Handle) {
 		// node: /|
 		// path: /|blog
 		if i-offset == len(node.prefix) {
-			// Try to search children
-			for _, child := range node.children {
-				if child.prefix[0] == path[i] {
-					offset = i
-					node = child
-					goto next
-				}
+			child := node.children[path[i]]
+
+			if child != nil {
+				offset = i
+				node = child
+				goto next
 			}
 
 			// No fitting children found, does this node even contain a prefix yet?
@@ -59,10 +58,10 @@ func (node *tree) add(path string, handle Handle) {
 			}
 
 			// Otherwise, add a new child with the remaining string.
-			node.children = append(node.children, &tree{
+			node.children[path[i]] = &tree{
 				prefix: path[i:],
 				handle: handle,
-			})
+			}
 
 			return
 		}
@@ -99,7 +98,7 @@ func (node *tree) split(index int, path string, handle Handle) {
 	// Just assign the handle for the existing node and store a single child node.
 	if path == "" {
 		node.handle = handle
-		node.children = []*tree{splitNode}
+		node.children[splitNode.prefix[0]] = splitNode
 		return
 	}
 
@@ -113,10 +112,9 @@ func (node *tree) split(index int, path string, handle Handle) {
 	node.handle = nil
 
 	// Assign new child nodes
-	node.children = []*tree{
-		splitNode,
-		newNode,
-	}
+	node.children = [256]*tree{}
+	node.children[splitNode.prefix[0]] = splitNode
+	node.children[newNode.prefix[0]] = splitNode
 }
 
 // find returns the handle for the given path, if available.
@@ -145,13 +143,12 @@ func (node *tree) find(path string) Handle {
 		// node: /|
 		// path: /|blog
 		if i-offset == len(node.prefix) {
-			// Try to search children
-			for _, child := range node.children {
-				if child.prefix[0] == path[i] {
-					offset = i
-					node = child
-					goto next
-				}
+			child := node.children[path[i]]
+
+			if child != nil {
+				offset = i
+				node = child
+				goto next
 			}
 
 			return nil
