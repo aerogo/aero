@@ -217,13 +217,6 @@ func (app *Application) StartTime() time.Time {
 	return app.start
 }
 
-var hello = []byte("Hello World")
-
-type responseWriter struct {
-	writer io.Writer
-	header http.Header
-}
-
 // ServeHTTP responds to the given request.
 func (app *Application) ServeHTTP(response http.ResponseWriter, request *http.Request) {
 	// Create context.
@@ -243,7 +236,16 @@ func (app *Application) ServeHTTP(response http.ResponseWriter, request *http.Re
 		return
 	}
 
-	handle(ctx)
+	err := handle(ctx)
+
+	if err != nil {
+		color.Red(err.Error())
+
+		for _, callback := range app.onError {
+			callback(err)
+		}
+	}
+
 	app.contextPool.Put(ctx)
 
 	// handle := app.Router.Find(request.Method, request.RequestURI)

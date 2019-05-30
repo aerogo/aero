@@ -13,8 +13,7 @@ require (
 	github.com/akyoto/stringutils v0.2.1
 	github.com/frankban/quicktest v1.4.0
 	github.com/json-iterator/go v1.1.6
-	github.com/julienschmidt/httprouter v1.2.0
 	github.com/tdewolff/parse v2.3.4+incompatible
 	github.com/tdewolff/test v1.0.0 // indirect
-	golang.org/x/sys v0.0.0-20190528012530-adf421d2caf4 // indirect
+	golang.org/x/sys v0.0.0-20190529164535-6a60838ec259 // indirect
 )
