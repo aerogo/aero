@@ -35,10 +35,6 @@ func TestRouterParameters(t *testing.T) {
 	router := aero.Router{}
 	page := func(*aero.Context) error { return nil }
 
-	c.Assert(router.Find("GET", "/"), qt.IsNil)
-	// c.Assert(router.Find("GET", "/user/123"), qt.IsNil)
-	// c.Assert(router.Find("GET", "/user/123/profile"), qt.IsNil)
-
 	router.Add("GET", "/", page)
 	router.Add("GET", "/user", page)
 	router.Add("GET", "/user/:id", page)

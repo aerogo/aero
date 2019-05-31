@@ -8,10 +8,21 @@ import (
 	"github.com/akyoto/color"
 )
 
+// node types
 const (
 	separator = '/'
 	parameter = ':'
 	wildcard  = '*'
+)
+
+// controlFlow tells the main loop what it should do next.
+type controlFlow int
+
+// controlFlow values.
+const (
+	controlStop  controlFlow = 0
+	controlBegin controlFlow = 1
+	controlNext  controlFlow = 2
 )
 
 // dataType specifies which type of data we are going to save for each node.
@@ -38,6 +49,8 @@ func (node *tree) add(path string, data dataType) {
 		switch node.kind {
 		case parameter:
 			// This only occurs when the same parameter based route is added twice.
+			// node: /post/:id|
+			// path: /post/:id|
 			if i == len(path) {
 				node.data = data
 				return
@@ -45,32 +58,17 @@ func (node *tree) add(path string, data dataType) {
 
 			// When we hit a separator, we'll search for a fitting child.
 			if path[i] == separator {
-				child := node.children[path[i]]
+				var control controlFlow
+				node, offset, control = node.end(path, data, i, offset)
 
-				if child != nil {
-					node = child
-					offset = i
+				switch control {
+				case controlStop:
+					return
+				case controlBegin:
+					goto begin
+				case controlNext:
 					goto next
 				}
-
-				// No fitting children found, does this node even contain a prefix yet?
-				// If no prefix is set, this is the starting node.
-				if node.prefix == "" {
-					node.prefix = path
-					node.data = data
-					return
-				}
-
-				// node: /user/|:id
-				// path: /user/|:id/profile
-				if node.parameter != nil {
-					node = node.parameter
-					offset = i
-					goto begin
-				}
-
-				node.append(path[i:], data)
-				return
 			}
 
 		default:
@@ -94,31 +92,17 @@ func (node *tree) add(path string, data dataType) {
 			// node: /|
 			// path: /|blog
 			if i-offset == len(node.prefix) {
-				child := node.children[path[i]]
+				var control controlFlow
+				node, offset, control = node.end(path, data, i, offset)
 
-				if child != nil {
-					node = child
-					offset = i
+				switch control {
+				case controlStop:
+					return
+				case controlBegin:
+					goto begin
+				case controlNext:
 					goto next
 				}
-
-				// If no prefix is set, this is the root node.
-				if node.prefix == "" {
-					node.prefix = path
-					node.data = data
-					return
-				}
-
-				// node: /user/|:id
-				// path: /user/|:id/profile
-				if node.parameter != nil {
-					node = node.parameter
-					offset = i
-					goto begin
-				}
-
-				node.append(path[i:], data)
-				return
 			}
 
 			// We got a conflict.
@@ -167,6 +151,18 @@ func (node *tree) split(index int, path string, data dataType) {
 	node.append(path, data)
 }
 
+// addTrailingSlash adds a trailing slash with the same data.
+func (node *tree) addTrailingSlash(data dataType) {
+	if strings.HasSuffix(node.prefix, "/") || node.children[separator] != nil {
+		return
+	}
+
+	node.children[separator] = &tree{
+		prefix: "/",
+		data:   data,
+	}
+}
+
 // append appends the given path to the tree.
 func (node *tree) append(path string, data dataType) {
 	// At this point, all we know is that somewhere
@@ -188,10 +184,13 @@ func (node *tree) append(path string, data dataType) {
 		// If it's a static route we are adding,
 		// just add the remainder as a normal node.
 		if paramStart == -1 {
-			node.children[path[0]] = &tree{
+			child := &tree{
 				prefix: path,
 				data:   data,
 			}
+
+			node.children[path[0]] = child
+			child.addTrailingSlash(data)
 			return
 		}
 
@@ -210,12 +209,14 @@ func (node *tree) append(path string, data dataType) {
 			}
 
 			node.parameter = child
+			child.addTrailingSlash(data)
 			node = child
 			path = path[paramEnd:]
 			continue
 		}
 
-		// Add a normal node
+		// We know there's a parameter, but not directly at the start.
+		// Add a normal node with the path before the parameter start.
 		child := &tree{
 			prefix: path[:paramStart],
 		}
@@ -230,6 +231,37 @@ func (node *tree) append(path string, data dataType) {
 		node = child
 		path = path[paramStart:]
 	}
+}
+
+// end is called when the node was fully parsed
+// and needs to decide the next control flow.
+func (node *tree) end(path string, data dataType, i int, offset int) (*tree, int, controlFlow) {
+	child := node.children[path[i]]
+
+	if child != nil {
+		node = child
+		offset = i
+		return node, offset, controlNext
+	}
+
+	// No fitting children found, does this node even contain a prefix yet?
+	// If no prefix is set, this is the starting node.
+	if node.prefix == "" {
+		node.prefix = path
+		node.data = data
+		return node, offset, controlStop
+	}
+
+	// node: /user/|:id
+	// path: /user/|:id/profile
+	if node.parameter != nil {
+		node = node.parameter
+		offset = i
+		return node, offset, controlBegin
+	}
+
+	node.append(path[i:], data)
+	return node, offset, controlStop
 }
 
 // find returns the data for the given path, if available.
