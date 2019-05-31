@@ -168,7 +168,7 @@ func (node *tree) reset(prefix string) {
 
 // addTrailingSlash adds a trailing slash with the same data.
 func (node *tree) addTrailingSlash(data dataType) {
-	if strings.HasSuffix(node.prefix, "/") || node.children[separator] != nil {
+	if strings.HasSuffix(node.prefix, "/") || node.children[separator] != nil || node.kind == wildcard {
 		return
 	}
 
@@ -220,14 +220,22 @@ func (node *tree) append(path string, data dataType) {
 
 			child := &tree{
 				prefix: path[1:paramEnd],
-				kind:   parameter,
+				kind:   path[paramStart],
 			}
 
-			node.parameter = child
-			child.addTrailingSlash(data)
-			node = child
-			path = path[paramEnd:]
-			continue
+			switch child.kind {
+			case parameter:
+				child.addTrailingSlash(data)
+				node.parameter = child
+				node = child
+				path = path[paramEnd:]
+				continue
+
+			case wildcard:
+				child.data = data
+				node.wildcard = child
+				return
+			}
 		}
 
 		// We know there's a parameter, but not directly at the start.
