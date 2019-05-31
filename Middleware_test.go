@@ -18,7 +18,7 @@ func TestApplicationMiddleware(t *testing.T) {
 
 	// Register middleware
 	app.Use(func(ctx *aero.Context, next func()) {
-		ctx.StatusCode = http.StatusPermanentRedirect
+		ctx.SetStatus(http.StatusPermanentRedirect)
 		next()
 	})
 

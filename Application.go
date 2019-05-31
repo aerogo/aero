@@ -86,7 +86,7 @@ func New() *Application {
 
 	app.contextPool.New = func() interface{} {
 		return &Context{
-			App: app,
+			app: app,
 		}
 	}
 
@@ -229,7 +229,7 @@ func (app *Application) StartTime() time.Time {
 func (app *Application) ServeHTTP(response http.ResponseWriter, request *http.Request) {
 	// Create context.
 	ctx := app.contextPool.Get().(*Context)
-	ctx.StatusCode = http.StatusOK
+	ctx.status = http.StatusOK
 	ctx.request = request
 	ctx.response = response
 	ctx.session = nil

@@ -42,10 +42,10 @@ var pushOptions = http.PushOptions{
 // Context represents a single request & response.
 type Context struct {
 	// A pointer to the application this request occurred on.
-	App *Application
+	app *Application
 
 	// Status code
-	StatusCode int
+	status int
 
 	// net/http
 	request  *http.Request
@@ -59,6 +59,21 @@ type Context struct {
 
 	// User session
 	session *session.Session
+}
+
+// App returns the application the context occurred in.
+func (ctx *Context) App() *Application {
+	return ctx.app
+}
+
+// Status returns the HTTP status.
+func (ctx *Context) Status() int {
+	return ctx.status
+}
+
+// SetStatus sets the HTTP status.
+func (ctx *Context) SetStatus(status int) {
+	ctx.status = status
 }
 
 // Request returns the HTTP request.
@@ -89,7 +104,7 @@ func (ctx *Context) Session() *session.Session {
 		sid := cookie.Value
 
 		if session.IsValidID(sid) {
-			ctx.session, err = ctx.App.Sessions.Store.Get(sid)
+			ctx.session, err = ctx.app.Sessions.Store.Get(sid)
 
 			if err != nil {
 				color.Red(err.Error())
@@ -102,7 +117,7 @@ func (ctx *Context) Session() *session.Session {
 	}
 
 	// Create a new session
-	ctx.session = ctx.App.Sessions.New()
+	ctx.session = ctx.app.Sessions.New()
 
 	// Create a session cookie in the client
 	ctx.createSessionCookie()
@@ -122,7 +137,7 @@ func (ctx *Context) HasSession() bool {
 		return false
 	}
 
-	ctx.session, err = ctx.App.Sessions.Store.Get(cookie.Value)
+	ctx.session, err = ctx.app.Sessions.Store.Get(cookie.Value)
 
 	if err != nil {
 		return false
@@ -138,7 +153,7 @@ func (ctx *Context) createSessionCookie() {
 		Value:    ctx.session.ID(),
 		HttpOnly: true,
 		Secure:   true,
-		MaxAge:   ctx.App.Sessions.Duration,
+		MaxAge:   ctx.app.Sessions.Duration,
 		Path:     "/",
 	}
 
@@ -184,12 +199,12 @@ func (ctx *Context) HTML(html string) error {
 	header.Set(xssProtectionHeader, xssProtection)
 	header.Set(referrerPolicyHeader, referrerPolicySameOrigin)
 
-	if ctx.App.Security.Certificate != "" {
+	if ctx.app.Security.Certificate != "" {
 		header.Set(strictTransportSecurityHeader, strictTransportSecurity)
-		header.Set(contentSecurityPolicyHeader, ctx.App.ContentSecurityPolicy.String())
+		header.Set(contentSecurityPolicyHeader, ctx.app.ContentSecurityPolicy.String())
 	}
 
-	if len(ctx.App.Config.Push) > 0 {
+	if len(ctx.app.Config.Push) > 0 {
 		ctx.pushResources()
 	}
 
@@ -312,7 +327,7 @@ func (ctx *Context) ReadSeeker(reader io.ReadSeeker) error {
 
 // Error should be used for sending error messages to the client.
 func (ctx *Context) Error(statusCode int, errorList ...interface{}) error {
-	ctx.StatusCode = statusCode
+	ctx.status = statusCode
 
 	if len(errorList) == 0 {
 		message := http.StatusText(statusCode)
@@ -385,17 +400,17 @@ func (ctx *Context) Query(param string) string {
 
 // Redirect redirects to the given URL using status code 302.
 func (ctx *Context) Redirect(url string) error {
-	ctx.StatusCode = http.StatusFound
+	ctx.status = http.StatusFound
 	ctx.response.Header().Set("Location", url)
-	ctx.response.WriteHeader(ctx.StatusCode)
+	ctx.response.WriteHeader(ctx.status)
 	return nil
 }
 
 // RedirectPermanently redirects to the given URL and indicates that this is a permanent change using status code 301.
 func (ctx *Context) RedirectPermanently(url string) error {
-	ctx.StatusCode = http.StatusMovedPermanently
+	ctx.status = http.StatusMovedPermanently
 	ctx.response.Header().Set("Location", url)
-	ctx.response.WriteHeader(ctx.StatusCode)
+	ctx.response.WriteHeader(ctx.status)
 	return nil
 }
 
@@ -430,7 +445,7 @@ func canCompress(contentType string) bool {
 // pushResources will push the given resources to the HTTP response.
 func (ctx *Context) pushResources() {
 	// Check if all the conditions for a push are met
-	for _, pushCondition := range ctx.App.pushConditions {
+	for _, pushCondition := range ctx.app.pushConditions {
 		if !pushCondition(ctx) {
 			return
 		}
@@ -444,12 +459,12 @@ func (ctx *Context) pushResources() {
 	}
 
 	// OnPush callbacks
-	for _, callback := range ctx.App.onPush {
+	for _, callback := range ctx.app.onPush {
 		callback(ctx)
 	}
 
 	// Push every resource defined in config.json
-	for _, resource := range ctx.App.Config.Push {
+	for _, resource := range ctx.app.Config.Push {
 		if err := pusher.Push(resource, &pushOptions); err != nil {
 			color.Red("Failed to push %s: %v", resource, err)
 		}
@@ -472,7 +487,7 @@ func (ctx *Context) Bytes(body []byte) error {
 
 	// Small response
 	if len(body) < gzipThreshold {
-		ctx.response.WriteHeader(ctx.StatusCode)
+		ctx.response.WriteHeader(ctx.status)
 		_, err := ctx.response.Write(body)
 		return err
 	}
@@ -506,24 +521,24 @@ func (ctx *Context) Bytes(body []byte) error {
 	// No GZip?
 	clientSupportsGZip := strings.Contains(ctx.request.Header.Get(acceptEncodingHeader), "gzip")
 
-	if !ctx.App.Config.GZip || !clientSupportsGZip || !canCompress(contentType) {
+	if !ctx.app.Config.GZip || !clientSupportsGZip || !canCompress(contentType) {
 		header.Set(contentLengthHeader, strconv.Itoa(len(body)))
-		ctx.response.WriteHeader(ctx.StatusCode)
+		ctx.response.WriteHeader(ctx.status)
 		_, err := ctx.response.Write(body)
 		return err
 	}
 
 	// GZip
 	header.Set(contentEncodingHeader, contentEncodingGzip)
-	ctx.response.WriteHeader(ctx.StatusCode)
+	ctx.response.WriteHeader(ctx.status)
 
 	// Write response body
-	writer := ctx.App.acquireGZipWriter(ctx.response)
+	writer := ctx.app.acquireGZipWriter(ctx.response)
 	_, err := writer.Write(body)
 	writer.Close()
 
 	// Put the writer back into the pool
-	ctx.App.gzipWriterPool.Put(writer)
+	ctx.app.gzipWriterPool.Put(writer)
 
 	// Return the error value of the last Write call
 	return err
