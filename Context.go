@@ -69,7 +69,7 @@ type context struct {
 	request     *http.Request
 	response    http.ResponseWriter
 	session     *session.Session
-	handler     Handle
+	handler     Handler
 	paramNames  [maxParams]string
 	paramValues [maxParams]string
 	paramCount  int

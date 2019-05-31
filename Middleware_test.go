@@ -17,10 +17,15 @@ func TestApplicationMiddleware(t *testing.T) {
 	})
 
 	// Register middleware
-	app.Use(func(ctx aero.Context, next func()) {
-		ctx.SetStatus(http.StatusPermanentRedirect)
-		next()
+	app.Use(func(next aero.Handler) aero.Handler {
+		return func(ctx aero.Context) error {
+			ctx.SetStatus(http.StatusPermanentRedirect)
+			return next(ctx)
+		}
 	})
+
+	// Bind middleware because we are not going to call app.Run
+	app.BindMiddleware()
 
 	// Get response
 	response := test(app, "/")
@@ -40,9 +45,15 @@ func TestApplicationMiddlewareSkipNext(t *testing.T) {
 	})
 
 	// Register middleware
-	app.Use(func(ctx aero.Context, next func()) {
-		// Not calling next() will stop the response chain
+	app.Use(func(next aero.Handler) aero.Handler {
+		return func(ctx aero.Context) error {
+			// Not calling next(ctx) will stop the response chain
+			return nil
+		}
 	})
+
+	// Bind middleware because we are not going to call app.Run
+	app.BindMiddleware()
 
 	// Get response
 	response := test(app, "/")

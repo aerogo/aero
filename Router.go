@@ -19,21 +19,21 @@ type Router struct {
 }
 
 // Add registers a new handler for the given method and path.
-func (router *Router) Add(method string, path string, handle Handle) {
+func (router *Router) Add(method string, path string, handler Handler) {
 	tree := router.selectTree(method)
-	tree.add(path, handle)
+	tree.add(path, handler)
 }
 
-// Find returns the handle for the given route.
+// Find returns the handler for the given route.
 // This is only useful for testing purposes.
 // Use Lookup instead.
-func (router *Router) Find(method string, path string) Handle {
+func (router *Router) Find(method string, path string) Handler {
 	c := context{}
 	router.Lookup(method, path, &c)
 	return c.handler
 }
 
-// Lookup finds the handle and parameters for the given route
+// Lookup finds the handler and parameters for the given route
 // and assigns them to the given context.
 func (router *Router) Lookup(method string, path string, ctx *context) {
 	tree := router.selectTree(method)
@@ -45,6 +45,19 @@ func (router *Router) Lookup(method string, path string, ctx *context) {
 	}
 
 	tree.find(path, ctx)
+}
+
+// Each traverses all trees and calls the given function on every node.
+func (router *Router) Each(callback func(*tree)) {
+	router.get.each(callback)
+	router.post.each(callback)
+	router.delete.each(callback)
+	router.put.each(callback)
+	router.patch.each(callback)
+	router.head.each(callback)
+	router.connect.each(callback)
+	router.trace.each(callback)
+	router.options.each(callback)
 }
 
 // Print shows a pretty print of the routes.

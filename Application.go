@@ -41,7 +41,7 @@ type Application struct {
 	onStart        []func()
 	onShutdown     []func()
 	onPush         []func(Context)
-	onError        []func(error)
+	onError        []func(Context, error)
 	stop           chan os.Signal
 	pushOptions    http.PushOptions
 	contextPool    sync.Pool
@@ -115,31 +115,32 @@ func New() *Application {
 }
 
 // Get registers your function to be called when the given GET path has been requested.
-func (app *Application) Get(path string, handle Handle) {
+func (app *Application) Get(path string, handler Handler) {
 	app.routes.GET = append(app.routes.GET, path)
-	app.router.Add(http.MethodGet, path, handle)
+	app.router.Add(http.MethodGet, path, handler)
 }
 
 // Post registers your function to be called when the given POST path has been requested.
-func (app *Application) Post(path string, handle Handle) {
-	app.router.Add(http.MethodPost, path, handle)
+func (app *Application) Post(path string, handler Handler) {
+	app.router.Add(http.MethodPost, path, handler)
 }
 
 // Delete registers your function to be called when the given DELETE path has been requested.
-func (app *Application) Delete(path string, handle Handle) {
-	app.router.Add(http.MethodDelete, path, handle)
+func (app *Application) Delete(path string, handler Handler) {
+	app.router.Add(http.MethodDelete, path, handler)
 }
 
 // Any registers your function to be called with any http method.
-func (app *Application) Any(path string, handle Handle) {
-	app.Get(path, handle)
-	app.Post(path, handle)
-	app.Delete(path, handle)
+func (app *Application) Any(path string, handler Handler) {
+	app.Get(path, handler)
+	app.Post(path, handler)
+	app.Delete(path, handler)
 	// TODO: Add more...
 }
 
 // Run starts your application.
 func (app *Application) Run() {
+	app.BindMiddleware()
 	app.ListenAndServe()
 
 	for _, callback := range app.onStart {
@@ -147,7 +148,7 @@ func (app *Application) Run() {
 	}
 
 	app.TestRoutes()
-	app.Wait()
+	app.wait()
 	app.Shutdown()
 }
 
@@ -183,8 +184,8 @@ func (app *Application) ListenAndServe() {
 	fmt.Println("Server running on:", color.GreenString("http://localhost:"+strconv.Itoa(app.Config.Ports.HTTP)))
 }
 
-// Wait will make the process wait until it is killed.
-func (app *Application) Wait() {
+// wait will make the process wait until it is killed.
+func (app *Application) wait() {
 	<-app.stop
 }
 
@@ -217,7 +218,7 @@ func (app *Application) OnPush(callback func(Context)) {
 }
 
 // OnError registers a callback to be executed on server errors.
-func (app *Application) OnError(callback func(error)) {
+func (app *Application) OnError(callback func(Context, error)) {
 	app.onError = append(app.onError, callback)
 }
 
@@ -238,7 +239,6 @@ func (app *Application) StartTime() time.Time {
 
 // ServeHTTP responds to the given request.
 func (app *Application) ServeHTTP(response http.ResponseWriter, request *http.Request) {
-	// Create context.
 	ctx := app.contextPool.Get().(*context)
 	ctx.status = http.StatusOK
 	ctx.request = request
@@ -254,53 +254,14 @@ func (app *Application) ServeHTTP(response http.ResponseWriter, request *http.Re
 		return
 	}
 
-	if len(app.middleware) == 0 {
-		err := ctx.handler(ctx)
+	err := ctx.handler(ctx)
 
-		if err != nil {
-			color.Red(err.Error())
-
-			for _, callback := range app.onError {
-				callback(err)
-			}
-		}
-
-		app.contextPool.Put(ctx)
-		return
-	}
-
-	// The last part of the call chain will send the actual response.
-	lastPartOfCallChain := func() {
-		err := ctx.handler(ctx)
-
-		if err != nil {
-			color.Red(err.Error())
-
-			for _, callback := range app.onError {
-				callback(err)
-			}
+	if err != nil {
+		for _, callback := range app.onError {
+			callback(ctx, err)
 		}
 	}
 
-	// Declare the type of generateNext so that we can define it recursively in the next part.
-	var generateNext func(index int) func()
-
-	// Create a function that returns a bound function next()
-	// which can be used as the 2nd parameter in the call chain.
-	generateNext = func(index int) func() {
-		if index == len(app.middleware) {
-			return lastPartOfCallChain
-		}
-
-		return func() {
-			app.middleware[index](ctx, generateNext(index+1))
-		}
-	}
-
-	// Start the call chain
-	generateNext(0)()
-
-	// Put context back into the pool for reuse
 	app.contextPool.Put(ctx)
 }
 
@@ -373,22 +334,24 @@ func (app *Application) acquireGZipWriter(response io.Writer) *gzip.Writer {
 	return writer
 }
 
-// shutdown will gracefully shut down the server.
-func shutdown(server *http.Server) {
-	if server == nil {
-		return
+// BindMiddleware applies the middleware to every router node.
+// This is called by `Run` automatically and should never be called
+// outside of tests.
+func (app *Application) BindMiddleware() {
+	app.router.Each(func(node *tree) {
+		if node.data != nil {
+			node.data = app.chain(node.data)
+		}
+	})
+}
+
+// chain chains all the middleware and returns a new handler.
+func (app *Application) chain(handler Handler) Handler {
+	for i := len(app.middleware) - 1; i >= 0; i-- {
+		handler = app.middleware[i](handler)
 	}
 
-	// Add a timeout to the server shutdown
-	ctx, cancel := stdContext.WithTimeout(stdContext.Background(), 250*time.Millisecond)
-	defer cancel()
-
-	// Shut down server
-	err := server.Shutdown(ctx)
-
-	if err != nil {
-		fmt.Println(err)
-	}
+	return handler
 }
 
 // createServer creates an http server instance.
@@ -446,5 +409,23 @@ func (app *Application) serveHTTPS(listener Listener) {
 
 	if err != http.ErrServerClosed {
 		panic(err)
+	}
+}
+
+// shutdown will gracefully shut down the server.
+func shutdown(server *http.Server) {
+	if server == nil {
+		return
+	}
+
+	// Add a timeout to the server shutdown
+	ctx, cancel := stdContext.WithTimeout(stdContext.Background(), 250*time.Millisecond)
+	defer cancel()
+
+	// Shut down server
+	err := server.Shutdown(ctx)
+
+	if err != nil {
+		fmt.Println(err)
 	}
 }

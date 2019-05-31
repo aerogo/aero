@@ -403,6 +403,27 @@ func (node *tree) find(path string, ctx *context) {
 	}
 }
 
+// each traverses the tree and calls the given function on every node.
+func (node *tree) each(callback func(*tree)) {
+	callback(node)
+
+	for _, child := range node.children {
+		if child == nil {
+			continue
+		}
+
+		child.each(callback)
+	}
+
+	if node.parameter != nil {
+		node.parameter.each(callback)
+	}
+
+	if node.wildcard != nil {
+		node.wildcard.each(callback)
+	}
+}
+
 // PrettyPrint prints a human-readable form of the tree to the given writer.
 func (node *tree) PrettyPrint(writer io.Writer) {
 	node.prettyPrint(writer, -1)
