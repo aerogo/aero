@@ -30,11 +30,9 @@ type Application struct {
 	Sessions              session.Manager
 	Security              ApplicationSecurity
 	Linters               []Linter
-	Router                Router
 	ContentSecurityPolicy *csp.ContentSecurityPolicy
 
-	servers        [2]*http.Server
-	serversMutex   sync.Mutex
+	router         Router
 	routeTests     map[string][]string
 	start          time.Time
 	rewrite        func(*RewriteContext)
@@ -47,6 +45,8 @@ type Application struct {
 	stop           chan os.Signal
 	contextPool    sync.Pool
 	gzipWriterPool sync.Pool
+	serversMutex   sync.Mutex
+	servers        [2]*http.Server
 
 	routes struct {
 		GET []string
@@ -106,17 +106,17 @@ func New() *Application {
 // Get registers your function to be called when the given GET path has been requested.
 func (app *Application) Get(path string, handle Handle) {
 	app.routes.GET = append(app.routes.GET, path)
-	app.Router.Add(http.MethodGet, path, handle)
+	app.router.Add(http.MethodGet, path, handle)
 }
 
 // Post registers your function to be called when the given POST path has been requested.
 func (app *Application) Post(path string, handle Handle) {
-	app.Router.Add(http.MethodPost, path, handle)
+	app.router.Add(http.MethodPost, path, handle)
 }
 
 // Delete registers your function to be called when the given DELETE path has been requested.
 func (app *Application) Delete(path string, handle Handle) {
-	app.Router.Add(http.MethodDelete, path, handle)
+	app.router.Add(http.MethodDelete, path, handle)
 }
 
 // Any registers your function to be called with any http method.
@@ -236,7 +236,7 @@ func (app *Application) ServeHTTP(response http.ResponseWriter, request *http.Re
 	ctx.session = nil
 	ctx.paramCount = 0
 
-	app.Router.Lookup(request.Method, request.RequestURI, ctx)
+	app.router.Lookup(request.Method, request.RequestURI, ctx)
 
 	if ctx.handler == nil {
 		response.WriteHeader(http.StatusNotFound)
