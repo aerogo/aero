@@ -69,7 +69,7 @@ func TestRouterWildcards(t *testing.T) {
 	c.Assert(router.Find("GET", "/images"), qt.Not(qt.IsNil))
 	c.Assert(router.Find("GET", "/images/hello.webp"), qt.Not(qt.IsNil))
 	c.Assert(router.Find("GET", "/videos/hello.webm"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/image.png"), qt.Not(qt.IsNil))
+	c.Assert(router.Find("GET", "/documents/hello.txt"), qt.Not(qt.IsNil))
 }
 
 func TestRouterStaticData(t *testing.T) {

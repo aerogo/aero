@@ -289,10 +289,14 @@ func (node *tree) end(path string, data dataType, i int, offset int) (*tree, int
 
 // find returns the data for the given path, if available.
 func (node *tree) find(path string) dataType {
-	// Search tree for equal parts until we can no longer proceed
-	i := 0
-	offset := 0
+	var (
+		i                  int
+		offset             int
+		lastWildcardOffset int
+		lastWildcard       *tree
+	)
 
+	// Search tree for equal parts until we can no longer proceed
 	for {
 	begin:
 		switch node.kind {
@@ -327,6 +331,11 @@ func (node *tree) find(path string) dataType {
 			// node: /|
 			// path: /|blog
 			if i-offset == len(node.prefix) {
+				if node.wildcard != nil {
+					lastWildcard = node.wildcard
+					lastWildcardOffset = i
+				}
+
 				child := node.children[path[i]]
 
 				if child != nil {
@@ -343,6 +352,13 @@ func (node *tree) find(path string) dataType {
 					goto begin
 				}
 
+				// node: /|*any
+				// path: /|image.png
+				if node.wildcard != nil {
+					fmt.Printf("WILCARD PARAMETER %s IS %s\n", node.wildcard.prefix, path[i:])
+					return node.wildcard.data
+				}
+
 				return nil
 			}
 
@@ -350,6 +366,11 @@ func (node *tree) find(path string) dataType {
 			// node: /b|ag
 			// path: /b|riefcase
 			if path[i] != node.prefix[i-offset] {
+				if lastWildcard != nil {
+					fmt.Printf("WILCARD PARAMETER %s IS %s\n", lastWildcard.prefix, path[lastWildcardOffset:])
+					return lastWildcard.data
+				}
+
 				return nil
 			}
 		}
