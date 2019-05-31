@@ -125,14 +125,7 @@ func (node *tree) add(path string, data dataType) {
 // and instead assign the data directly to the node.
 func (node *tree) split(index int, path string, data dataType) {
 	// Create split node with the remaining string
-	splitNode := &tree{
-		prefix:    node.prefix[index:],
-		data:      node.data,
-		children:  node.children,
-		parameter: node.parameter,
-		wildcard:  node.wildcard,
-		kind:      node.kind,
-	}
+	splitNode := node.clone(node.prefix[index:])
 
 	/// The existing data must be removed
 	node.reset(node.prefix[:index])
@@ -149,6 +142,18 @@ func (node *tree) split(index int, path string, data dataType) {
 
 	// Create new nodes with the remaining path
 	node.append(path, data)
+}
+
+// clone clones the node with a new prefix.
+func (node *tree) clone(prefix string) *tree {
+	return &tree{
+		prefix:    prefix,
+		data:      node.data,
+		children:  node.children,
+		parameter: node.parameter,
+		wildcard:  node.wildcard,
+		kind:      node.kind,
+	}
 }
 
 // reset resets the existing node data.
