@@ -8,16 +8,22 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sync"
 
 	"github.com/aerogo/aero"
 	"github.com/akyoto/color"
 )
 
+var once sync.Once
+
 // Main
 func main() {
 	var newApp bool
-	flag.BoolVar(&newApp, "new", false, "Creates the basic structure of a new app in an empty directory")
-	flag.Parse()
+
+	once.Do(func() {
+		flag.BoolVar(&newApp, "new", false, "Creates the basic structure of a new app in an empty directory")
+		flag.Parse()
+	})
 
 	if !newApp {
 		flag.Usage()
