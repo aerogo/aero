@@ -126,13 +126,16 @@ func (node *tree) add(path string, data dataType) {
 func (node *tree) split(index int, path string, data dataType) {
 	// Create split node with the remaining string
 	splitNode := &tree{
-		prefix:   node.prefix[index:],
-		data:     node.data,
-		children: node.children,
+		prefix:    node.prefix[index:],
+		data:      node.data,
+		children:  node.children,
+		parameter: node.parameter,
+		wildcard:  node.wildcard,
+		kind:      node.kind,
 	}
 
-	// Cut the existing node
-	node.prefix = node.prefix[:index]
+	/// The existing data must be removed
+	node.reset(node.prefix[:index])
 
 	// If the path is empty, it means we don't create a 2nd child node.
 	// Just assign the data for the existing node and store a single child node.
@@ -142,13 +145,20 @@ func (node *tree) split(index int, path string, data dataType) {
 		return
 	}
 
-	// The existing data must be removed
-	node.data = nil
-	node.children = [256]*tree{}
 	node.children[splitNode.prefix[0]] = splitNode
 
 	// Create new nodes with the remaining path
 	node.append(path, data)
+}
+
+// reset resets the existing node data.
+func (node *tree) reset(prefix string) {
+	node.prefix = prefix
+	node.data = nil
+	node.parameter = nil
+	node.wildcard = nil
+	node.kind = 0
+	node.children = [256]*tree{}
 }
 
 // addTrailingSlash adds a trailing slash with the same data.
@@ -275,12 +285,12 @@ func (node *tree) find(path string) dataType {
 		switch node.kind {
 		case parameter:
 			if i == len(path) {
-				fmt.Printf("PARAMETER %s IS %s\n", node.prefix, path[offset:i])
+				// fmt.Printf("PARAMETER %s IS %s\n", node.prefix, path[offset:i])
 				return node.data
 			}
 
 			if path[i] == separator {
-				fmt.Printf("PARAMETER %s IS %s\n", node.prefix, path[offset:i])
+				// fmt.Printf("PARAMETER %s IS %s\n", node.prefix, path[offset:i])
 				node = node.children[separator]
 				offset = i
 				goto next

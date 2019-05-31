@@ -15,7 +15,7 @@ type routeDefinition struct {
 	path   string
 }
 
-func TestRouterBasics(t *testing.T) {
+func TestRouterStatic(t *testing.T) {
 	c := qt.New(t)
 	router := aero.Router{}
 	page := func(*aero.Context) error { return nil }
@@ -43,18 +43,16 @@ func TestRouterParameters(t *testing.T) {
 	router.Add("GET", "/user/:id/:something", page)
 	router.Add("GET", "/admin", page)
 
-	router.Print("GET")
-
 	c.Assert(router.Find("GET", "/"), qt.Not(qt.IsNil))
 	c.Assert(router.Find("GET", "/user"), qt.Not(qt.IsNil))
 	c.Assert(router.Find("GET", "/user/123"), qt.Not(qt.IsNil))
 	c.Assert(router.Find("GET", "/user/123/profile"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/user/123/profile/black"), qt.Not(qt.IsNil))
+	c.Assert(router.Find("GET", "/user/123/profile/456"), qt.Not(qt.IsNil))
 	c.Assert(router.Find("GET", "/user/123/456"), qt.Not(qt.IsNil))
 	c.Assert(router.Find("GET", "/admin"), qt.Not(qt.IsNil))
 }
 
-func TestStaticRoutes(t *testing.T) {
+func TestRouterStaticData(t *testing.T) {
 	router := aero.Router{}
 	routes := loadRoutes("testdata/router/static.txt")
 	page := func(*aero.Context) error { return nil }
@@ -70,7 +68,7 @@ func TestStaticRoutes(t *testing.T) {
 	}
 }
 
-func TestGitHubRoutes(t *testing.T) {
+func TestRouterGitHubData(t *testing.T) {
 	router := aero.Router{}
 	routes := loadRoutes("testdata/router/github.txt")
 	page := func(*aero.Context) error { return nil }
@@ -97,15 +95,24 @@ func BenchmarkStaticRoutes(b *testing.B) {
 
 	b.ReportAllocs()
 	b.ResetTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			for _, route := range routes {
-				if router.Find(route.method, route.path) == nil {
-					b.Fatal(route.method + " " + route.path)
-				}
+
+	for i := 0; i < b.N; i++ {
+		for _, route := range routes {
+			if router.Find(route.method, route.path) == nil {
+				b.Fatal(route.method + " " + route.path)
 			}
 		}
-	})
+	}
+
+	// b.RunParallel(func(pb *testing.PB) {
+	// 	for pb.Next() {
+	// 		for _, route := range routes {
+	// 			if router.Find(route.method, route.path) == nil {
+	// 				b.Fatal(route.method + " " + route.path)
+	// 			}
+	// 		}
+	// 	}
+	// })
 }
 
 func BenchmarkGitHubRoutes(b *testing.B) {
@@ -119,15 +126,24 @@ func BenchmarkGitHubRoutes(b *testing.B) {
 
 	b.ReportAllocs()
 	b.ResetTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			for _, route := range routes {
-				if router.Find(route.method, route.path) == nil {
-					b.Fatal(route.method + " " + route.path)
-				}
+
+	for i := 0; i < b.N; i++ {
+		for _, route := range routes {
+			if router.Find(route.method, route.path) == nil {
+				b.Fatal(route.method + " " + route.path)
 			}
 		}
-	})
+	}
+
+	// b.RunParallel(func(pb *testing.PB) {
+	// 	for pb.Next() {
+	// 		for _, route := range routes {
+	// 			if router.Find(route.method, route.path) == nil {
+	// 				b.Fatal(route.method + " " + route.path)
+	// 			}
+	// 		}
+	// 	}
+	// })
 }
 
 func loadRoutes(filePath string) []routeDefinition {
