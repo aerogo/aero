@@ -25,7 +25,7 @@ func TestApplicationGet(t *testing.T) {
 	})
 
 	// Get response
-	response := getResponse(app, "/")
+	response := test(app, "/")
 
 	// Verify response
 	c := qt.New(t)
@@ -88,7 +88,7 @@ func TestApplicationRewrite(t *testing.T) {
 	})
 
 	// Get response
-	response := getResponse(app, "/")
+	response := test(app, "/")
 
 	// Verify response
 	c := qt.New(t)
@@ -195,13 +195,11 @@ func TestApplicationUnavailablePort(t *testing.T) {
 	app.ListenAndServe()
 }
 
-// getResponse sends a request to the server and returns the response.
-func getResponse(app *aero.Application, route string) *httptest.ResponseRecorder {
-	// Create request
+// test sends a request to the server and returns the response.
+func test(app *aero.Application, route string) *httptest.ResponseRecorder {
 	request := httptest.NewRequest("GET", route, nil)
 	request.Header.Set("Accept-Encoding", "gzip")
 
-	// Get response
 	response := httptest.NewRecorder()
 	app.ServeHTTP(response, request)
 

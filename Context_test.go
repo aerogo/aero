@@ -29,7 +29,7 @@ func TestContextResponseHeader(t *testing.T) {
 	})
 
 	// Get response
-	response := getResponse(app, "/")
+	response := test(app, "/")
 
 	// Verify response
 	c := qt.New(t)
@@ -56,17 +56,17 @@ func TestContextError(t *testing.T) {
 
 	// Verify response with known error
 	c := qt.New(t)
-	response := getResponse(app, "/")
+	response := test(app, "/")
 	c.Assert(response.Code, qt.Equals, http.StatusUnauthorized)
 	c.Assert(response.Body.String(), qt.Contains, "Not logged in")
 
 	// Verify response with explanation only
-	response = getResponse(app, "/explanation-only")
+	response = test(app, "/explanation-only")
 	c.Assert(response.Code, qt.Equals, http.StatusUnauthorized)
 	c.Assert(response.Body.String(), qt.Contains, "Not authorized")
 
 	// Verify response with unknown error
-	response = getResponse(app, "/unknown-error")
+	response = test(app, "/unknown-error")
 	c.Assert(response.Code, qt.Equals, http.StatusUnauthorized)
 	c.Assert(response.Body.String(), qt.Contains, http.StatusText(http.StatusUnauthorized))
 }
@@ -81,7 +81,7 @@ func TestContextURI(t *testing.T) {
 
 	// Verify response with read-only URI
 	c := qt.New(t)
-	response := getResponse(app, "/uri")
+	response := test(app, "/uri")
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
 	c.Assert(response.Body.String(), qt.Contains, "/uri")
 }
@@ -95,7 +95,7 @@ func TestContextRealIP(t *testing.T) {
 	})
 
 	// Get response
-	response := getResponse(app, "/ip")
+	response := test(app, "/ip")
 
 	// Verify response
 	c := qt.New(t)
@@ -117,7 +117,7 @@ func TestContextSession(t *testing.T) {
 	})
 
 	// Get response
-	response := getResponse(app, "/")
+	response := test(app, "/")
 
 	// Verify response
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
@@ -255,12 +255,12 @@ func TestContextContentTypes(t *testing.T) {
 	})
 
 	// Get responses
-	responseJSON := getResponse(app, "/json")
-	responseHTML := getResponse(app, "/html")
-	responseCSS := getResponse(app, "/css")
-	responseJS := getResponse(app, "/js")
-	responseFile := getResponse(app, "/files/Application.go")
-	responseMediaFile := getResponse(app, "/files/docs/media/usage.apng")
+	responseJSON := test(app, "/json")
+	responseHTML := test(app, "/html")
+	responseCSS := test(app, "/css")
+	responseJS := test(app, "/js")
+	responseFile := test(app, "/files/Application.go")
+	responseMediaFile := test(app, "/files/docs/media/usage.apng")
 
 	// Verify JSON response
 	c := qt.New(t)
@@ -347,7 +347,7 @@ func TestContextReader(t *testing.T) {
 
 	for _, route := range routes {
 		// Verify response
-		response := getResponse(app, route)
+		response := test(app, route)
 		c.Assert(response.Code, qt.Equals, http.StatusOK)
 		c.Assert(strings.TrimSpace(response.Body.String()), qt.Equals, config)
 	}
@@ -372,7 +372,7 @@ func TestContextHTTP2Push(t *testing.T) {
 	})
 
 	// Get response
-	response := getResponse(app, "/")
+	response := test(app, "/")
 
 	// Verify response
 	c := qt.New(t)
@@ -394,7 +394,7 @@ func TestContextGetInt(t *testing.T) {
 	})
 
 	// Get response
-	response := getResponse(app, "/21")
+	response := test(app, "/21")
 
 	// Verify response
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
@@ -439,14 +439,14 @@ func TestContextRedirect(t *testing.T) {
 	})
 
 	// Get temporary response
-	response := getResponse(app, "/temporary")
+	response := test(app, "/temporary")
 
 	// Verify response
 	c.Assert(response.Code, qt.Equals, http.StatusFound)
 	c.Assert(response.Body.String(), qt.Equals, "")
 
 	// Get permanent response
-	response = getResponse(app, "/permanent")
+	response = test(app, "/permanent")
 
 	// Verify response
 	c.Assert(response.Code, qt.Equals, http.StatusMovedPermanently)
@@ -550,7 +550,7 @@ func TestBigResponse(t *testing.T) {
 	})
 
 	// Get response
-	response := getResponse(app, "/")
+	response := test(app, "/")
 
 	// Verify the response
 	c.Assert(response.Code, qt.Equals, http.StatusOK)

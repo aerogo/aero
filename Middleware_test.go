@@ -23,7 +23,7 @@ func TestApplicationMiddleware(t *testing.T) {
 	})
 
 	// Get response
-	response := getResponse(app, "/")
+	response := test(app, "/")
 
 	// Verify response
 	c := qt.New(t)
@@ -45,7 +45,7 @@ func TestApplicationMiddlewareSkipNext(t *testing.T) {
 	})
 
 	// Get response
-	response := getResponse(app, "/")
+	response := test(app, "/")
 
 	// Verify response
 	c := qt.New(t)

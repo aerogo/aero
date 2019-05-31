@@ -26,7 +26,7 @@ func TestRequest(t *testing.T) {
 		return ctx.Text(helloWorld)
 	})
 
-	response := getResponse(app, "/")
+	response := test(app, "/")
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
 }
 
@@ -39,6 +39,6 @@ func TestMultiRequest(t *testing.T) {
 
 	// Repeating the request will trigger the gzip writer pool
 	for i := 0; i < 10; i++ {
-		getResponse(app, "/")
+		test(app, "/")
 	}
 }
