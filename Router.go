@@ -25,17 +25,26 @@ func (router *Router) Add(method string, path string, handle Handle) {
 }
 
 // Find returns the handle for the given route.
+// This is only useful for testing purposes.
+// Use Lookup instead.
 func (router *Router) Find(method string, path string) Handle {
+	c := Context{}
+	router.Lookup(method, path, &c)
+	return c.handler
+}
+
+// Lookup finds the handle and parameters for the given route
+// and assigns them to the given context.
+func (router *Router) Lookup(method string, path string, ctx *Context) {
 	tree := router.selectTree(method)
 
 	// Fast path for the root node
 	if tree.prefix == path {
-		handle, _ := tree.data.(Handle)
-		return handle
+		ctx.handler = tree.data
+		return
 	}
 
-	handle, _ := tree.find(path).(Handle)
-	return handle
+	tree.find(path, ctx)
 }
 
 // Print shows a pretty print of the routes.

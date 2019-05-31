@@ -226,17 +226,17 @@ func (app *Application) ServeHTTP(response http.ResponseWriter, request *http.Re
 	ctx.request = request
 	ctx.response = response
 	ctx.session = nil
+	ctx.paramCount = 0
 
-	// app.Router.Exec(request.Method, request.RequestURI, ctx)
-	handle := app.Router.Find(request.Method, request.RequestURI)
+	app.Router.Lookup(request.Method, request.RequestURI, ctx)
 
-	if handle == nil {
+	if ctx.handler == nil {
 		response.WriteHeader(http.StatusNotFound)
 		app.contextPool.Put(ctx)
 		return
 	}
 
-	err := handle(ctx)
+	err := ctx.handler(ctx)
 
 	if err != nil {
 		color.Red(err.Error())

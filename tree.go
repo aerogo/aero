@@ -26,7 +26,7 @@ const (
 )
 
 // dataType specifies which type of data we are going to save for each node.
-type dataType = interface{}
+type dataType = func(*Context) error
 
 // tree represents a radix tree.
 type tree struct {
@@ -287,8 +287,8 @@ func (node *tree) end(path string, data dataType, i int, offset int) (*tree, int
 	return node, offset, controlStop
 }
 
-// find returns the data for the given path, if available.
-func (node *tree) find(path string) dataType {
+// find finds the data for the given path and assigns it to ctx.handler, if available.
+func (node *tree) find(path string, ctx *Context) {
 	var (
 		i                  int
 		offset             int
@@ -302,12 +302,13 @@ func (node *tree) find(path string) dataType {
 		switch node.kind {
 		case parameter:
 			if i == len(path) {
-				// fmt.Printf("PARAMETER %s IS %s\n", node.prefix, path[offset:i])
-				return node.data
+				ctx.addParameter(node.prefix, path[offset:i])
+				ctx.handler = node.data
+				return
 			}
 
 			if path[i] == separator {
-				// fmt.Printf("PARAMETER %s IS %s\n", node.prefix, path[offset:i])
+				ctx.addParameter(node.prefix, path[offset:i])
 				node = node.children[separator]
 				offset = i
 				goto next
@@ -319,12 +320,14 @@ func (node *tree) find(path string) dataType {
 				// node: /blog|
 				// path: /blog|
 				if i-offset == len(node.prefix) {
-					return node.data
+					ctx.handler = node.data
+					return
 				}
 
 				// node: /blog|feed
 				// path: /blog|
-				return nil
+				ctx.handler = nil
+				return
 			}
 
 			// The node we just checked is entirely included in our path.
@@ -355,11 +358,13 @@ func (node *tree) find(path string) dataType {
 				// node: /|*any
 				// path: /|image.png
 				if node.wildcard != nil {
-					fmt.Printf("WILCARD PARAMETER %s IS %s\n", node.wildcard.prefix, path[i:])
-					return node.wildcard.data
+					ctx.addParameter(node.wildcard.prefix, path[i:])
+					ctx.handler = node.wildcard.data
+					return
 				}
 
-				return nil
+				ctx.handler = nil
+				return
 			}
 
 			// We got a conflict.
@@ -367,11 +372,13 @@ func (node *tree) find(path string) dataType {
 			// path: /b|riefcase
 			if path[i] != node.prefix[i-offset] {
 				if lastWildcard != nil {
-					fmt.Printf("WILCARD PARAMETER %s IS %s\n", lastWildcard.prefix, path[lastWildcardOffset:])
-					return lastWildcard.data
+					ctx.addParameter(lastWildcard.prefix, path[lastWildcardOffset:])
+					ctx.handler = lastWildcard.data
+					return
 				}
 
-				return nil
+				ctx.handler = nil
+				return
 			}
 		}
 

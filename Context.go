@@ -55,9 +55,11 @@ type Context struct {
 	request  *http.Request
 	response http.ResponseWriter
 
-	// Parameters
+	// Router
+	handler     Handle
 	paramNames  [maxParams]string
 	paramValues [maxParams]string
+	paramCount  int
 
 	// User session
 	session *session.Session
@@ -145,6 +147,13 @@ func (ctx *Context) createSessionCookie() {
 	}
 
 	http.SetCookie(ctx.response, &sessionCookie)
+}
+
+// addParameter adds a new parameter to the context.
+func (ctx *Context) addParameter(name string, value string) {
+	ctx.paramNames[ctx.paramCount] = name
+	ctx.paramValues[ctx.paramCount] = value
+	ctx.paramCount++
 }
 
 // JSON encodes the object to a JSON string and responds.
@@ -350,9 +359,13 @@ func (ctx *Context) SetURI(b string) {
 
 // Get retrieves an URL parameter.
 func (ctx *Context) Get(param string) string {
-	// TODO: ...
+	for index, name := range ctx.paramNames {
+		if name == param {
+			return ctx.paramValues[index]
+		}
+	}
+
 	return ""
-	// return strings.TrimPrefix(ctx.params.ByName(param), "/")
 }
 
 // GetInt retrieves an URL parameter as an integer.

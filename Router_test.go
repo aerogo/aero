@@ -63,8 +63,6 @@ func TestRouterWildcards(t *testing.T) {
 	router.Add("GET", "/videos/*file", page)
 	router.Add("GET", "/*anything", page)
 
-	router.Print("GET")
-
 	c.Assert(router.Find("GET", "/"), qt.Not(qt.IsNil))
 	c.Assert(router.Find("GET", "/images"), qt.Not(qt.IsNil))
 	c.Assert(router.Find("GET", "/images/hello.webp"), qt.Not(qt.IsNil))
