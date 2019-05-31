@@ -24,7 +24,7 @@ func TestContextResponseHeader(t *testing.T) {
 
 	// Register route
 	app.Get("/", func(ctx aero.Context) error {
-		ctx.Response().Header().Set("X-Custom", "42")
+		ctx.Response().SetHeader("X-Custom", "42")
 		return ctx.Text(helloWorld)
 	})
 
@@ -407,7 +407,7 @@ func TestContextUserAgent(t *testing.T) {
 
 	// Register route
 	app.Get("/", func(ctx aero.Context) error {
-		userAgent := ctx.Request().Header().Get("User-Agent")
+		userAgent := ctx.Request().Header("User-Agent")
 		return ctx.Text(userAgent)
 	})
 

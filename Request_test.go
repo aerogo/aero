@@ -16,12 +16,11 @@ func TestRequest(t *testing.T) {
 	app.Get("/", func(ctx aero.Context) error {
 		request := ctx.Request()
 
-		c.Assert(request.Header(), qt.Not(qt.Equals), "")
+		c.Assert(request.Header("Accept-Encoding"), qt.Equals, "gzip")
 		c.Assert(request.Host(), qt.Equals, "example.com")
 		c.Assert(request.Protocol(), qt.Equals, "HTTP/1.1")
 		c.Assert(request.Method(), qt.Equals, "GET")
-		c.Assert(request.URL(), qt.Not(qt.IsNil))
-		c.Assert(request.URL().Path, qt.Equals, "/")
+		c.Assert(request.Path(), qt.Equals, "/")
 
 		return ctx.Text(helloWorld)
 	})

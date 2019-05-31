@@ -206,7 +206,7 @@ By default, HTTP/2 push for your [configured resources](Configuration.md#push) w
 // Our service worker will add "X-Source" to the headers.
 // Skip the push when the header is set.
 app.AddPushCondition(func(ctx aero.Context) bool {
-	return ctx.Request().Header().Get("X-Source") != "service-worker"
+	return ctx.Request().Header("X-Source") != "service-worker"
 })
 ```
 

@@ -3,47 +3,57 @@ package aero
 import (
 	stdContext "context"
 	"net/http"
-	"net/url"
 )
 
-// Request represents the HTTP request used in the given context.
-type Request struct {
+// Request is an interface for HTTP requests.
+type Request interface {
+	Body() Body
+	Context() stdContext.Context
+	Header(string) string
+	Method() string
+	Protocol() string
+	Host() string
+	Path() string
+}
+
+// request represents the HTTP request used in the given context.
+type request struct {
 	inner *http.Request
 }
 
 // Body represents the request body.
-func (request Request) Body() Body {
+func (req request) Body() Body {
 	return Body{
-		reader: request.inner.Body,
+		reader: req.inner.Body,
 	}
 }
 
 // Context returns the request context.
-func (request Request) Context() stdContext.Context {
-	return request.inner.Context()
+func (req request) Context() stdContext.Context {
+	return req.inner.Context()
 }
 
-// Header represents the request headers.
-func (request Request) Header() http.Header {
-	return request.inner.Header
+// Header returns the header value for the given key.
+func (req request) Header(key string) string {
+	return req.inner.Header.Get(key)
 }
 
 // Method returns the request method.
-func (request Request) Method() string {
-	return request.inner.Method
+func (req request) Method() string {
+	return req.inner.Method
 }
 
 // Protocol returns the request protocol.
-func (request Request) Protocol() string {
-	return request.inner.Proto
+func (req request) Protocol() string {
+	return req.inner.Proto
 }
 
 // Host returns the requested host.
-func (request Request) Host() string {
-	return request.inner.Host
+func (req request) Host() string {
+	return req.inner.Host
 }
 
-// URL returns the request URL.
-func (request Request) URL() *url.URL {
-	return request.inner.URL
+// Path returns the requested path.
+func (req request) Path() string {
+	return req.inner.URL.Path
 }

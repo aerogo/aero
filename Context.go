@@ -511,14 +511,14 @@ func (ctx *context) String(body string) error {
 
 // Request returns the HTTP request.
 func (ctx *context) Request() Request {
-	return Request{
+	return &request{
 		inner: ctx.request,
 	}
 }
 
 // Response returns the HTTP response.
 func (ctx *context) Response() Response {
-	return Response{
+	return &response{
 		inner: ctx.response,
 	}
 }
