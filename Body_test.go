@@ -88,13 +88,13 @@ func TestBodyErrors(t *testing.T) {
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
 
 	// Invalid JSON
-	request, _ = http.NewRequest("GET", "/", strings.NewReader("{"))
+	request = httptest.NewRequest("GET", "/", strings.NewReader("{"))
 	response = httptest.NewRecorder()
 	app.ServeHTTP(response, request)
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
 
 	// Not a JSON object
-	request, _ = http.NewRequest("GET", "/json-object", strings.NewReader("{"))
+	request = httptest.NewRequest("GET", "/json-object", strings.NewReader("{"))
 	response = httptest.NewRecorder()
 	app.ServeHTTP(response, request)
 	c.Assert(response.Code, qt.Equals, http.StatusOK)

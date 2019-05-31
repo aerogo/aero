@@ -189,7 +189,7 @@ func TestContextSessionValidCookie(t *testing.T) {
 	})
 
 	// Create request 1
-	request1, _ := http.NewRequest("GET", "/1", nil)
+	request1 := httptest.NewRequest("GET", "/1", nil)
 
 	// Get response 1
 	response1 := httptest.NewRecorder()
@@ -210,7 +210,7 @@ func TestContextSessionValidCookie(t *testing.T) {
 	c.Assert(session.IsValidID(sid), qt.Equals, true)
 
 	// Create request 2
-	request2, _ := http.NewRequest("GET", "/2", nil)
+	request2 := httptest.NewRequest("GET", "/2", nil)
 	request2.AddCookie(&http.Cookie{
 		Name:  "sid",
 		Value: sid,
@@ -225,7 +225,7 @@ func TestContextSessionValidCookie(t *testing.T) {
 	c.Assert(response2.Body.String(), qt.Equals, helloWorld)
 
 	// Create request 3
-	request3, _ := http.NewRequest("GET", "/3", nil)
+	request3 := httptest.NewRequest("GET", "/3", nil)
 	request3.AddCookie(&http.Cookie{
 		Name:  "sid",
 		Value: sid,
@@ -671,7 +671,7 @@ func TestBigResponse304(t *testing.T) {
 	c.Assert(response.Body.String(), qt.Not(qt.Equals), "")
 
 	// Set if-none-match to the etag we just received
-	request, _ = http.NewRequest("GET", "/", nil)
+	request = httptest.NewRequest("GET", "/", nil)
 	request.Header.Set("If-None-Match", etag)
 	response = httptest.NewRecorder()
 	app.ServeHTTP(response, request)
