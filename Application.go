@@ -5,6 +5,7 @@ import (
 	stdContext "context"
 	"fmt"
 	"io"
+	"mime"
 	"net"
 	"net/http"
 	"os"
@@ -107,6 +108,9 @@ func New() *Application {
 
 	// Default session store: Memory
 	app.Sessions.Store = memstore.New()
+
+	// MIME types
+	initMIMETypes()
 
 	// Receive signals
 	signal.Notify(app.stop, os.Interrupt, syscall.SIGTERM)
@@ -432,5 +436,30 @@ func shutdown(server *http.Server) {
 
 	if err != nil {
 		fmt.Println(err)
+	}
+}
+
+// initMIMETypes adds a few additional types to the MIME package.
+func initMIMETypes() {
+	mimeTypes := []struct {
+		extension string
+		typ       string
+	}{
+		{
+			extension: ".webp",
+			typ:       "image/webp",
+		},
+		{
+			extension: ".apng",
+			typ:       "image/apng",
+		},
+	}
+
+	for _, m := range mimeTypes {
+		err := mime.AddExtensionType(m.extension, m.typ)
+
+		if err != nil {
+			color.Red("Failed adding '%s' MIME extension", m.typ)
+		}
 	}
 }

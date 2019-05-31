@@ -47,6 +47,7 @@ type Context interface {
 	JavaScript(string) error
 	JSON(interface{}) error
 	Path() string
+	Push(paths ...string) error
 	Query(param string) string
 	ReadAll(io.Reader) error
 	Reader(io.Reader) error
@@ -86,6 +87,11 @@ func (ctx *context) Bytes(body []byte) error {
 	// If the request has been canceled by the client, stop.
 	if ctx.request.Context().Err() != nil {
 		return errors.New("Request interrupted by the client")
+	}
+
+	// HTTP/2 push
+	if len(ctx.app.Config.Push) > 0 {
+		ctx.pushResources()
 	}
 
 	// Small response
@@ -398,20 +404,13 @@ func canCompress(contentType string) bool {
 	}
 }
 
-// pushResources will push the given resources to the HTTP response.
-func (ctx *context) pushResources() {
-	// Check if all the conditions for a push are met
-	for _, pushCondition := range ctx.app.pushConditions {
-		if !pushCondition(ctx) {
-			return
-		}
-	}
-
+// Push will start pushing the given resources in a separate goroutine.
+func (ctx *context) Push(paths ...string) error {
 	// Check if we can push
 	pusher, ok := ctx.response.(http.Pusher)
 
 	if !ok {
-		return
+		return nil
 	}
 
 	// OnPush callbacks
@@ -419,12 +418,28 @@ func (ctx *context) pushResources() {
 		callback(ctx)
 	}
 
-	// Push every resource defined in config.json
-	for _, resource := range ctx.app.Config.Push {
-		if err := pusher.Push(resource, &ctx.app.pushOptions); err != nil {
-			color.Red("Failed to push %s: %v", resource, err)
+	// Push every resource
+	for _, path := range paths {
+		err := pusher.Push(path, &ctx.app.pushOptions)
+
+		if err != nil {
+			return err
 		}
 	}
+
+	return nil
+}
+
+// pushResources will start pushing the given resources
+// in a separate goroutine if the defined conditions are true.
+func (ctx *context) pushResources(paths ...string) {
+	for _, pushCondition := range ctx.app.pushConditions {
+		if !pushCondition(ctx) {
+			return
+		}
+	}
+
+	ctx.Push(paths...)
 }
 
 // HasSession indicates whether the client has a valid session or not.

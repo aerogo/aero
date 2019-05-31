@@ -12,7 +12,7 @@ app := aero.New()
 
 ```go
 app.Get("/hello", func(ctx aero.Context) error {
-	return ctx.Text("Hello World")
+	return ctx.String("Hello World")
 })
 ```
 
@@ -20,7 +20,7 @@ app.Get("/hello", func(ctx aero.Context) error {
 
 ```go
 app.Get("/hello/:person", func(ctx aero.Context) error {
-	return ctx.Text("Hello " + ctx.Get("person"))
+	return ctx.String("Hello " + ctx.Get("person"))
 })
 ```
 
@@ -37,36 +37,7 @@ app.Get("/", func(ctx aero.Context) error {
 })
 ```
 
-## Middleware
-
-You can run middleware functions that are executed after the routing phase and before the final request handler.
-
-```go
-app.Use(func(ctx aero.Context, next func()) {
-	start := time.Now()
-	next()
-	responseTime := time.Since(start)
-	fmt.Println(responseTime)
-})
-```
-
-It is possible to implement a firewall by filtering requests and denying the `next()` call as the final request handler is also part of the middleware chain. Not calling `next()` means the request will not be handled.
-
-It is also possible to create a request / access log that includes performance timings as shown in the code example above. `ctx.Path()` will retrieve the URI of the request. Note that the actual logging happens **after** the request has been dealt with (`next()` call) which makes it efficient.
-
-## Multiple middleware
-
-You can use multiple `Use()` calls or combine them into a single call:
-
-```go
-app.Use(
-	First(),
-	Second(),
-	Third(),
-)
-```
-
-## Starting server
+## Starting the server
 
 This will start the server and block until a termination signal arrives.
 
@@ -74,24 +45,43 @@ This will start the server and block until a termination signal arrives.
 app.Run()
 ```
 
-## Layout
+## Middleware
 
-The server package by itself does **not** concern itself with the implementation of your layout system but you can add [aerogo/layout](https://github.com/aerogo/layout) to register full-page and content-only routes at once.
+You can run middleware functions that are executed after the routing phase and before the final request handler.
+A middleware function is a function that accepts an `aero.Handler` and returns a modified one.
+The accepted handler is the next handler in the middleware chain.
 
 ```go
-// Create a new aerogo/layout
-l := layout.New(app)
+app.Use(func(next aero.Handler) {
+	return func(ctx aero.Context) error {
+		// Measure response time
+		start := time.Now()
+		err := next(ctx)
+		responseTime := time.Since(start)
 
-// Specify the page frame
-l.Render = func(ctx aero.Context, content string) string {
-	return "<html><head></head><body>" + content + "</body></html>"
-}
+		// Write it to the log
+		fmt.Println(responseTime)
 
-// Register the /hello page.
-// The page without the page frame will be available under /_/hello
-l.Page("/hello", func(ctx aero.Context) error {
-	return ctx.HTML("<h1>Hello</h1>")
+		// Make sure to pass the error back!
+		return err
+	}
 })
+```
+
+It is possible to implement a firewall by filtering requests and denying the `next` call as the final request handler is also part of the middleware chain. Not calling `next` means the request will not be handled.
+
+It is also possible to create a request / access log that includes performance timings as shown in the code example above. `ctx.Path()` will retrieve the path of the request. Note that the actual logging happens **after** the request has been dealt with, which makes it efficient.
+
+## Multiple middleware
+
+You can use multiple `Use()` calls or combine them into a single call:
+
+```go
+app.Use(
+	first,
+	second,
+	third,
+)
 ```
 
 ## Rewrite
@@ -99,17 +89,17 @@ l.Page("/hello", func(ctx aero.Context) error {
 Rewrites the internal URI before routing happens:
 
 ```go
-app.Rewrite(func(ctx *aero.RewriteContext) {
-	uri := ctx.Path()
+app.Rewrite(func(ctx aero.RewriteContext) {
+	path := ctx.Path()
 
-	if uri == "/old" {
+	if path == "/old" {
 		ctx.SetPath("/new")
 		return
 	}
 })
 ```
 
-Only one rewrite function can be active in an Application. Multiple calls will overwrite the previously registered function.
+Calling `Rewrite` multiple times will register multiple callbacks.
 
 ## OnStart
 
@@ -132,6 +122,26 @@ app.OnEnd(func() {
 ```
 
 ## Sessions
+
+You can use `HasSession` and `Session().Modified()` to store the sessions in your preferred backend storage. I highly recommend using [nano](https://github.com/aerogo/nano) with [session-store-nano](https://github.com/aerogo/session-store-nano) for maximum performance.
+
+```go
+app.Use(func(next aero.Context) aero.Handler {
+	return func(ctx aero.Context) error {
+		// Handle the request first.
+		err := next(ctx)
+
+		// If the session was modified, store it.
+		if ctx.HasSession() && ctx.Session().Modified() {
+			ctx.App.Sessions.Store.Set(ctx.Session().ID(), ctx.Session())
+		}
+		
+		return err
+	}
+})
+```
+
+Here is an example of a view counter in an actual request handler:
 
 ```go
 app.Get("/", func(ctx aero.Context) error {
@@ -189,10 +199,12 @@ On the client side, use [EventSource](https://developer.mozilla.org/en-US/docs/W
 
 ## AddPushCondition
 
-By default, HTTP/2 push will only trigger on `text/html` responses. You can add more conditions via:
+By default, HTTP/2 push for your [configured resources](Configuration.md#push) will only trigger on `text/html` response via `ctx.HTML`. You can add more conditions via:
 
 ```go
-// Do not use HTTP/2 push on service worker requests
+// Do not use HTTP/2 push on service worker requests.
+// Our service worker will add "X-Source" to the headers.
+// Skip the push when the header is set.
 app.AddPushCondition(func(ctx aero.Context) bool {
 	return ctx.Request().Header().Get("X-Source") != "service-worker"
 })

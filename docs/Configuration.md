@@ -1,6 +1,6 @@
 # Configuration
 
-Aero allows you to configure your server via a `config.json` file in your project directory.
+Aero allows you to configure your server via a `config.json` file in your project directory. You can also set these directly via `app.Config` in your code.
 
 ## ports
 
@@ -27,7 +27,7 @@ Enable or disable gzip compression for your server. Setting this to `true` is hi
 
 ## push
 
-Specifies resources that you want to be HTTP/2 pushed on first load:
+Specifies resources that you want to be HTTP/2 pushed on `ctx.HTML` responses:
 
 ```json
 {
@@ -38,32 +38,4 @@ Specifies resources that you want to be HTTP/2 pushed on first load:
 }
 ```
 
-These resources will be queried by synthetic requests to your request handler and then pushed to the client.
-
-# Guidelines
-
-The following fields are not required, but can be set via the configuration. There is a small chance that they will be removed in a future update.
-
-## title
-
-Your public website title.
-
-```json
-{
-	"title": "My Awesome Site!"
-}
-```
-
-This is only a guideline. The actual field value is not used anywhere in the server code. The field is usually used in template files.
-
-## domain
-
-The website domain you are using in production.
-
-```json
-{
-	"domain": "example.com"
-}
-```
-
-This is only a guideline. The actual field value is not used anywhere in the server code.
+These resources will be queried by synthetic requests to your request handler and then pushed to the client asynchronously.

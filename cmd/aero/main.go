@@ -13,15 +13,10 @@ import (
 	"github.com/akyoto/color"
 )
 
-var newApp bool
-
-// Shell flags
-func init() {
-	flag.BoolVar(&newApp, "new", false, "Creates the basic structure of a new app in an empty directory")
-}
-
 // Main
 func main() {
+	var newApp bool
+	flag.BoolVar(&newApp, "new", false, "Creates the basic structure of a new app in an empty directory")
 	flag.Parse()
 
 	if !newApp {

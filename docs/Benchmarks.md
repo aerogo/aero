@@ -5,19 +5,23 @@
 Simple routing test on an Intel Core i7-8700 using `Hello World` as output:
 
 ```text
-λ wrk -t8 -c400 -d2s http://localhost:4000/
+λ wrk -t12 -c400 -d2s http://localhost:4000/
 Running 2s test @ http://localhost:4000/
-  8 threads and 400 connections
+  12 threads and 400 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     1.41ms    1.42ms  14.88ms   86.18%
-    Req/Sec    42.17k     5.43k   59.83k    71.25%
-  672784 requests in 2.05s, 102.66MB read
-Requests/sec: 327837.89
-Transfer/sec:     50.02MB
+    Latency     1.39ms    1.57ms  22.91ms   87.67%
+    Req/Sec    30.91k     5.23k   55.90k    76.11%
+  761999 requests in 2.08s, 93.02MB read
+Requests/sec: 365857.04
+Transfer/sec:     44.66MB
 ```
 
 ## Conclusion
 
-Considering that it's possible to reach over 300k requests per second on a decent CPU, Aero which is based on `net/http` from the standard library will not be the bottleneck of your website.
+Aero's router uses a highly optimized radix tree and is therefore extremely fast.
+I am fairly confident that it is the fastest router implementation out there.
 
-Databases and complex application logic are usually the bigger factor in your web application performance.
+Using the GitHub API routes as benchmark data, Aero finishes the benchmark in 15 microseconds while [echo](https://github.com/labstack/echo) requires 25 microseconds.
+
+Nonetheless, databases and complex application logic are the most important factor in your web application performance.
+You shouldn't need to worry about Aero's routing performance at all.

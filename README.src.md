@@ -21,14 +21,15 @@ Now you can build your app with `go build` or use the [run](https://github.com/a
 ## Features
 
 - Makes it easy to reach top scores in [Lighthouse](https://developers.google.com/web/tools/lighthouse/), [PageSpeed](https://developers.google.com/speed/pagespeed/insights/) and [Mozilla Observatory](https://observatory.mozilla.org/)
-- Optimized for high latency environments (mobile networks)
+- Optimized for low latency
+- Best practices are enabled by default
 - Has a strict content security policy
 - Calculates E-Tags out of the box
 - Saves you a lot of bandwidth using browser cache validation
 - Finishes ongoing requests on a server shutdown
-- Automatic HTTP/2 push of configured resources
+- Lets you push resources via HTTP/2
 - Supports session data with custom stores
-- Allows pushing live data to the client via SSE
+- Allows sending live data to the client via SSE
 - Provides http and https listener
 - Shows response time and size for your routes
 - Can run standalone without `nginx` babysitting it
@@ -57,8 +58,8 @@ Now you can build your app with `go build` or use the [run](https://github.com/a
 ## Others
 
 - [Slides for OWDDM talk](https://docs.google.com/presentation/d/166I69goLEVuvuFeeRfUu8c5lwl2_HAeSi2SZyzIuEKg/edit) (Osaka, May 2018)
-- [Discord community](https://discord.gg/V3y4xTY)
-- [Twitter account](https://twitter.com/aeroframework)
-- [Facebook page](https://www.facebook.com/aeroframework/)
+- [Discord](https://discord.gg/V3y4xTY)
+- [Twitter](https://twitter.com/aeroframework)
+- [Facebook](https://www.facebook.com/aeroframework/)
 
 {go:footer}
