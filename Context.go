@@ -89,11 +89,6 @@ func (ctx *context) Bytes(body []byte) error {
 		return errors.New("Request interrupted by the client")
 	}
 
-	// HTTP/2 push
-	if len(ctx.app.Config.Push) > 0 {
-		ctx.pushResources()
-	}
-
 	// Small response
 	if len(body) < gzipThreshold {
 		ctx.response.WriteHeader(ctx.status)
@@ -200,7 +195,13 @@ func (ctx *context) HTML(html string) error {
 	}
 
 	if len(ctx.app.Config.Push) > 0 {
-		ctx.pushResources()
+		err := ctx.pushResources()
+
+		if err != nil {
+			for _, callback := range ctx.app.onError {
+				callback(ctx, err)
+			}
+		}
 	}
 
 	return ctx.String(html)
@@ -432,14 +433,14 @@ func (ctx *context) Push(paths ...string) error {
 
 // pushResources will start pushing the given resources
 // in a separate goroutine if the defined conditions are true.
-func (ctx *context) pushResources(paths ...string) {
+func (ctx *context) pushResources(paths ...string) error {
 	for _, pushCondition := range ctx.app.pushConditions {
 		if !pushCondition(ctx) {
-			return
+			return nil
 		}
 	}
 
-	ctx.Push(paths...)
+	return ctx.Push(paths...)
 }
 
 // HasSession indicates whether the client has a valid session or not.
