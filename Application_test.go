@@ -1,6 +1,7 @@
 package aero_test
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -16,41 +17,16 @@ import (
 
 const helloWorld = "Hello World"
 
-func TestApplicationGet(t *testing.T) {
-	app := aero.New()
-
-	app.Get("/", func(ctx aero.Context) error {
-		return ctx.Text(helloWorld)
-	})
-
-	response := test(app, "/")
-
-	c := qt.New(t)
-	c.Assert(response.Code, qt.Equals, http.StatusOK)
-	c.Assert(response.Body.String(), qt.Equals, helloWorld)
-}
-
-func TestApplicationPost(t *testing.T) {
-	app := aero.New()
-
-	app.Post("/", func(ctx aero.Context) error {
-		return ctx.Text(helloWorld)
-	})
-
-	request := httptest.NewRequest("POST", "/", nil)
-	response := httptest.NewRecorder()
-	app.ServeHTTP(response, request)
-
-	c := qt.New(t)
-	c.Assert(response.Code, qt.Equals, http.StatusOK)
-	c.Assert(response.Body.String(), qt.Equals, helloWorld)
-}
-
 func TestApplicationAny(t *testing.T) {
 	app := aero.New()
+	c := qt.New(t)
 
 	app.Any("/", func(ctx aero.Context) error {
 		return ctx.Text(helloWorld)
+	})
+
+	app.OnError(func(ctx aero.Context, err error) {
+		c.Fatal(err)
 	})
 
 	methods := []string{
@@ -61,30 +37,22 @@ func TestApplicationAny(t *testing.T) {
 	}
 
 	for _, method := range methods {
+		// Test existing route
 		request := httptest.NewRequest(method, "/", nil)
 		response := httptest.NewRecorder()
 		app.ServeHTTP(response, request)
 
-		c := qt.New(t)
 		c.Assert(response.Code, qt.Equals, http.StatusOK)
 		c.Assert(response.Body.String(), qt.Equals, helloWorld)
+
+		// Test non-existing route
+		request = httptest.NewRequest(method, "/404", nil)
+		response = httptest.NewRecorder()
+		app.ServeHTTP(response, request)
+
+		c.Assert(response.Code, qt.Equals, http.StatusNotFound)
+		c.Assert(response.Body.String(), qt.Equals, "")
 	}
-}
-
-func TestApplicationDelete(t *testing.T) {
-	app := aero.New()
-
-	app.Delete("/", func(ctx aero.Context) error {
-		return ctx.Text(helloWorld)
-	})
-
-	request := httptest.NewRequest("DELETE", "/", nil)
-	response := httptest.NewRecorder()
-	app.ServeHTTP(response, request)
-
-	c := qt.New(t)
-	c.Assert(response.Code, qt.Equals, http.StatusOK)
-	c.Assert(response.Body.String(), qt.Equals, helloWorld)
 }
 
 func TestApplicationRewrite(t *testing.T) {
@@ -216,4 +184,19 @@ func test(app *aero.Application, route string) *httptest.ResponseRecorder {
 	app.ServeHTTP(response, request)
 
 	return response
+}
+
+func TestApplicationOnError(t *testing.T) {
+	app := aero.New()
+	c := qt.New(t)
+
+	app.Get("/", func(ctx aero.Context) error {
+		return errors.New("something happened")
+	})
+
+	app.OnError(func(ctx aero.Context, err error) {
+		c.Assert(err.Error(), qt.Equals, "something happened")
+	})
+
+	test(app, "/")
 }
