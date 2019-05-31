@@ -42,7 +42,7 @@ func TestApplicationPost(t *testing.T) {
 	})
 
 	// Get response
-	request, _ := http.NewRequest("POST", "/", nil)
+	request := httptest.NewRequest("POST", "/", nil)
 	response := httptest.NewRecorder()
 	app.ServeHTTP(response, request)
 
@@ -61,7 +61,7 @@ func TestApplicationDelete(t *testing.T) {
 	})
 
 	// Get response
-	request, _ := http.NewRequest("DELETE", "/", nil)
+	request := httptest.NewRequest("DELETE", "/", nil)
 	response := httptest.NewRecorder()
 	app.ServeHTTP(response, request)
 
@@ -198,7 +198,7 @@ func TestApplicationUnavailablePort(t *testing.T) {
 // getResponse sends a request to the server and returns the response.
 func getResponse(app *aero.Application, route string) *httptest.ResponseRecorder {
 	// Create request
-	request, _ := http.NewRequest("GET", route, nil)
+	request := httptest.NewRequest("GET", route, nil)
 	request.Header.Set("Accept-Encoding", "gzip")
 
 	// Get response

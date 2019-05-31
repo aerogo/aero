@@ -202,8 +202,7 @@ func (ctx *Context) HTML(html string) error {
 
 // Text sends a plain text string.
 func (ctx *Context) Text(text string) error {
-	// Don't set text/plain as a content type here
-	// because it's actually faster to let net/http do it.
+	ctx.response.Header().Set(contentTypeHeader, contentTypePlainText)
 	return ctx.String(text)
 }
 
@@ -359,9 +358,9 @@ func (ctx *Context) SetURI(b string) {
 
 // Get retrieves an URL parameter.
 func (ctx *Context) Get(param string) string {
-	for index, name := range ctx.paramNames {
-		if name == param {
-			return ctx.paramValues[index]
+	for i := 0; i < ctx.paramCount; i++ {
+		if ctx.paramNames[i] == param {
+			return ctx.paramValues[i]
 		}
 	}
 

@@ -26,7 +26,7 @@ func TestBody(t *testing.T) {
 
 	// Get response
 	requestBody := []byte(helloWorld)
-	request, _ := http.NewRequest("GET", "/", buffer.NewReader(requestBody))
+	request := httptest.NewRequest("GET", "/", buffer.NewReader(requestBody))
 	response := httptest.NewRecorder()
 	app.ServeHTTP(response, request)
 
@@ -47,7 +47,7 @@ func TestBodyJSON(t *testing.T) {
 
 	// Get response
 	requestBody := []byte(`{"key":"value"}`)
-	request, _ := http.NewRequest("GET", "/", buffer.NewReader(requestBody))
+	request := httptest.NewRequest("GET", "/", buffer.NewReader(requestBody))
 	response := httptest.NewRecorder()
 	app.ServeHTTP(response, request)
 
@@ -82,7 +82,7 @@ func TestBodyErrors(t *testing.T) {
 	})
 
 	// No body
-	request, _ := http.NewRequest("GET", "/", nil)
+	request := httptest.NewRequest("GET", "/", nil)
 	response := httptest.NewRecorder()
 	app.ServeHTTP(response, request)
 	c.Assert(response.Code, qt.Equals, http.StatusOK)

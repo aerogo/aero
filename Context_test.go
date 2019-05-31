@@ -148,7 +148,7 @@ func TestContextSessionInvalidCookie(t *testing.T) {
 	})
 
 	// Create request
-	request, _ := http.NewRequest("GET", "/", nil)
+	request := httptest.NewRequest("GET", "/", nil)
 	request.Header.Set("Accept-Encoding", "gzip")
 	request.Header.Set("Cookie", "sid=invalid")
 
@@ -432,7 +432,7 @@ func TestContextUserAgent(t *testing.T) {
 	})
 
 	// Create request
-	request, _ := http.NewRequest("GET", "/", nil)
+	request := httptest.NewRequest("GET", "/", nil)
 	request.Header.Set("User-Agent", agent)
 
 	// Get response
@@ -475,7 +475,7 @@ func TestContextRedirect(t *testing.T) {
 
 func TestContextQuery(t *testing.T) {
 	app := aero.New()
-	search := "Luke Skywalker"
+	search := "Skywalker"
 	c := qt.New(t)
 
 	// Register route
@@ -485,7 +485,7 @@ func TestContextQuery(t *testing.T) {
 	})
 
 	// Create request
-	request, _ := http.NewRequest("GET", "/?search="+search, nil)
+	request := httptest.NewRequest("GET", "/?search="+search, nil)
 
 	// Get response
 	response := httptest.NewRecorder()
@@ -542,7 +542,7 @@ func TestContextEventStream(t *testing.T) {
 	})
 
 	// Create request
-	request, _ := http.NewRequest("GET", "/", nil)
+	request := httptest.NewRequest("GET", "/", nil)
 	ctx, cancel := context.WithTimeout(context.TODO(), 100*time.Millisecond)
 	defer cancel()
 	request = request.WithContext(ctx)
@@ -587,7 +587,7 @@ func BenchmarkHelloWorld(b *testing.B) {
 	})
 
 	// Create request
-	request, _ := http.NewRequest("GET", "/", nil)
+	request := httptest.NewRequest("GET", "/", nil)
 	handler := app
 
 	// Benchmark settings
@@ -613,7 +613,7 @@ func BenchmarkBigResponse(b *testing.B) {
 	})
 
 	// Create request
-	request, _ := http.NewRequest("GET", "/", nil)
+	request := httptest.NewRequest("GET", "/", nil)
 	request.Header.Set("Accept-Encoding", "gzip")
 	handler := app
 
@@ -631,7 +631,7 @@ func BenchmarkBigResponse(b *testing.B) {
 }
 
 func TestBigResponseNoGzip(t *testing.T) {
-	text := strings.Repeat("HelloWorld", 1000000)
+	text := strings.Repeat("HelloWorld", 1000)
 	app := aero.New()
 
 	// Register route
@@ -640,7 +640,7 @@ func TestBigResponseNoGzip(t *testing.T) {
 	})
 
 	// Create request and record response
-	request, _ := http.NewRequest("GET", "/", nil)
+	request := httptest.NewRequest("GET", "/", nil)
 	response := httptest.NewRecorder()
 	app.ServeHTTP(response, request)
 
@@ -651,7 +651,7 @@ func TestBigResponseNoGzip(t *testing.T) {
 }
 
 func TestBigResponse304(t *testing.T) {
-	text := strings.Repeat("HelloWorld", 1000000)
+	text := strings.Repeat("HelloWorld", 1000)
 	app := aero.New()
 	c := qt.New(t)
 
@@ -661,7 +661,7 @@ func TestBigResponse304(t *testing.T) {
 	})
 
 	// Create request and record response
-	request, _ := http.NewRequest("GET", "/", nil)
+	request := httptest.NewRequest("GET", "/", nil)
 	response := httptest.NewRecorder()
 	app.ServeHTTP(response, request)
 	etag := response.Header().Get("ETag")

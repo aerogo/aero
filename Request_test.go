@@ -17,7 +17,7 @@ func TestRequest(t *testing.T) {
 		request := ctx.Request()
 
 		c.Assert(request.Header(), qt.Not(qt.Equals), "")
-		c.Assert(request.Host(), qt.Equals, "")
+		c.Assert(request.Host(), qt.Equals, "example.com")
 		c.Assert(request.Protocol(), qt.Equals, "HTTP/1.1")
 		c.Assert(request.Method(), qt.Equals, "GET")
 		c.Assert(request.URL(), qt.Not(qt.IsNil))

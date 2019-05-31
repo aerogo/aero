@@ -236,68 +236,54 @@ func (app *Application) ServeHTTP(response http.ResponseWriter, request *http.Re
 		return
 	}
 
-	err := ctx.handler(ctx)
+	if len(app.middleware) == 0 {
+		err := ctx.handler(ctx)
 
-	if err != nil {
-		color.Red(err.Error())
+		if err != nil {
+			color.Red(err.Error())
 
-		for _, callback := range app.onError {
-			callback(err)
+			for _, callback := range app.onError {
+				callback(err)
+			}
+		}
+
+		app.contextPool.Put(ctx)
+		return
+	}
+
+	// The last part of the call chain will send the actual response.
+	lastPartOfCallChain := func() {
+		err := ctx.handler(ctx)
+
+		if err != nil {
+			color.Red(err.Error())
+
+			for _, callback := range app.onError {
+				callback(err)
+			}
 		}
 	}
 
+	// Declare the type of generateNext so that we can define it recursively in the next part.
+	var generateNext func(index int) func()
+
+	// Create a function that returns a bound function next()
+	// which can be used as the 2nd parameter in the call chain.
+	generateNext = func(index int) func() {
+		if index == len(app.middleware) {
+			return lastPartOfCallChain
+		}
+
+		return func() {
+			app.middleware[index](ctx, generateNext(index+1))
+		}
+	}
+
+	// Start the call chain
+	generateNext(0)()
+
+	// Put context back into the pool for reuse
 	app.contextPool.Put(ctx)
-
-	// handle := app.Router.Find(request.Method, request.RequestURI)
-
-	// if len(app.middleware) == 0 {
-	// 	err := handle(ctx)
-
-	// 	if err != nil {
-	// 		color.Red(err.Error())
-
-	// 		for _, callback := range app.onError {
-	// 			callback(err)
-	// 		}
-	// 	}
-
-	// 	app.contextPool.Put(ctx)
-	// 	return
-	// }
-
-	// // The last part of the call chain will send the actual response.
-	// lastPartOfCallChain := func() {
-	// 	err := handle(ctx)
-
-	// 	if err != nil {
-	// 		color.Red(err.Error())
-
-	// 		for _, callback := range app.onError {
-	// 			callback(err)
-	// 		}
-	// 	}
-	// }
-
-	// // Declare the type of generateNext so that we can define it recursively in the next part.
-	// var generateNext func(index int) func()
-
-	// // Create a function that returns a bound function next()
-	// // which can be used as the 2nd parameter in the call chain.
-	// generateNext = func(index int) func() {
-	// 	if index == len(app.middleware) {
-	// 		return lastPartOfCallChain
-	// 	}
-
-	// 	return func() {
-	// 		app.middleware[index](ctx, generateNext(index+1))
-	// 	}
-	// }
-
-	// // Start the call chain
-	// generateNext(0)()
-
-	// // // Put it back into the pool for reuse
-	// app.contextPool.Put(ctx)
 }
 
 // Test tests the given URI paths when the application starts.
