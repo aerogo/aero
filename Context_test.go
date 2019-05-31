@@ -84,11 +84,6 @@ func TestContextURI(t *testing.T) {
 	response := getResponse(app, "/uri")
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
 	c.Assert(response.Body.String(), qt.Contains, "/uri")
-
-	// Verify response with modified URI
-	response = getResponse(app, "/set-uri")
-	c.Assert(response.Code, qt.Equals, http.StatusOK)
-	c.Assert(response.Body.String(), qt.Contains, "/hello")
 }
 
 func TestContextRealIP(t *testing.T) {
@@ -261,7 +256,6 @@ func TestContextContentTypes(t *testing.T) {
 
 	// Get responses
 	responseJSON := getResponse(app, "/json")
-	responseJSONLD := getResponse(app, "/jsonld")
 	responseHTML := getResponse(app, "/html")
 	responseCSS := getResponse(app, "/css")
 	responseJS := getResponse(app, "/js")
@@ -275,11 +269,6 @@ func TestContextContentTypes(t *testing.T) {
 	c.Assert(responseJSON.Code, qt.Equals, http.StatusOK)
 	c.Assert(responseJSON.Body.Bytes(), qt.DeepEquals, json)
 	c.Assert(responseJSON.Header().Get("Content-Type"), qt.Matches, `application/json.*`)
-
-	// Verify JSON+LD response
-	c.Assert(responseJSONLD.Code, qt.Equals, http.StatusOK)
-	c.Assert(responseJSONLD.Body.Bytes(), qt.DeepEquals, json)
-	c.Assert(responseJSONLD.Header().Get("Content-Type"), qt.Matches, `application/ld\+json.*`)
 
 	// Verify HTML response
 	c.Assert(responseHTML.Code, qt.Equals, http.StatusOK)

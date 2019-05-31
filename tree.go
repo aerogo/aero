@@ -199,6 +199,14 @@ func (node *tree) append(path string, data dataType) {
 		// If it's a static route we are adding,
 		// just add the remainder as a normal node.
 		if paramStart == -1 {
+			// If the node itself doesn't have a prefix (root node),
+			// don't add a child and use the node itself.
+			if node.prefix == "" {
+				node.prefix = path
+				node.data = data
+				return
+			}
+
 			child := &tree{
 				prefix: path,
 				data:   data,
@@ -239,6 +247,15 @@ func (node *tree) append(path string, data dataType) {
 		}
 
 		// We know there's a parameter, but not directly at the start.
+
+		// If the node itself doesn't have a prefix (root node),
+		// don't add a child and use the node itself.
+		if node.prefix == "" {
+			node.prefix = path[:paramStart]
+			path = path[paramStart:]
+			continue
+		}
+
 		// Add a normal node with the path before the parameter start.
 		child := &tree{
 			prefix: path[:paramStart],
@@ -270,8 +287,7 @@ func (node *tree) end(path string, data dataType, i int, offset int) (*tree, int
 	// No fitting children found, does this node even contain a prefix yet?
 	// If no prefix is set, this is the starting node.
 	if node.prefix == "" {
-		node.prefix = path
-		node.data = data
+		node.append(path[i:], data)
 		return node, offset, controlStop
 	}
 

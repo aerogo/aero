@@ -246,7 +246,7 @@ func (app *Application) ServeHTTP(response http.ResponseWriter, request *http.Re
 	ctx.session = nil
 	ctx.paramCount = 0
 
-	app.router.Lookup(request.Method, request.RequestURI, ctx)
+	app.router.Lookup(request.Method, request.URL.Path, ctx)
 
 	if ctx.handler == nil {
 		response.WriteHeader(http.StatusNotFound)
