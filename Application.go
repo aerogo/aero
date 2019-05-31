@@ -35,7 +35,7 @@ type Application struct {
 	router         Router
 	routeTests     map[string][]string
 	start          time.Time
-	rewrite        func(*RewriteContext)
+	rewrite        []func(RewriteContext)
 	middleware     []Middleware
 	pushConditions []func(Context) bool
 	onStart        []func()
@@ -222,14 +222,15 @@ func (app *Application) OnError(callback func(Context, error)) {
 	app.onError = append(app.onError, callback)
 }
 
-// AddPushCondition registers a callback to be executed when an HTTP/2 push happens.
+// AddPushCondition registers a callback that
+// needs to return true before an HTTP/2 push happens.
 func (app *Application) AddPushCondition(test func(Context) bool) {
 	app.pushConditions = append(app.pushConditions, test)
 }
 
-// Rewrite sets the URL rewrite function.
-func (app *Application) Rewrite(rewrite func(*RewriteContext)) {
-	app.rewrite = rewrite
+// Rewrite adds a URL path rewrite function.
+func (app *Application) Rewrite(rewrite func(RewriteContext)) {
+	app.rewrite = append(app.rewrite, rewrite)
 }
 
 // StartTime returns the time the application started.
@@ -245,6 +246,10 @@ func (app *Application) ServeHTTP(response http.ResponseWriter, request *http.Re
 	ctx.response = response
 	ctx.session = nil
 	ctx.paramCount = 0
+
+	for _, rewrite := range app.rewrite {
+		rewrite(ctx)
+	}
 
 	app.router.Lookup(request.Method, request.URL.Path, ctx)
 

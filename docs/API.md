@@ -52,7 +52,7 @@ app.Use(func(ctx aero.Context, next func()) {
 
 It is possible to implement a firewall by filtering requests and denying the `next()` call as the final request handler is also part of the middleware chain. Not calling `next()` means the request will not be handled.
 
-It is also possible to create a request / access log that includes performance timings as shown in the code example above. `ctx.URI()` will retrieve the URI of the request. Note that the actual logging happens **after** the request has been dealt with (`next()` call) which makes it efficient.
+It is also possible to create a request / access log that includes performance timings as shown in the code example above. `ctx.Path()` will retrieve the URI of the request. Note that the actual logging happens **after** the request has been dealt with (`next()` call) which makes it efficient.
 
 ## Multiple middleware
 
@@ -100,10 +100,10 @@ Rewrites the internal URI before routing happens:
 
 ```go
 app.Rewrite(func(ctx *aero.RewriteContext) {
-	uri := ctx.URI()
+	uri := ctx.Path()
 
 	if uri == "/old" {
-		ctx.SetURI("/new")
+		ctx.SetPath("/new")
 		return
 	}
 })

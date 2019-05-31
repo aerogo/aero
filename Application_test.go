@@ -80,9 +80,9 @@ func TestApplicationRewrite(t *testing.T) {
 	})
 
 	// Rewrite route
-	app.Rewrite(func(ctx *aero.RewriteContext) {
-		if ctx.URI() == "/" {
-			ctx.SetURI("/hello")
+	app.Rewrite(func(ctx aero.RewriteContext) {
+		if ctx.Path() == "/" {
+			ctx.SetPath("/hello")
 			return
 		}
 	})

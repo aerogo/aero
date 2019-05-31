@@ -46,6 +46,7 @@ type Context interface {
 	IP() string
 	JavaScript(string) error
 	JSON(interface{}) error
+	Path() string
 	Query(param string) string
 	ReadAll(io.Reader) error
 	Reader(io.Reader) error
@@ -59,7 +60,6 @@ type Context interface {
 	Status() int
 	String(string) error
 	Text(string) error
-	URI() string
 }
 
 // context represents a request & response context.
@@ -311,9 +311,14 @@ func (ctx *context) Error(statusCode int, errorList ...interface{}) error {
 	return errors.New(message)
 }
 
-// URI returns the relative path, e.g. /blog/post/123.
-func (ctx *context) URI() string {
+// Path returns the relative path, e.g. /blog/post/123.
+func (ctx *context) Path() string {
 	return ctx.request.URL.Path
+}
+
+// SetPath sets the relative path, e.g. /blog/post/123.
+func (ctx *context) SetPath(path string) {
+	ctx.request.URL.Path = path
 }
 
 // Get retrieves an URL parameter.

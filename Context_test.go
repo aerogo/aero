@@ -76,7 +76,7 @@ func TestContextURI(t *testing.T) {
 
 	// Register route
 	app.Get("/uri", func(ctx aero.Context) error {
-		return ctx.Text(ctx.URI())
+		return ctx.Text(ctx.Path())
 	})
 
 	// Verify response with read-only URI
