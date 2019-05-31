@@ -11,7 +11,7 @@ import (
 func TestApplicationMiddleware(t *testing.T) {
 	app := aero.New()
 
-	// Register route
+
 	app.Get("/", func(ctx aero.Context) error {
 		return ctx.Text(helloWorld)
 	})
@@ -27,10 +27,10 @@ func TestApplicationMiddleware(t *testing.T) {
 	// Bind middleware because we are not going to call app.Run
 	app.BindMiddleware()
 
-	// Get response
+
 	response := test(app, "/")
 
-	// Verify response
+
 	c := qt.New(t)
 	c.Assert(response.Code, qt.Equals, http.StatusPermanentRedirect)
 	c.Assert(response.Body.String(), qt.Equals, helloWorld)
@@ -39,7 +39,7 @@ func TestApplicationMiddleware(t *testing.T) {
 func TestApplicationMiddlewareSkipNext(t *testing.T) {
 	app := aero.New()
 
-	// Register route
+
 	app.Get("/", func(ctx aero.Context) error {
 		return ctx.Text(helloWorld)
 	})
@@ -55,10 +55,10 @@ func TestApplicationMiddlewareSkipNext(t *testing.T) {
 	// Bind middleware because we are not going to call app.Run
 	app.BindMiddleware()
 
-	// Get response
+
 	response := test(app, "/")
 
-	// Verify response
+
 	c := qt.New(t)
 	c.Assert(response.Body.String(), qt.Equals, "")
 }

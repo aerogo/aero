@@ -19,15 +19,12 @@ const helloWorld = "Hello World"
 func TestApplicationGet(t *testing.T) {
 	app := aero.New()
 
-	// Register route
 	app.Get("/", func(ctx aero.Context) error {
 		return ctx.Text(helloWorld)
 	})
 
-	// Get response
 	response := test(app, "/")
 
-	// Verify response
 	c := qt.New(t)
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
 	c.Assert(response.Body.String(), qt.Equals, helloWorld)
@@ -36,36 +33,55 @@ func TestApplicationGet(t *testing.T) {
 func TestApplicationPost(t *testing.T) {
 	app := aero.New()
 
-	// Register route
 	app.Post("/", func(ctx aero.Context) error {
 		return ctx.Text(helloWorld)
 	})
 
-	// Get response
 	request := httptest.NewRequest("POST", "/", nil)
 	response := httptest.NewRecorder()
 	app.ServeHTTP(response, request)
 
-	// Verify response
 	c := qt.New(t)
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
 	c.Assert(response.Body.String(), qt.Equals, helloWorld)
 }
 
+func TestApplicationAny(t *testing.T) {
+	app := aero.New()
+
+	app.Any("/", func(ctx aero.Context) error {
+		return ctx.Text(helloWorld)
+	})
+
+	methods := []string{
+		"GET",
+		"POST",
+		"PUT",
+		"DELETE",
+	}
+
+	for _, method := range methods {
+		request := httptest.NewRequest(method, "/", nil)
+		response := httptest.NewRecorder()
+		app.ServeHTTP(response, request)
+
+		c := qt.New(t)
+		c.Assert(response.Code, qt.Equals, http.StatusOK)
+		c.Assert(response.Body.String(), qt.Equals, helloWorld)
+	}
+}
+
 func TestApplicationDelete(t *testing.T) {
 	app := aero.New()
 
-	// Register route
 	app.Delete("/", func(ctx aero.Context) error {
 		return ctx.Text(helloWorld)
 	})
 
-	// Get response
 	request := httptest.NewRequest("DELETE", "/", nil)
 	response := httptest.NewRecorder()
 	app.ServeHTTP(response, request)
 
-	// Verify response
 	c := qt.New(t)
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
 	c.Assert(response.Body.String(), qt.Equals, helloWorld)
@@ -74,7 +90,6 @@ func TestApplicationDelete(t *testing.T) {
 func TestApplicationRewrite(t *testing.T) {
 	app := aero.New()
 
-	// Register route
 	app.Get("/hello", func(ctx aero.Context) error {
 		return ctx.Text(helloWorld)
 	})
@@ -87,10 +102,8 @@ func TestApplicationRewrite(t *testing.T) {
 		}
 	})
 
-	// Get response
 	response := test(app, "/")
 
-	// Verify response
 	c := qt.New(t)
 	c.Assert(response.Code, qt.Equals, http.StatusOK)
 	c.Assert(response.Body.String(), qt.Equals, helloWorld)
@@ -143,7 +156,6 @@ func TestApplicationRunHTTPS(t *testing.T) {
 	app.Security.Load("testdata/fullchain.pem", "testdata/privkey.pem")
 	c := qt.New(t)
 
-	// Register route
 	app.Get("/", func(ctx aero.Context) error {
 		return ctx.HTML(helloWorld)
 	})

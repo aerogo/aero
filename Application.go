@@ -134,12 +134,17 @@ func (app *Application) Delete(path string, handler Handler) {
 	app.router.Add(http.MethodDelete, path, handler)
 }
 
+// Put registers your function to be called when the given PUT path has been requested.
+func (app *Application) Put(path string, handler Handler) {
+	app.router.Add(http.MethodPut, path, handler)
+}
+
 // Any registers your function to be called with any http method.
 func (app *Application) Any(path string, handler Handler) {
 	app.Get(path, handler)
 	app.Post(path, handler)
 	app.Delete(path, handler)
-	// TODO: Add more...
+	app.Put(path, handler)
 }
 
 // Run starts your application.
