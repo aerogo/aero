@@ -230,7 +230,6 @@ func (app *Application) ServeHTTP(response http.ResponseWriter, request *http.Re
 	// Create context.
 	ctx := app.contextPool.Get().(*Context)
 	ctx.StatusCode = http.StatusOK
-	ctx.Data = nil
 	ctx.request = request
 	ctx.response = response
 	ctx.session = nil

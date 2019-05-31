@@ -47,10 +47,6 @@ type Context struct {
 	// Status code
 	StatusCode int
 
-	// Custom data
-	// TODO: Find a cleaner solution to deal with this?
-	Data interface{}
-
 	// net/http
 	request  *http.Request
 	response http.ResponseWriter
