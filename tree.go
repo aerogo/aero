@@ -32,7 +32,7 @@ type dataType = func(Context) error
 type tree struct {
 	prefix    string
 	data      dataType
-	children  [256]*tree
+	children  [224]*tree
 	parameter *tree
 	wildcard  *tree
 	kind      byte
@@ -134,11 +134,11 @@ func (node *tree) split(index int, path string, data dataType) {
 	// Just assign the data for the existing node and store a single child node.
 	if path == "" {
 		node.data = data
-		node.children[splitNode.prefix[0]] = splitNode
+		node.children[splitNode.prefix[0]-32] = splitNode
 		return
 	}
 
-	node.children[splitNode.prefix[0]] = splitNode
+	node.children[splitNode.prefix[0]-32] = splitNode
 
 	// Create new nodes with the remaining path
 	node.append(path, data)
@@ -163,16 +163,16 @@ func (node *tree) reset(prefix string) {
 	node.parameter = nil
 	node.wildcard = nil
 	node.kind = 0
-	node.children = [256]*tree{}
+	node.children = [224]*tree{}
 }
 
 // addTrailingSlash adds a trailing slash with the same data.
 func (node *tree) addTrailingSlash(data dataType) {
-	if strings.HasSuffix(node.prefix, "/") || node.children[separator] != nil || node.kind == wildcard {
+	if strings.HasSuffix(node.prefix, "/") || node.children[separator-32] != nil || node.kind == wildcard {
 		return
 	}
 
-	node.children[separator] = &tree{
+	node.children[separator-32] = &tree{
 		prefix: "/",
 		data:   data,
 	}
@@ -204,7 +204,7 @@ func (node *tree) append(path string, data dataType) {
 				data:   data,
 			}
 
-			node.children[path[0]] = child
+			node.children[path[0]-32] = child
 			child.addTrailingSlash(data)
 			return
 		}
@@ -250,7 +250,7 @@ func (node *tree) append(path string, data dataType) {
 			child.data = node.data
 		}
 
-		node.children[path[0]] = child
+		node.children[path[0]-32] = child
 		node = child
 		path = path[paramStart:]
 	}
@@ -259,7 +259,7 @@ func (node *tree) append(path string, data dataType) {
 // end is called when the node was fully parsed
 // and needs to decide the next control flow.
 func (node *tree) end(path string, data dataType, i int, offset int) (*tree, int, controlFlow) {
-	child := node.children[path[i]]
+	child := node.children[path[i]-32]
 
 	if child != nil {
 		node = child
@@ -309,7 +309,7 @@ func (node *tree) find(path string, ctx *context) {
 
 			if path[i] == separator {
 				ctx.addParameter(node.prefix, path[offset:i])
-				node = node.children[separator]
+				node = node.children[separator-32]
 				offset = i
 				goto next
 			}
@@ -339,7 +339,7 @@ func (node *tree) find(path string, ctx *context) {
 					lastWildcardOffset = i
 				}
 
-				child := node.children[path[i]]
+				child := node.children[path[i]-32]
 
 				if child != nil {
 					node = child
