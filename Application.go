@@ -119,6 +119,14 @@ func (app *Application) Delete(path string, handle Handle) {
 	app.Router.Add(http.MethodDelete, path, handle)
 }
 
+// Any registers your function to be called with any http method.
+func (app *Application) Any(path string, handle Handle) {
+	app.Get(path, handle)
+	app.Post(path, handle)
+	app.Delete(path, handle)
+	// TODO: Add more...
+}
+
 // Run starts your application.
 func (app *Application) Run() {
 	app.ListenAndServe()
