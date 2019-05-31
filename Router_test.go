@@ -44,6 +44,7 @@ func TestRouterParameters(t *testing.T) {
 	router.Add("GET", "/user/:id", page)
 	router.Add("GET", "/user/:id/profile", page)
 	router.Add("GET", "/user/:id/profile/:theme", page)
+	router.Add("GET", "/user/:id/:something", page)
 	router.Add("GET", "/admin", page)
 
 	router.Print("GET")
@@ -53,6 +54,7 @@ func TestRouterParameters(t *testing.T) {
 	c.Assert(router.Find("GET", "/user/123"), qt.Not(qt.IsNil))
 	c.Assert(router.Find("GET", "/user/123/profile"), qt.Not(qt.IsNil))
 	c.Assert(router.Find("GET", "/user/123/profile/black"), qt.Not(qt.IsNil))
+	c.Assert(router.Find("GET", "/user/123/456"), qt.Not(qt.IsNil))
 	c.Assert(router.Find("GET", "/admin"), qt.Not(qt.IsNil))
 }
 

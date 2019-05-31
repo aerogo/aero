@@ -69,7 +69,7 @@ func (node *tree) add(path string, data dataType) {
 					goto begin
 				}
 
-				node.make(path[i:], data)
+				node.append(path[i:], data)
 				return
 			}
 
@@ -118,7 +118,7 @@ func (node *tree) add(path string, data dataType) {
 					goto begin
 				}
 
-				node.make(path[i:], data)
+				node.append(path[i:], data)
 				return
 			}
 
@@ -174,8 +174,8 @@ func (node *tree) split(index int, path string, data dataType) {
 	node.children[newNode.prefix[0]] = newNode
 }
 
-// make appends the given path to the tree.
-func (node *tree) make(path string, data dataType) {
+// append appends the given path to the tree.
+func (node *tree) append(path string, data dataType) {
 	// At this point, all we know is that somewhere
 	// in the remaining string we have parameters.
 	// node: /user|
@@ -186,10 +186,10 @@ func (node *tree) make(path string, data dataType) {
 			return
 		}
 
-		paramStart := strings.Index(path, ":")
+		paramStart := strings.IndexByte(path, parameter)
 
 		if paramStart == -1 {
-			paramStart = strings.Index(path, "*")
+			paramStart = strings.IndexByte(path, wildcard)
 		}
 
 		// If it's a static route we are adding,
@@ -205,7 +205,7 @@ func (node *tree) make(path string, data dataType) {
 		// If we're directly in front of a parameter,
 		// add a parameter node.
 		if paramStart == 0 {
-			paramEnd := strings.Index(path, "/")
+			paramEnd := strings.IndexByte(path, separator)
 
 			if paramEnd == -1 {
 				paramEnd = len(path)
