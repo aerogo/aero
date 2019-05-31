@@ -102,8 +102,7 @@ func (node *tree) add(path string, data dataType) {
 					goto next
 				}
 
-				// No fitting children found, does this node even contain a prefix yet?
-				// If no prefix is set, this is the starting node.
+				// If no prefix is set, this is the root node.
 				if node.prefix == "" {
 					node.prefix = path
 					node.data = data
@@ -159,19 +158,13 @@ func (node *tree) split(index int, path string, data dataType) {
 		return
 	}
 
-	// Create new node with the remaining string in the path
-	newNode := &tree{
-		prefix: path,
-		data:   data,
-	}
-
 	// The existing data must be removed
 	node.data = nil
-
-	// Assign new child nodes
 	node.children = [256]*tree{}
 	node.children[splitNode.prefix[0]] = splitNode
-	node.children[newNode.prefix[0]] = newNode
+
+	// Create new nodes with the remaining path
+	node.append(path, data)
 }
 
 // append appends the given path to the tree.
