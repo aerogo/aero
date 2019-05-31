@@ -16,7 +16,6 @@ const (
 	contentTypeCSS                = "text/css; charset=utf-8"
 	contentTypeJavaScript         = "application/javascript; charset=utf-8"
 	contentTypeJSON               = "application/json; charset=utf-8"
-	contentTypeJSONLD             = "application/ld+json; charset=utf-8"
 	contentTypePlainText          = "text/plain; charset=utf-8"
 	contentTypeEventStream        = "text/event-stream; charset=utf-8"
 	contentTypeSVG                = "image/svg+xml"

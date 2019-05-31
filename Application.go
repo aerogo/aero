@@ -2,7 +2,7 @@ package aero
 
 import (
 	"compress/gzip"
-	"context"
+	stdContext "context"
 	"fmt"
 	"io"
 	"net"
@@ -37,12 +37,13 @@ type Application struct {
 	start          time.Time
 	rewrite        func(*RewriteContext)
 	middleware     []Middleware
-	pushConditions []func(*Context) bool
+	pushConditions []func(Context) bool
 	onStart        []func()
 	onShutdown     []func()
-	onPush         []func(*Context)
+	onPush         []func(Context)
 	onError        []func(error)
 	stop           chan os.Signal
+	pushOptions    http.PushOptions
 	contextPool    sync.Pool
 	gzipWriterPool sync.Pool
 	serversMutex   sync.Mutex
@@ -84,10 +85,20 @@ func New() *Application {
 		"form-action":  "'self'",
 	})
 
+	// Context pool
 	app.contextPool.New = func() interface{} {
-		return &Context{
+		return &context{
 			app: app,
 		}
+	}
+
+	// Push options describes the headers that are sent
+	// to our server to retrieve the push response.
+	app.pushOptions = http.PushOptions{
+		Method: "GET",
+		Header: http.Header{
+			acceptEncodingHeader: []string{"gzip"},
+		},
 	}
 
 	// Configuration
@@ -201,7 +212,7 @@ func (app *Application) OnEnd(callback func()) {
 }
 
 // OnPush registers a callback to be executed when an HTTP/2 push happens.
-func (app *Application) OnPush(callback func(*Context)) {
+func (app *Application) OnPush(callback func(Context)) {
 	app.onPush = append(app.onPush, callback)
 }
 
@@ -211,7 +222,7 @@ func (app *Application) OnError(callback func(error)) {
 }
 
 // AddPushCondition registers a callback to be executed when an HTTP/2 push happens.
-func (app *Application) AddPushCondition(test func(*Context) bool) {
+func (app *Application) AddPushCondition(test func(Context) bool) {
 	app.pushConditions = append(app.pushConditions, test)
 }
 
@@ -228,7 +239,7 @@ func (app *Application) StartTime() time.Time {
 // ServeHTTP responds to the given request.
 func (app *Application) ServeHTTP(response http.ResponseWriter, request *http.Request) {
 	// Create context.
-	ctx := app.contextPool.Get().(*Context)
+	ctx := app.contextPool.Get().(*context)
 	ctx.status = http.StatusOK
 	ctx.request = request
 	ctx.response = response
@@ -369,7 +380,7 @@ func shutdown(server *http.Server) {
 	}
 
 	// Add a timeout to the server shutdown
-	ctx, cancel := context.WithTimeout(context.Background(), 250*time.Millisecond)
+	ctx, cancel := stdContext.WithTimeout(stdContext.Background(), 250*time.Millisecond)
 	defer cancel()
 
 	// Shut down server

@@ -12,12 +12,12 @@ func TestApplicationMiddleware(t *testing.T) {
 	app := aero.New()
 
 	// Register route
-	app.Get("/", func(ctx *aero.Context) error {
+	app.Get("/", func(ctx aero.Context) error {
 		return ctx.Text(helloWorld)
 	})
 
 	// Register middleware
-	app.Use(func(ctx *aero.Context, next func()) {
+	app.Use(func(ctx aero.Context, next func()) {
 		ctx.SetStatus(http.StatusPermanentRedirect)
 		next()
 	})
@@ -35,12 +35,12 @@ func TestApplicationMiddlewareSkipNext(t *testing.T) {
 	app := aero.New()
 
 	// Register route
-	app.Get("/", func(ctx *aero.Context) error {
+	app.Get("/", func(ctx aero.Context) error {
 		return ctx.Text(helloWorld)
 	})
 
 	// Register middleware
-	app.Use(func(ctx *aero.Context, next func()) {
+	app.Use(func(ctx aero.Context, next func()) {
 		// Not calling next() will stop the response chain
 	})
 

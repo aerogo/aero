@@ -11,7 +11,7 @@ app := aero.New()
 ## Routing
 
 ```go
-app.Get("/hello", func(ctx *aero.Context) error {
+app.Get("/hello", func(ctx aero.Context) error {
 	return ctx.Text("Hello World")
 })
 ```
@@ -19,7 +19,7 @@ app.Get("/hello", func(ctx *aero.Context) error {
 ## Routing with parameters
 
 ```go
-app.Get("/hello/:person", func(ctx *aero.Context) error {
+app.Get("/hello/:person", func(ctx aero.Context) error {
 	return ctx.Text("Hello " + ctx.Get("person"))
 })
 ```
@@ -27,7 +27,7 @@ app.Get("/hello/:person", func(ctx *aero.Context) error {
 ## Shortcuts for different content types
 
 ```go
-app.Get("/", func(ctx *aero.Context) error {
+app.Get("/", func(ctx aero.Context) error {
 	// Choose one:
 	return ctx.HTML("<html></html>")
 	return ctx.CSS("body{}")
@@ -42,7 +42,7 @@ app.Get("/", func(ctx *aero.Context) error {
 You can run middleware functions that are executed after the routing phase and before the final request handler.
 
 ```go
-app.Use(func(ctx *aero.Context, next func()) {
+app.Use(func(ctx aero.Context, next func()) {
 	start := time.Now()
 	next()
 	responseTime := time.Since(start)
@@ -83,13 +83,13 @@ The server package by itself does **not** concern itself with the implementation
 l := layout.New(app)
 
 // Specify the page frame
-l.Render = func(ctx *aero.Context, content string) string {
+l.Render = func(ctx aero.Context, content string) string {
 	return "<html><head></head><body>" + content + "</body></html>"
 }
 
 // Register the /hello page.
 // The page without the page frame will be available under /_/hello
-l.Page("/hello", func(ctx *aero.Context) error {
+l.Page("/hello", func(ctx aero.Context) error {
 	return ctx.HTML("<h1>Hello</h1>")
 })
 ```
@@ -134,7 +134,7 @@ app.OnEnd(func() {
 ## Sessions
 
 ```go
-app.Get("/", func(ctx *aero.Context) error {
+app.Get("/", func(ctx aero.Context) error {
 	// Load number of views
 	views := 0
 	storedViews := ctx.Session().Get("views")
@@ -161,7 +161,7 @@ app.Get("/", func(ctx *aero.Context) error {
 Using an event stream, you can push data from your server at any time to your client.
 
 ```go
-app.Get("/events/live", func(ctx *aero.Context) error {
+app.Get("/events/live", func(ctx aero.Context) error {
 	stream := aero.NewEventStream()
 
 	go func() {
@@ -193,7 +193,7 @@ By default, HTTP/2 push will only trigger on `text/html` responses. You can add 
 
 ```go
 // Do not use HTTP/2 push on service worker requests
-app.AddPushCondition(func(ctx *aero.Context) bool {
+app.AddPushCondition(func(ctx aero.Context) bool {
 	return ctx.Request().Header().Get("X-Source") != "service-worker"
 })
 ```

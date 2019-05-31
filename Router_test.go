@@ -18,7 +18,7 @@ type routeDefinition struct {
 func TestRouterStatic(t *testing.T) {
 	c := qt.New(t)
 	router := aero.Router{}
-	page := func(*aero.Context) error { return nil }
+	page := func(aero.Context) error { return nil }
 	c.Assert(router.Find("GET", "/"), qt.IsNil)
 
 	router.Add("GET", "/", page)
@@ -33,7 +33,7 @@ func TestRouterStatic(t *testing.T) {
 func TestRouterParameters(t *testing.T) {
 	c := qt.New(t)
 	router := aero.Router{}
-	page := func(*aero.Context) error { return nil }
+	page := func(aero.Context) error { return nil }
 
 	router.Add("GET", "/", page)
 	router.Add("GET", "/user", page)
@@ -55,7 +55,7 @@ func TestRouterParameters(t *testing.T) {
 func TestRouterWildcards(t *testing.T) {
 	c := qt.New(t)
 	router := aero.Router{}
-	page := func(*aero.Context) error { return nil }
+	page := func(aero.Context) error { return nil }
 
 	router.Add("GET", "/", page)
 	router.Add("GET", "/images", page)
@@ -73,7 +73,7 @@ func TestRouterWildcards(t *testing.T) {
 func TestRouterStaticData(t *testing.T) {
 	router := aero.Router{}
 	routes := loadRoutes("testdata/router/static.txt")
-	page := func(*aero.Context) error { return nil }
+	page := func(aero.Context) error { return nil }
 
 	for _, route := range routes {
 		router.Add(route.method, route.path, page)
@@ -89,7 +89,7 @@ func TestRouterStaticData(t *testing.T) {
 func TestRouterGitHubData(t *testing.T) {
 	router := aero.Router{}
 	routes := loadRoutes("testdata/router/github.txt")
-	page := func(*aero.Context) error { return nil }
+	page := func(aero.Context) error { return nil }
 
 	for _, route := range routes {
 		router.Add(route.method, route.path, page)
@@ -105,7 +105,7 @@ func TestRouterGitHubData(t *testing.T) {
 func BenchmarkStaticRoutes(b *testing.B) {
 	router := aero.Router{}
 	routes := loadRoutes("testdata/router/static.txt")
-	page := func(*aero.Context) error { return nil }
+	page := func(aero.Context) error { return nil }
 
 	for _, route := range routes {
 		router.Add(route.method, route.path, page)
@@ -136,7 +136,7 @@ func BenchmarkStaticRoutes(b *testing.B) {
 func BenchmarkGitHubRoutes(b *testing.B) {
 	router := aero.Router{}
 	routes := loadRoutes("testdata/router/github.txt")
-	page := func(*aero.Context) error { return nil }
+	page := func(aero.Context) error { return nil }
 
 	for _, route := range routes {
 		router.Add(route.method, route.path, page)

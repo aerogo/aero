@@ -1,6 +1,7 @@
 package aero
 
 import (
+	stdContext "context"
 	"net/http"
 	"net/url"
 )
@@ -15,6 +16,11 @@ func (request Request) Body() Body {
 	return Body{
 		reader: request.inner.Body,
 	}
+}
+
+// Context returns the request context.
+func (request Request) Context() stdContext.Context {
+	return request.inner.Context()
 }
 
 // Header represents the request headers.

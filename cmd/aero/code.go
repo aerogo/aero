@@ -12,7 +12,7 @@ func main() {
 }
 
 func configure(app *aero.Application) *aero.Application {
-	app.Get("/", func(ctx *aero.Context) error {
+	app.Get("/", func(ctx aero.Context) error {
 		return ctx.Text("Hello World")
 	})
 

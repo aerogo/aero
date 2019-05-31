@@ -17,7 +17,7 @@ func TestBody(t *testing.T) {
 	c := qt.New(t)
 
 	// Register route
-	app.Get("/", func(ctx *aero.Context) error {
+	app.Get("/", func(ctx aero.Context) error {
 		body := ctx.Request().Body()
 		c.Assert(ctx.Request().Body().Reader(), qt.Not(qt.IsNil))
 		bodyText, _ := body.String()
@@ -39,7 +39,7 @@ func TestBodyJSON(t *testing.T) {
 	app := aero.New()
 
 	// Register route
-	app.Get("/", func(ctx *aero.Context) error {
+	app.Get("/", func(ctx aero.Context) error {
 		body := ctx.Request().Body()
 		obj, _ := body.JSONObject()
 		return ctx.Text(fmt.Sprint(obj["key"]))
@@ -61,7 +61,7 @@ func TestBodyErrors(t *testing.T) {
 	app := aero.New()
 	c := qt.New(t)
 
-	app.Get("/", func(ctx *aero.Context) error {
+	app.Get("/", func(ctx aero.Context) error {
 		body := ctx.Request().Body()
 		bodyJSON, err := body.JSON()
 
@@ -71,7 +71,7 @@ func TestBodyErrors(t *testing.T) {
 		return ctx.Text(helloWorld)
 	})
 
-	app.Get("/json-object", func(ctx *aero.Context) error {
+	app.Get("/json-object", func(ctx aero.Context) error {
 		body := ctx.Request().Body()
 		bodyJSONObject, err := body.JSONObject()
 

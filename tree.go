@@ -26,7 +26,7 @@ const (
 )
 
 // dataType specifies which type of data we are going to save for each node.
-type dataType = func(*Context) error
+type dataType = func(Context) error
 
 // tree represents a radix tree.
 type tree struct {
@@ -288,7 +288,7 @@ func (node *tree) end(path string, data dataType, i int, offset int) (*tree, int
 }
 
 // find finds the data for the given path and assigns it to ctx.handler, if available.
-func (node *tree) find(path string, ctx *Context) {
+func (node *tree) find(path string, ctx *context) {
 	var (
 		i                  int
 		offset             int

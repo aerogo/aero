@@ -13,7 +13,7 @@ func TestRequest(t *testing.T) {
 	app := aero.New()
 	c := qt.New(t)
 
-	app.Get("/", func(ctx *aero.Context) error {
+	app.Get("/", func(ctx aero.Context) error {
 		request := ctx.Request()
 
 		c.Assert(request.Header(), qt.Not(qt.Equals), "")
@@ -33,7 +33,7 @@ func TestRequest(t *testing.T) {
 func TestMultiRequest(t *testing.T) {
 	app := aero.New()
 
-	app.Get("/", func(ctx *aero.Context) error {
+	app.Get("/", func(ctx aero.Context) error {
 		return ctx.Text(strings.Repeat(helloWorld, 1000))
 	})
 
