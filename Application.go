@@ -253,11 +253,11 @@ func (app *Application) StartTime() time.Time {
 }
 
 // NewContext returns a new context from the pool.
-func (app *Application) NewContext(request *http.Request, response http.ResponseWriter) *context {
+func (app *Application) NewContext(req *http.Request, res http.ResponseWriter) *context {
 	ctx := app.contextPool.Get().(*context)
 	ctx.status = http.StatusOK
-	ctx.request = request
-	ctx.response = response
+	ctx.request = request{inner: req}
+	ctx.response = response{inner: res}
 	ctx.session = nil
 	ctx.paramCount = 0
 	return ctx

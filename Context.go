@@ -68,8 +68,8 @@ type Context interface {
 type context struct {
 	app         *Application
 	status      int
-	request     *http.Request
-	response    http.ResponseWriter
+	request     request
+	response    response
 	session     *session.Session
 	handler     Handler
 	paramNames  [maxParams]string
@@ -92,8 +92,8 @@ func (ctx *context) Bytes(body []byte) error {
 
 	// Small response
 	if len(body) < gzipThreshold {
-		ctx.response.WriteHeader(ctx.status)
-		_, err := ctx.response.Write(body)
+		ctx.response.inner.WriteHeader(ctx.status)
+		_, err := ctx.response.inner.Write(body)
 		return err
 	}
 
@@ -101,15 +101,15 @@ func (ctx *context) Bytes(body []byte) error {
 	etag := ETag(body)
 
 	// If client cache is up to date, send 304 with no response body.
-	clientETag := ctx.request.Header.Get(ifNoneMatchHeader)
+	clientETag := ctx.request.Header(ifNoneMatchHeader)
 
 	if etag == clientETag {
-		ctx.response.WriteHeader(304)
+		ctx.response.inner.WriteHeader(304)
 		return nil
 	}
 
 	// Set ETag
-	header := ctx.response.Header()
+	header := ctx.response.inner.Header()
 	header.Set(etagHeader, etag)
 
 	// Content type
@@ -124,21 +124,21 @@ func (ctx *context) Bytes(body []byte) error {
 	}
 
 	// No GZip?
-	clientSupportsGZip := strings.Contains(ctx.request.Header.Get(acceptEncodingHeader), "gzip")
+	clientSupportsGZip := strings.Contains(ctx.request.Header(acceptEncodingHeader), "gzip")
 
 	if !ctx.app.Config.GZip || !clientSupportsGZip || !canCompress(contentType) {
 		header.Set(contentLengthHeader, strconv.Itoa(len(body)))
-		ctx.response.WriteHeader(ctx.status)
-		_, err := ctx.response.Write(body)
+		ctx.response.inner.WriteHeader(ctx.status)
+		_, err := ctx.response.inner.Write(body)
 		return err
 	}
 
 	// GZip
 	header.Set(contentEncodingHeader, contentEncodingGzip)
-	ctx.response.WriteHeader(ctx.status)
+	ctx.response.inner.WriteHeader(ctx.status)
 
 	// Write response body
-	writer := ctx.app.acquireGZipWriter(ctx.response)
+	writer := ctx.app.acquireGZipWriter(ctx.response.inner)
 	_, err := writer.Write(body)
 	writer.Close()
 
@@ -160,7 +160,7 @@ func (ctx *context) createSessionCookie() {
 		Path:     "/",
 	}
 
-	http.SetCookie(ctx.response, &sessionCookie)
+	http.SetCookie(ctx.response.inner, &sessionCookie)
 }
 
 // addParameter adds a new parameter to the context.
@@ -172,7 +172,7 @@ func (ctx *context) addParameter(name string, value string) {
 
 // JSON encodes the object to a JSON string and responds.
 func (ctx *context) JSON(value interface{}) error {
-	ctx.response.Header().Set(contentTypeHeader, contentTypeJSON)
+	ctx.response.SetHeader(contentTypeHeader, contentTypeJSON)
 	bytes, err := jsoniter.Marshal(value)
 
 	if err != nil {
@@ -184,7 +184,7 @@ func (ctx *context) JSON(value interface{}) error {
 
 // HTML sends a HTML string.
 func (ctx *context) HTML(html string) error {
-	header := ctx.response.Header()
+	header := ctx.response.inner.Header()
 	header.Set(contentTypeHeader, contentTypeHTML)
 	header.Set(contentTypeOptionsHeader, contentTypeOptions)
 	header.Set(xssProtectionHeader, xssProtection)
@@ -216,13 +216,13 @@ func (ctx *context) Close() {
 
 // CSS sends a style sheet.
 func (ctx *context) CSS(text string) error {
-	ctx.response.Header().Set(contentTypeHeader, contentTypeCSS)
+	ctx.response.SetHeader(contentTypeHeader, contentTypeCSS)
 	return ctx.String(text)
 }
 
 // JavaScript sends a script.
 func (ctx *context) JavaScript(code string) error {
-	ctx.response.Header().Set(contentTypeHeader, contentTypeJavaScript)
+	ctx.response.SetHeader(contentTypeHeader, contentTypeJavaScript)
 	return ctx.String(code)
 }
 
@@ -231,7 +231,7 @@ func (ctx *context) EventStream(stream *EventStream) error {
 	defer close(stream.Closed)
 
 	// Flush
-	flusher, ok := ctx.response.(http.Flusher)
+	flusher, ok := ctx.response.inner.(http.Flusher)
 
 	if !ok {
 		return ctx.Error(http.StatusNotImplemented, "Flushing not supported")
@@ -244,12 +244,12 @@ func (ctx *context) EventStream(stream *EventStream) error {
 	defer cancel()
 
 	// Send headers
-	header := ctx.response.Header()
+	header := ctx.response.inner.Header()
 	header.Set(contentTypeHeader, contentTypeEventStream)
 	header.Set(cacheControlHeader, "no-cache")
 	header.Set("Connection", "keep-alive")
 	header.Set("Access-Control-Allow-Origin", "*")
-	ctx.response.WriteHeader(200)
+	ctx.response.inner.WriteHeader(200)
 
 	for {
 		select {
@@ -272,7 +272,7 @@ func (ctx *context) EventStream(stream *EventStream) error {
 					}
 				}
 
-				fmt.Fprintf(ctx.response, "event: %s\ndata: %s\n\n", event.Name, data)
+				fmt.Fprintf(ctx.response.inner, "event: %s\ndata: %s\n\n", event.Name, data)
 				flusher.Flush()
 			}
 		}
@@ -286,10 +286,10 @@ func (ctx *context) File(file string) error {
 
 	// Cache control header
 	if isMedia(contentType) {
-		ctx.response.Header().Set(cacheControlHeader, cacheControlMedia)
+		ctx.response.SetHeader(cacheControlHeader, cacheControlMedia)
 	}
 
-	http.ServeFile(ctx.response, ctx.request, file)
+	http.ServeFile(ctx.response.inner, ctx.request.inner, file)
 	return nil
 }
 
@@ -325,14 +325,14 @@ func (ctx *context) Error(statusCode int, errorList ...interface{}) error {
 	return errors.New(message)
 }
 
-// Path returns the relative path, e.g. /blog/post/123.
+// Path returns the relative request path, e.g. /blog/post/123.
 func (ctx *context) Path() string {
-	return ctx.request.URL.Path
+	return ctx.request.inner.URL.Path
 }
 
-// SetPath sets the relative path, e.g. /blog/post/123.
+// SetPath sets the relative request path, e.g. /blog/post/123.
 func (ctx *context) SetPath(path string) {
-	ctx.request.URL.Path = path
+	ctx.request.inner.URL.Path = path
 }
 
 // Get retrieves an URL parameter.
@@ -353,14 +353,14 @@ func (ctx *context) GetInt(param string) (int, error) {
 
 // IP tries to determine the real IP address of the client.
 func (ctx *context) IP() string {
-	return strings.Trim(realIP(ctx.request), "[]")
+	return strings.Trim(realIP(ctx.request.inner), "[]")
 }
 
 // RemoteIP returns the remote IP address. This will return
 // the IP address of the endpoint (e.g. a proxy) but not
 // necessarily the IP of the client.
 func (ctx *context) RemoteIP() string {
-	remoteIP := ctx.request.RemoteAddr
+	remoteIP := ctx.request.inner.RemoteAddr
 
 	// If there is a colon in the remote address,
 	// remove the port number.
@@ -373,14 +373,14 @@ func (ctx *context) RemoteIP() string {
 
 // Query retrieves the value for the given URL query parameter.
 func (ctx *context) Query(param string) string {
-	return ctx.request.URL.Query().Get(param)
+	return ctx.request.inner.URL.Query().Get(param)
 }
 
 // Redirect redirects to the given URL.
 func (ctx *context) Redirect(status int, url string) error {
 	ctx.status = status
-	ctx.response.Header().Set("Location", url)
-	ctx.response.WriteHeader(ctx.status)
+	ctx.response.SetHeader("Location", url)
+	ctx.response.inner.WriteHeader(ctx.status)
 	return nil
 }
 
@@ -415,7 +415,7 @@ func canCompress(contentType string) bool {
 // Push will start pushing the given resources in a separate goroutine.
 func (ctx *context) Push(paths ...string) error {
 	// Check if we can push
-	pusher, ok := ctx.response.(http.Pusher)
+	pusher, ok := ctx.response.inner.(http.Pusher)
 
 	if !ok {
 		return nil
@@ -456,7 +456,7 @@ func (ctx *context) HasSession() bool {
 		return true
 	}
 
-	cookie, err := ctx.request.Cookie("sid")
+	cookie, err := ctx.request.inner.Cookie("sid")
 
 	if err != nil || !session.IsValidID(cookie.Value) {
 		return false
@@ -488,7 +488,7 @@ func (ctx *context) ReadAll(reader io.Reader) error {
 // E-Tags will not be generated for the content and compression will not be applied.
 // Use this function if your reader contains huge amounts of data.
 func (ctx *context) Reader(reader io.Reader) error {
-	_, err := io.Copy(ctx.response, reader)
+	_, err := io.Copy(ctx.response.inner, reader)
 	return err
 }
 
@@ -496,7 +496,7 @@ func (ctx *context) Reader(reader io.Reader) error {
 // E-Tags will not be generated for the content and compression will not be applied.
 // Use this function if your reader contains huge amounts of data.
 func (ctx *context) ReadSeeker(reader io.ReadSeeker) error {
-	http.ServeContent(ctx.response, ctx.request, "", time.Time{}, reader)
+	http.ServeContent(ctx.response.inner, ctx.request.inner, "", time.Time{}, reader)
 	return nil
 }
 
@@ -518,16 +518,12 @@ func (ctx *context) String(body string) error {
 
 // Request returns the HTTP request.
 func (ctx *context) Request() Request {
-	return &request{
-		inner: ctx.request,
-	}
+	return &ctx.request
 }
 
 // Response returns the HTTP response.
 func (ctx *context) Response() Response {
-	return &response{
-		inner: ctx.response,
-	}
+	return &ctx.response
 }
 
 // Session returns the session of the context or creates and caches a new session.
@@ -538,7 +534,7 @@ func (ctx *context) Session() *session.Session {
 	}
 
 	// Check if the client has a session cookie already.
-	cookie, err := ctx.request.Cookie("sid")
+	cookie, err := ctx.request.inner.Cookie("sid")
 
 	if err == nil {
 		sid := cookie.Value
@@ -564,6 +560,6 @@ func (ctx *context) Session() *session.Session {
 
 // Text sends a plain text string.
 func (ctx *context) Text(text string) error {
-	ctx.response.Header().Set(contentTypeHeader, contentTypePlainText)
+	ctx.response.SetHeader(contentTypeHeader, contentTypePlainText)
 	return ctx.String(text)
 }
