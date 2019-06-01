@@ -24,6 +24,14 @@ app.Get("/hello/:person", func(ctx aero.Context) error {
 })
 ```
 
+## Routing with wildcards
+
+```go
+app.Get("/images/*file", func(ctx aero.Context) error {
+	return ctx.String(ctx.Get("file"))
+})
+```
+
 ## Shortcuts for different content types
 
 ```go
