@@ -256,8 +256,8 @@ func (app *Application) StartTime() time.Time {
 func (app *Application) NewContext(req *http.Request, res http.ResponseWriter) *context {
 	ctx := app.contextPool.Get().(*context)
 	ctx.status = http.StatusOK
-	ctx.request = request{inner: req}
-	ctx.response = response{inner: res}
+	ctx.request.inner = req
+	ctx.response.inner = res
 	ctx.session = nil
 	ctx.paramCount = 0
 	return ctx
