@@ -15,5 +15,5 @@ require (
 	github.com/json-iterator/go v1.1.6
 	github.com/tdewolff/parse v2.3.4+incompatible
 	github.com/tdewolff/test v1.0.0 // indirect
-	golang.org/x/sys v0.0.0-20190531132440-69e3a3a65b5b // indirect
+	golang.org/x/sys v0.0.0-20190531175056-4c3a928424d2 // indirect
 )
