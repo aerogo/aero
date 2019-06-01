@@ -9,7 +9,6 @@ import (
 	"mime"
 	"net"
 	"net/http"
-	"net/http/httptest"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -60,7 +59,6 @@ type Context interface {
 	Response() Response
 	Session() *session.Session
 	SetStatus(int)
-	Simulate(Handler) (*httptest.ResponseRecorder, error)
 	Status() int
 	String(string) error
 	Text(string) error
@@ -510,25 +508,6 @@ func (ctx *context) Status() int {
 // SetStatus sets the HTTP status.
 func (ctx *context) SetStatus(status int) {
 	ctx.status = status
-}
-
-// Simulate simulates the request with the given handler and returns the response.
-func (ctx *context) Simulate(handler Handler) (*httptest.ResponseRecorder, error) {
-	// Set up fake state
-	originalResponse := ctx.response
-	originalAcceptEncoding := ctx.request.Header.Get("Accept-Encoding")
-	ctx.request.Header.Set("Accept-Encoding", "")
-
-	// Record the response
-	response := httptest.NewRecorder()
-	ctx.response = response
-	err := handler(ctx)
-
-	// Restore old state
-	ctx.request.Header.Set("Accept-Encoding", originalAcceptEncoding)
-	ctx.response = originalResponse
-
-	return response, err
 }
 
 // String responds either with raw text or gzipped if the
