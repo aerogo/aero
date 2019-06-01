@@ -18,10 +18,8 @@ Transfer/sec:     44.66MB
 
 ## Conclusion
 
-Aero's router uses highly optimized [radix trees](https://en.wikipedia.org/wiki/Radix_tree) and is therefore extremely fast.
-I am fairly confident that it is the fastest router implementation out there.
+Aero's router uses highly optimized [radix trees](https://en.wikipedia.org/wiki/Radix_tree) with 0 allocations during route lookup and is therefore extremely fast. I am fairly confident that it is the fastest router implementation out there.
 
-Using the GitHub API routes as benchmark data, Aero finishes the benchmark in 15 microseconds while [echo](https://github.com/labstack/echo) requires 25 microseconds for the same routes.
+Using the GitHub API routes as benchmark data, Aero finishes the benchmark in 22 microseconds while [echo](https://github.com/labstack/echo) requires 25 microseconds for the same routes (13% slower).
 
-Nonetheless, databases and complex application logic are the most important factor in your web application performance.
-You shouldn't need to worry about Aero's routing performance at all.
+Nonetheless, databases and complex application logic are the most important factor in your web application performance. You shouldn't need to worry about Aero's routing performance at all.

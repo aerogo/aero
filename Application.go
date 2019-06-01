@@ -147,6 +147,11 @@ func (app *Application) Any(path string, handler Handler) {
 	app.Put(path, handler)
 }
 
+// Router returns the router used by the application.
+func (app *Application) Router() *Router {
+	return &app.router
+}
+
 // Run starts your application.
 func (app *Application) Run() {
 	app.BindMiddleware()
@@ -247,14 +252,20 @@ func (app *Application) StartTime() time.Time {
 	return app.start
 }
 
-// ServeHTTP responds to the given request.
-func (app *Application) ServeHTTP(response http.ResponseWriter, request *http.Request) {
+// NewContext returns a new context from the pool.
+func (app *Application) NewContext(request *http.Request, response http.ResponseWriter) *context {
 	ctx := app.contextPool.Get().(*context)
 	ctx.status = http.StatusOK
 	ctx.request = request
 	ctx.response = response
 	ctx.session = nil
 	ctx.paramCount = 0
+	return ctx
+}
+
+// ServeHTTP responds to the given request.
+func (app *Application) ServeHTTP(response http.ResponseWriter, request *http.Request) {
+	ctx := app.NewContext(request, response)
 
 	for _, rewrite := range app.rewrite {
 		rewrite(ctx)
@@ -264,7 +275,7 @@ func (app *Application) ServeHTTP(response http.ResponseWriter, request *http.Re
 
 	if ctx.handler == nil {
 		response.WriteHeader(http.StatusNotFound)
-		app.contextPool.Put(ctx)
+		ctx.Close()
 		return
 	}
 
@@ -276,7 +287,7 @@ func (app *Application) ServeHTTP(response http.ResponseWriter, request *http.Re
 		}
 	}
 
-	app.contextPool.Put(ctx)
+	ctx.Close()
 }
 
 // Test tests the given URI paths when the application starts.

@@ -35,6 +35,7 @@ const maxParams = 16
 type Context interface {
 	App() *Application
 	Bytes([]byte) error
+	Close()
 	CSS(string) error
 	Get(string) string
 	GetInt(string) (int, error)
@@ -205,6 +206,12 @@ func (ctx *context) HTML(html string) error {
 	}
 
 	return ctx.String(html)
+}
+
+// Close frees up resources and is automatically called
+// in the ServeHTTP part of the web server.
+func (ctx *context) Close() {
+	ctx.app.contextPool.Put(ctx)
 }
 
 // CSS sends a style sheet.
