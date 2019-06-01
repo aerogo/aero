@@ -39,4 +39,6 @@ Transfer/sec:     44.66MB
 
 ## Conclusion
 
-Aero's router uses highly optimized [radix trees](https://en.wikipedia.org/wiki/Radix_tree) with 0 allocations during route lookup and is therefore extremely fast. I am fairly confident that it is the fastest router implementation out there. It also supports smart route prioritization (static > parameter > wildcard) and therefore doesn't lack any of the common features.
+Aero's router uses highly optimized [radix trees](https://en.wikipedia.org/wiki/Radix_tree) with 0 allocations during route lookup and is therefore extremely fast. I am fairly confident that it is the fastest router implementation out there.
+
+It also supports smart route prioritization: **Static > Parameter > Wildcard**.
