@@ -1,6 +1,7 @@
 package aero
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 )
@@ -21,6 +22,11 @@ type Router struct {
 // Add registers a new handler for the given method and path.
 func (router *Router) Add(method string, path string, handler Handler) {
 	tree := router.selectTree(method)
+
+	if tree == nil {
+		panic(fmt.Errorf("Unknown HTTP method: '%s'", method))
+	}
+
 	tree.add(path, handler)
 }
 
