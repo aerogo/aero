@@ -462,14 +462,14 @@ func (ctx *context) Push(paths ...string) error {
 
 // pushResources will start pushing the given resources
 // in a separate goroutine if the defined conditions are true.
-func (ctx *context) pushResources(paths ...string) error {
+func (ctx *context) pushResources() error {
 	for _, pushCondition := range ctx.app.pushConditions {
 		if !pushCondition(ctx) {
 			return nil
 		}
 	}
 
-	return ctx.Push(paths...)
+	return ctx.Push(ctx.app.Config.Push...)
 }
 
 // HasSession indicates whether the client has a valid session or not.
