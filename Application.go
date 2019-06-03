@@ -260,6 +260,7 @@ func (app *Application) NewContext(req *http.Request, res http.ResponseWriter) *
 	ctx.response.inner = res
 	ctx.session = nil
 	ctx.paramCount = 0
+	ctx.modifierCount = 0
 	return ctx
 }
 
@@ -337,7 +338,7 @@ func (app *Application) TestRoute(route string, uri string) {
 		linter.Begin(route, uri)
 	}
 
-	response, _ := client.Get("http://localhost:" + strconv.Itoa(app.Config.Ports.HTTP) + uri).End()
+	response, _ := client.Get("http://localhost:"+strconv.Itoa(app.Config.Ports.HTTP)+uri).Header("Accept", "text/html,*/*").End()
 
 	for _, linter := range app.Linters {
 		linter.End(route, uri, response)
