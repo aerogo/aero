@@ -26,7 +26,7 @@ const (
 )
 
 // dataType specifies which type of data we are going to save for each node.
-type dataType = func(Context) error
+type dataType = Handler
 
 // tree represents a radix tree.
 type tree struct {

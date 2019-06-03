@@ -366,18 +366,9 @@ func (app *Application) acquireGZipWriter(response io.Writer) *gzip.Writer {
 func (app *Application) BindMiddleware() {
 	app.router.Each(func(node *tree) {
 		if node.data != nil {
-			node.data = app.chain(node.data)
+			node.data = node.data.Bind(app.middleware...)
 		}
 	})
-}
-
-// chain chains all the middleware and returns a new handler.
-func (app *Application) chain(handler Handler) Handler {
-	for i := len(app.middleware) - 1; i >= 0; i-- {
-		handler = app.middleware[i](handler)
-	}
-
-	return handler
 }
 
 // createServer creates an http server instance.
