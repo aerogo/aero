@@ -20,19 +20,25 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-// This should be close to the MTU size of a TCP packet.
-// Regarding performance it makes no sense to compress smaller files.
-// Bandwidth can be saved however the savings are minimal for small files
-// and the overhead of compressing can lead up to a 75% reduction
-// in server speed under high load. Therefore in this case
-// we're trying to optimize for performance, not bandwidth.
-const gzipThreshold = 1450
+const (
+	// gzipThreshold should be close to the MTU size of a TCP packet.
+	// Regarding performance it makes no sense to compress smaller files.
+	// Bandwidth can be saved however the savings are minimal for small files
+	// and the overhead of compressing can lead up to a 75% reduction
+	// in server speed under high load. Therefore in this case
+	// we're trying to optimize for performance, not bandwidth.
+	gzipThreshold = 1450
 
-// This defines the maximum number of parameters per route.
-const maxParams = 16
+	// maxParams defines the maximum number of parameters per route.
+	maxParams = 16
+
+	// maxModifiers defines the maximum number of modifiers per context.
+	maxModifiers = 4
+)
 
 // Context represents the interface for a request & response context.
 type Context interface {
+	AddModifier(Modifier)
 	App() *Application
 	Bytes([]byte) error
 	Close()
@@ -66,15 +72,24 @@ type Context interface {
 
 // context represents a request & response context.
 type context struct {
-	app         *Application
-	status      int
-	request     request
-	response    response
-	session     *session.Session
-	handler     Handler
-	paramNames  [maxParams]string
-	paramValues [maxParams]string
-	paramCount  int
+	app           *Application
+	status        int
+	request       request
+	response      response
+	session       *session.Session
+	handler       Handler
+	paramNames    [maxParams]string
+	paramValues   [maxParams]string
+	paramCount    int
+	modifiers     [maxModifiers]Modifier
+	modifierCount int
+}
+
+// AddModifier adds a modifier that can change the response body
+// contents of in-memory responses before the actual response happens.
+func (ctx *context) AddModifier(modifier Modifier) {
+	ctx.modifiers[ctx.modifierCount] = modifier
+	ctx.modifierCount++
 }
 
 // App returns the application the context occurred in.
@@ -88,6 +103,13 @@ func (ctx *context) Bytes(body []byte) error {
 	// If the request has been canceled by the client, stop.
 	if ctx.request.Context().Err() != nil {
 		return errors.New("Request interrupted by the client")
+	}
+
+	// If we registered any response body modifiers, invoke them.
+	if ctx.modifierCount > 0 {
+		for i := 0; i < ctx.modifierCount; i++ {
+			body = ctx.modifiers[i](body)
+		}
 	}
 
 	// Small response
