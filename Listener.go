@@ -29,11 +29,9 @@ func (listener Listener) Accept() (net.Conn, error) {
 		return nil, err
 	}
 
-	err = connection.SetKeepAlivePeriod(keepAlivePeriod)
-
-	if err != nil {
-		return nil, err
-	}
+	// Ignore the error here because some systems do not allow
+	// setting the TCP_USER_TIMEOUT socket option (issue #10).
+	_ = connection.SetKeepAlivePeriod(keepAlivePeriod)
 
 	// Disable Nagle's algorithm to get lower latency.
 	// NoDelay causes TCP packets to be sent immediately
