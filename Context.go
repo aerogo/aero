@@ -54,7 +54,6 @@ type Context interface {
 	JavaScript(string) error
 	JSON(interface{}) error
 	Path() string
-	Push(paths ...string) error
 	Query(param string) string
 	ReadAll(io.Reader) error
 	Reader(io.Reader) error
@@ -434,8 +433,8 @@ func canCompress(contentType string) bool {
 	}
 }
 
-// Push will start pushing the given resources in a separate goroutine.
-func (ctx *context) Push(paths ...string) error {
+// push will start pushing the given resources in a separate goroutine.
+func (ctx *context) push(paths ...string) error {
 	// Check if we can push
 	pusher, ok := ctx.response.inner.(http.Pusher)
 
@@ -469,7 +468,7 @@ func (ctx *context) pushResources() error {
 		}
 	}
 
-	return ctx.Push(ctx.app.Config.Push...)
+	return ctx.push(ctx.app.Config.Push...)
 }
 
 // HasSession indicates whether the client has a valid session or not.
