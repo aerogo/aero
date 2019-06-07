@@ -15,6 +15,7 @@ type Request interface {
 	Method() string
 	Path() string
 	Protocol() string
+	Scheme() string
 }
 
 // request represents the HTTP request used in the given context.
@@ -57,6 +58,21 @@ func (req *request) Host() string {
 // Path returns the requested path.
 func (req *request) Path() string {
 	return req.inner.URL.Path
+}
+
+// Scheme returns http or https depending on what scheme has been used.
+func (req *request) Scheme() string {
+	scheme := req.inner.Header.Get("X-Forwarded-Proto")
+
+	if scheme != "" {
+		return scheme
+	}
+
+	if req.inner.TLS != nil {
+		return "https"
+	}
+
+	return "http"
 }
 
 // Internal returns the underlying *http.Request.

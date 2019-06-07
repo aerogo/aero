@@ -21,6 +21,7 @@ func TestRequest(t *testing.T) {
 		c.Assert(request.Protocol(), qt.Equals, "HTTP/1.1")
 		c.Assert(request.Method(), qt.Equals, "GET")
 		c.Assert(request.Path(), qt.Equals, "/")
+		c.Assert(request.Scheme(), qt.Equals, "http")
 
 		return ctx.Text(helloWorld)
 	})
