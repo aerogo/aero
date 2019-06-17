@@ -1,6 +1,7 @@
 package aero_test
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -9,7 +10,6 @@ import (
 
 	"github.com/aerogo/aero"
 	qt "github.com/frankban/quicktest"
-	"github.com/tdewolff/parse/buffer"
 )
 
 func TestBody(t *testing.T) {
@@ -24,7 +24,7 @@ func TestBody(t *testing.T) {
 	})
 
 	requestBody := []byte(helloWorld)
-	request := httptest.NewRequest("GET", "/", buffer.NewReader(requestBody))
+	request := httptest.NewRequest("GET", "/", bytes.NewReader(requestBody))
 	response := httptest.NewRecorder()
 	app.ServeHTTP(response, request)
 
@@ -42,7 +42,7 @@ func TestBodyJSON(t *testing.T) {
 	})
 
 	requestBody := []byte(`{"key":"value"}`)
-	request := httptest.NewRequest("GET", "/", buffer.NewReader(requestBody))
+	request := httptest.NewRequest("GET", "/", bytes.NewReader(requestBody))
 	response := httptest.NewRecorder()
 	app.ServeHTTP(response, request)
 
