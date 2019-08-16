@@ -12,21 +12,20 @@ import (
 
 	"github.com/aerogo/aero"
 	"github.com/aerogo/http/client"
-	qt "github.com/frankban/quicktest"
+	"github.com/akyoto/assert"
 )
 
 const helloWorld = "Hello World"
 
 func TestApplicationAny(t *testing.T) {
 	app := aero.New()
-	c := qt.New(t)
 
 	app.Any("/", func(ctx aero.Context) error {
 		return ctx.Text(helloWorld)
 	})
 
 	app.OnError(func(ctx aero.Context, err error) {
-		c.Fatal(err)
+		t.Fatal(err)
 	})
 
 	methods := []string{
@@ -42,16 +41,16 @@ func TestApplicationAny(t *testing.T) {
 		response := httptest.NewRecorder()
 		app.ServeHTTP(response, request)
 
-		c.Assert(response.Code, qt.Equals, http.StatusOK)
-		c.Assert(response.Body.String(), qt.Equals, helloWorld)
+		assert.Equal(t, response.Code, http.StatusOK)
+		assert.Equal(t, response.Body.String(), helloWorld)
 
 		// Test non-existing route
 		request = httptest.NewRequest(method, "/404", nil)
 		response = httptest.NewRecorder()
 		app.ServeHTTP(response, request)
 
-		c.Assert(response.Code, qt.Equals, http.StatusNotFound)
-		c.Assert(response.Body.String(), qt.Equals, "")
+		assert.Equal(t, response.Code, http.StatusNotFound)
+		assert.Equal(t, response.Body.String(), "")
 	}
 }
 
@@ -72,28 +71,25 @@ func TestApplicationRewrite(t *testing.T) {
 
 	response := test(app, "/")
 
-	c := qt.New(t)
-	c.Assert(response.Code, qt.Equals, http.StatusOK)
-	c.Assert(response.Body.String(), qt.Equals, helloWorld)
+	assert.Equal(t, response.Code, http.StatusOK)
+	assert.Equal(t, response.Body.String(), helloWorld)
 }
 
 func TestApplicationLoadConfig(t *testing.T) {
 	app := aero.New()
 	workingDirectory, _ := os.Getwd()
-	c := qt.New(t)
 
 	err := os.Chdir("testdata")
-	c.Assert(err, qt.IsNil)
+	assert.Nil(t, err)
 
 	app.Load()
 
 	err = os.Chdir(workingDirectory)
-	c.Assert(err, qt.IsNil)
+	assert.Nil(t, err)
 }
 
 func TestApplicationRun(t *testing.T) {
 	app := aero.New()
-	c := qt.New(t)
 
 	// When frontpage is requested, kill the server
 	app.Get("/", func(ctx aero.Context) error {
@@ -103,16 +99,16 @@ func TestApplicationRun(t *testing.T) {
 	// When the server is started, we request the frontpage
 	app.OnStart(func() {
 		_, err := client.Get(fmt.Sprintf("http://localhost:%d/", app.Config.Ports.HTTP)).End()
-		c.Assert(err, qt.IsNil)
+		assert.Nil(t, err)
 
 		err = syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
-		c.Assert(err, qt.IsNil)
+		assert.Nil(t, err)
 	})
 
 	// When the server ends, check elapsed time
 	app.OnEnd(func() {
 		elapsed := time.Since(app.StartTime())
-		c.Assert(elapsed < 2*time.Second, qt.Equals, true)
+		assert.Equal(t, elapsed < 2*time.Second, true)
 	})
 
 	// Run
@@ -122,7 +118,6 @@ func TestApplicationRun(t *testing.T) {
 func TestApplicationRunHTTPS(t *testing.T) {
 	app := aero.New()
 	app.Security.Load("testdata/fullchain.pem", "testdata/privkey.pem")
-	c := qt.New(t)
 
 	app.Get("/", func(ctx aero.Context) error {
 		return ctx.HTML(helloWorld)
@@ -131,14 +126,14 @@ func TestApplicationRunHTTPS(t *testing.T) {
 	// When the server is started, we request the frontpage
 	app.OnStart(func() {
 		_, err := client.Get(fmt.Sprintf("http://localhost:%d/", app.Config.Ports.HTTP)).End()
-		c.Assert(err, qt.IsNil)
+		assert.Nil(t, err)
 
 		_, err = client.Get(fmt.Sprintf("https://localhost:%d/", app.Config.Ports.HTTPS)).End()
-		c.Assert(err, qt.IsNil)
+		assert.Nil(t, err)
 
 		go func() {
 			err = syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
-			c.Assert(err, qt.IsNil)
+			assert.Nil(t, err)
 		}()
 	})
 
@@ -165,8 +160,8 @@ func TestApplicationRouteTests(t *testing.T) {
 func TestApplicationUnavailablePort(t *testing.T) {
 	defer func() {
 		_ = recover()
-		// c.Assert(r, qt.Not(qt.IsNil))
-		// c.Assert(r.(error).Error(), qt.Contains, "bind: permission denied")
+		// assert.NotNil(t, r)
+		// assert.Contains(t, r.(error).Error(), "bind: permission denied")
 	}()
 
 	app := aero.New()
@@ -188,14 +183,13 @@ func test(app *aero.Application, route string) *httptest.ResponseRecorder {
 
 func TestApplicationOnError(t *testing.T) {
 	app := aero.New()
-	c := qt.New(t)
 
 	app.Get("/", func(ctx aero.Context) error {
 		return errors.New("something happened")
 	})
 
 	app.OnError(func(ctx aero.Context, err error) {
-		c.Assert(err.Error(), qt.Equals, "something happened")
+		assert.Equal(t, err.Error(), "something happened")
 	})
 
 	test(app, "/")

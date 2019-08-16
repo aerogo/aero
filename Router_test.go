@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/aerogo/aero"
-	qt "github.com/frankban/quicktest"
+	"github.com/akyoto/assert"
 )
 
 type routeDefinition struct {
@@ -16,22 +16,20 @@ type routeDefinition struct {
 }
 
 func TestRouterStatic(t *testing.T) {
-	c := qt.New(t)
 	router := aero.Router{}
 	page := func(aero.Context) error { return nil }
-	c.Assert(router.Find("GET", "/"), qt.IsNil)
+	assert.Nil(t, router.Find("GET", "/"))
 
 	router.Add("GET", "/", page)
-	c.Assert(router.Find("GET", "/"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/日本語"), qt.IsNil)
+	assert.NotNil(t, router.Find("GET", "/"))
+	assert.Nil(t, router.Find("GET", "/日本語"))
 
 	router.Add("GET", "/日本語", page)
-	c.Assert(router.Find("GET", "/"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/日本語"), qt.Not(qt.IsNil))
+	assert.NotNil(t, router.Find("GET", "/"))
+	assert.NotNil(t, router.Find("GET", "/日本語"))
 }
 
 func TestRouterParameters(t *testing.T) {
-	c := qt.New(t)
 	router := aero.Router{}
 	page := func(aero.Context) error { return nil }
 
@@ -43,17 +41,16 @@ func TestRouterParameters(t *testing.T) {
 	router.Add("GET", "/user/:id/:something", page)
 	router.Add("GET", "/admin", page)
 
-	c.Assert(router.Find("GET", "/"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/user"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/user/123"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/user/123/profile"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/user/123/profile/456"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/user/123/456"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/admin"), qt.Not(qt.IsNil))
+	assert.NotNil(t, router.Find("GET", "/"))
+	assert.NotNil(t, router.Find("GET", "/user"))
+	assert.NotNil(t, router.Find("GET", "/user/123"))
+	assert.NotNil(t, router.Find("GET", "/user/123/profile"))
+	assert.NotNil(t, router.Find("GET", "/user/123/profile/456"))
+	assert.NotNil(t, router.Find("GET", "/user/123/456"))
+	assert.NotNil(t, router.Find("GET", "/admin"))
 }
 
 func TestRouterWildcards(t *testing.T) {
-	c := qt.New(t)
 	router := aero.Router{}
 	page := func(aero.Context) error { return nil }
 
@@ -63,11 +60,11 @@ func TestRouterWildcards(t *testing.T) {
 	router.Add("GET", "/videos/*file", page)
 	router.Add("GET", "/*anything", page)
 
-	c.Assert(router.Find("GET", "/"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/images"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/images/hello.webp"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/videos/hello.webm"), qt.Not(qt.IsNil))
-	c.Assert(router.Find("GET", "/documents/hello.txt"), qt.Not(qt.IsNil))
+	assert.NotNil(t, router.Find("GET", "/"))
+	assert.NotNil(t, router.Find("GET", "/images"))
+	assert.NotNil(t, router.Find("GET", "/images/hello.webp"))
+	assert.NotNil(t, router.Find("GET", "/videos/hello.webm"))
+	assert.NotNil(t, router.Find("GET", "/documents/hello.txt"))
 }
 
 func TestRouterStaticData(t *testing.T) {

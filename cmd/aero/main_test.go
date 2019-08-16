@@ -5,52 +5,50 @@ import (
 	"path"
 	"testing"
 
-	qt "github.com/frankban/quicktest"
+	"github.com/akyoto/assert"
 )
 
 func TestNoParameters(t *testing.T) {
-	c := qt.New(t)
 
 	oldPath, err := os.Getwd()
-	c.Assert(err, qt.IsNil)
+	assert.Nil(t, err)
 
 	projectPath := path.Join(os.TempDir(), "aero-app-test")
 	err = os.Mkdir(projectPath, 0777)
-	c.Assert(err, qt.IsNil)
+	assert.Nil(t, err)
 
 	defer func() {
 		err := os.RemoveAll(projectPath)
-		c.Assert(err, qt.IsNil)
+		assert.Nil(t, err)
 
 		err = os.Chdir(oldPath)
-		c.Assert(err, qt.IsNil)
+		assert.Nil(t, err)
 	}()
 
 	err = os.Chdir(projectPath)
-	c.Assert(err, qt.IsNil)
+	assert.Nil(t, err)
 	main()
 }
 
 func TestNewApp(t *testing.T) {
-	c := qt.New(t)
 
 	oldPath, err := os.Getwd()
-	c.Assert(err, qt.IsNil)
+	assert.Nil(t, err)
 
 	projectPath := path.Join(os.TempDir(), "aero-app-test")
 	err = os.Mkdir(projectPath, 0777)
-	c.Assert(err, qt.IsNil)
+	assert.Nil(t, err)
 
 	defer func() {
 		err := os.RemoveAll(projectPath)
-		c.Assert(err, qt.IsNil)
+		assert.Nil(t, err)
 
 		err = os.Chdir(oldPath)
-		c.Assert(err, qt.IsNil)
+		assert.Nil(t, err)
 	}()
 
 	err = os.Chdir(projectPath)
-	c.Assert(err, qt.IsNil)
+	assert.Nil(t, err)
 	os.Args = append(os.Args, "-new")
 	main()
 }

@@ -6,28 +6,27 @@ import (
 	"testing"
 
 	"github.com/aerogo/aero"
-	qt "github.com/frankban/quicktest"
+	"github.com/akyoto/assert"
 )
 
 func TestRequest(t *testing.T) {
 	app := aero.New()
-	c := qt.New(t)
 
 	app.Get("/", func(ctx aero.Context) error {
 		request := ctx.Request()
 
-		c.Assert(request.Header("Accept-Encoding"), qt.Equals, "gzip")
-		c.Assert(request.Host(), qt.Equals, "example.com")
-		c.Assert(request.Protocol(), qt.Equals, "HTTP/1.1")
-		c.Assert(request.Method(), qt.Equals, "GET")
-		c.Assert(request.Path(), qt.Equals, "/")
-		c.Assert(request.Scheme(), qt.Equals, "http")
+		assert.Equal(t, request.Header("Accept-Encoding"), "gzip")
+		assert.Equal(t, request.Host(), "example.com")
+		assert.Equal(t, request.Protocol(), "HTTP/1.1")
+		assert.Equal(t, request.Method(), "GET")
+		assert.Equal(t, request.Path(), "/")
+		assert.Equal(t, request.Scheme(), "http")
 
 		return ctx.Text(helloWorld)
 	})
 
 	response := test(app, "/")
-	c.Assert(response.Code, qt.Equals, http.StatusOK)
+	assert.Equal(t, response.Code, http.StatusOK)
 }
 
 func TestMultiRequest(t *testing.T) {

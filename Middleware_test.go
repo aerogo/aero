@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/aerogo/aero"
-	qt "github.com/frankban/quicktest"
+	"github.com/akyoto/assert"
 )
 
 func TestApplicationMiddleware(t *testing.T) {
@@ -28,9 +28,8 @@ func TestApplicationMiddleware(t *testing.T) {
 
 	response := test(app, "/")
 
-	c := qt.New(t)
-	c.Assert(response.Code, qt.Equals, http.StatusPermanentRedirect)
-	c.Assert(response.Body.String(), qt.Equals, helloWorld)
+	assert.Equal(t, response.Code, http.StatusPermanentRedirect)
+	assert.Equal(t, response.Body.String(), helloWorld)
 }
 
 func TestApplicationMiddlewareSkipNext(t *testing.T) {
@@ -53,6 +52,5 @@ func TestApplicationMiddlewareSkipNext(t *testing.T) {
 
 	response := test(app, "/")
 
-	c := qt.New(t)
-	c.Assert(response.Body.String(), qt.Equals, "")
+	assert.Equal(t, response.Body.String(), "")
 }

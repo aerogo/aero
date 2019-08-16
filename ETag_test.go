@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/aerogo/aero"
-	qt "github.com/frankban/quicktest"
+	"github.com/akyoto/assert"
 )
 
 func TestETag(t *testing.T) {
@@ -16,10 +16,9 @@ func TestETag(t *testing.T) {
 	etag1 := aero.ETag(text1)
 	etag2 := aero.ETag(text2)
 
-	c := qt.New(t)
-	c.Assert(etag1, qt.Not(qt.Equals), "")
-	c.Assert(etag2, qt.Not(qt.Equals), "")
-	c.Assert(etag1, qt.Not(qt.Equals), etag2)
+	assert.NotEqual(t, etag1, "")
+	assert.NotEqual(t, etag2, "")
+	assert.NotEqual(t, etag1, etag2)
 }
 
 func TestETagString(t *testing.T) {
@@ -29,8 +28,7 @@ func TestETagString(t *testing.T) {
 	etag1 := aero.ETagString(text1)
 	etag2 := aero.ETagString(text2)
 
-	c := qt.New(t)
-	c.Assert(etag1, qt.Not(qt.Equals), "")
-	c.Assert(etag2, qt.Not(qt.Equals), "")
-	c.Assert(etag1, qt.Not(qt.Equals), etag2)
+	assert.NotEqual(t, etag1, "")
+	assert.NotEqual(t, etag2, "")
+	assert.NotEqual(t, etag1, etag2)
 }

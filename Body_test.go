@@ -9,16 +9,15 @@ import (
 	"testing"
 
 	"github.com/aerogo/aero"
-	qt "github.com/frankban/quicktest"
+	"github.com/akyoto/assert"
 )
 
 func TestBody(t *testing.T) {
 	app := aero.New()
-	c := qt.New(t)
 
 	app.Get("/", func(ctx aero.Context) error {
 		body := ctx.Request().Body()
-		c.Assert(ctx.Request().Body().Reader(), qt.Not(qt.IsNil))
+		assert.NotNil(t, ctx.Request().Body().Reader())
 		bodyText, _ := body.String()
 		return ctx.Text(bodyText)
 	})
@@ -28,8 +27,8 @@ func TestBody(t *testing.T) {
 	response := httptest.NewRecorder()
 	app.ServeHTTP(response, request)
 
-	c.Assert(response.Code, qt.Equals, http.StatusOK)
-	c.Assert(response.Body.String(), qt.Equals, helloWorld)
+	assert.Equal(t, response.Code, http.StatusOK)
+	assert.Equal(t, response.Body.String(), helloWorld)
 }
 
 func TestBodyJSON(t *testing.T) {
@@ -46,21 +45,19 @@ func TestBodyJSON(t *testing.T) {
 	response := httptest.NewRecorder()
 	app.ServeHTTP(response, request)
 
-	c := qt.New(t)
-	c.Assert(response.Code, qt.Equals, http.StatusOK)
-	c.Assert(response.Body.String(), qt.Equals, "value")
+	assert.Equal(t, response.Code, http.StatusOK)
+	assert.Equal(t, response.Body.String(), "value")
 }
 
 func TestBodyErrors(t *testing.T) {
 	app := aero.New()
-	c := qt.New(t)
 
 	app.Get("/", func(ctx aero.Context) error {
 		body := ctx.Request().Body()
 		bodyJSON, err := body.JSON()
 
-		c.Assert(err, qt.Not(qt.IsNil))
-		c.Assert(bodyJSON, qt.IsNil)
+		assert.NotNil(t, err)
+		assert.Nil(t, bodyJSON)
 
 		return ctx.Text(helloWorld)
 	})
@@ -69,8 +66,8 @@ func TestBodyErrors(t *testing.T) {
 		body := ctx.Request().Body()
 		bodyJSONObject, err := body.JSONObject()
 
-		c.Assert(err, qt.Not(qt.IsNil))
-		c.Assert(bodyJSONObject, qt.IsNil)
+		assert.NotNil(t, err)
+		assert.Nil(t, bodyJSONObject)
 
 		return ctx.Text(helloWorld)
 	})
@@ -79,17 +76,17 @@ func TestBodyErrors(t *testing.T) {
 	request := httptest.NewRequest("GET", "/", nil)
 	response := httptest.NewRecorder()
 	app.ServeHTTP(response, request)
-	c.Assert(response.Code, qt.Equals, http.StatusOK)
+	assert.Equal(t, response.Code, http.StatusOK)
 
 	// Invalid JSON
 	request = httptest.NewRequest("GET", "/", strings.NewReader("{"))
 	response = httptest.NewRecorder()
 	app.ServeHTTP(response, request)
-	c.Assert(response.Code, qt.Equals, http.StatusOK)
+	assert.Equal(t, response.Code, http.StatusOK)
 
 	// Not a JSON object
 	request = httptest.NewRequest("GET", "/json-object", strings.NewReader("{"))
 	response = httptest.NewRecorder()
 	app.ServeHTTP(response, request)
-	c.Assert(response.Code, qt.Equals, http.StatusOK)
+	assert.Equal(t, response.Code, http.StatusOK)
 }
