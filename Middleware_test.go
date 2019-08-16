@@ -51,6 +51,5 @@ func TestApplicationMiddlewareSkipNext(t *testing.T) {
 	app.BindMiddleware()
 
 	response := test(app, "/")
-
 	assert.Equal(t, response.Body.String(), "")
 }
