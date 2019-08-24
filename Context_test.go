@@ -1,7 +1,9 @@
 package aero_test
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"io/ioutil"
@@ -228,7 +230,7 @@ func TestContextContentTypes(t *testing.T) {
 	responseMediaFile := test(app, "/files/docs/media/usage.apng")
 
 	// Verify JSON response
-	json, err := jsoniter.Marshal(app.Config)
+	json, err := json.Marshal(app.Config)
 	assert.Nil(t, err)
 	assert.Equal(t, responseJSON.Code, http.StatusOK)
 	assert.DeepEqual(t, responseJSON.Body.Bytes(), json)
@@ -266,7 +268,7 @@ func TestContextContentTypes(t *testing.T) {
 
 func TestContextReader(t *testing.T) {
 	app := aero.New()
-	config, err := jsoniter.MarshalToString(app.Config)
+	config, err := json.Marshal(app.Config)
 	assert.Nil(t, err)
 
 	// ReadAll
@@ -299,7 +301,7 @@ func TestContextReader(t *testing.T) {
 
 	// ReadSeeker
 	app.Get("/readseeker", func(ctx aero.Context) error {
-		return ctx.ReadSeeker(strings.NewReader(config))
+		return ctx.ReadSeeker(bytes.NewReader(config))
 	})
 
 	routes := []string{
@@ -309,10 +311,9 @@ func TestContextReader(t *testing.T) {
 	}
 
 	for _, route := range routes {
-
 		response := test(app, route)
 		assert.Equal(t, response.Code, http.StatusOK)
-		assert.Equal(t, strings.TrimSpace(response.Body.String()), config)
+		assert.DeepEqual(t, bytes.TrimSpace(response.Body.Bytes()), config)
 	}
 }
 

@@ -2,6 +2,7 @@ package aero
 
 import (
 	stdContext "context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -17,7 +18,6 @@ import (
 	"github.com/aerogo/session"
 	"github.com/akyoto/color"
 	"github.com/akyoto/stringutils/unsafe"
-	jsoniter "github.com/json-iterator/go"
 )
 
 const (
@@ -194,7 +194,7 @@ func (ctx *context) addParameter(name string, value string) {
 // JSON encodes the object to a JSON string and responds.
 func (ctx *context) JSON(value interface{}) error {
 	ctx.response.SetHeader(contentTypeHeader, contentTypeJSON)
-	bytes, err := jsoniter.Marshal(value)
+	bytes, err := json.Marshal(value)
 
 	if err != nil {
 		return err
@@ -286,7 +286,7 @@ func (ctx *context) EventStream(stream *EventStream) error {
 					// Do nothing with the data if it's already a string or byte slice.
 				default:
 					var err error
-					data, err = jsoniter.Marshal(data)
+					data, err = json.Marshal(data)
 
 					if err != nil {
 						color.Red("Failed encoding event data as JSON: %v", data)
