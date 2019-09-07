@@ -172,6 +172,41 @@ app.Get("/", func(ctx aero.Context) error {
 })
 ```
 
+## Directory
+
+To serve a directory you can use wildcard parameters and then stream the requested file:
+
+```go
+app.Get("/images/*file", func(ctx aero.Context) error {
+	return ctx.File("images/" + ctx.Get("file"))
+})
+```
+
+## Streaming data
+
+Use `ctx.Reader` with `io.Pipe` for efficient streaming:
+
+```go
+app.Get("/streamhello", func(ctx aero.Context) error {
+	reader, writer := io.Pipe()
+
+	go func() {
+		for i := 0; i < 100000; i++ {
+			_, err := writer.Write([]byte("Hello\n"))
+
+			if err != nil {
+				writer.CloseWithError(err)
+				return
+			}
+		}
+
+		writer.Close()
+	}()
+
+	return ctx.Reader(reader)
+}
+```
+
 ## EventStream
 
 *SSE (server sent events) have recently been added as an experimental feature. The API is subject to change.*
