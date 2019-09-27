@@ -95,3 +95,33 @@ Want to see [your own name here?](https://github.com/users/akyoto/sponsorship)
 [coverage-url]: https://codecov.io/gh/aerogo/aero
 [sponsor-image]: https://img.shields.io/badge/github-donate-green.svg
 [sponsor-url]: https://github.com/users/akyoto/sponsorship
+
+## Contributors
+
+### Code Contributors
+
+This project exists thanks to all the people who contribute. [[Contribute](CONTRIBUTING.md)].
+<a href="https://github.com/aerogo/aero/graphs/contributors"><img src="https://opencollective.com/aero/contributors.svg?width=890&button=false" /></a>
+
+### Financial Contributors
+
+Become a financial contributor and help us sustain our community. [[Contribute](https://opencollective.com/aero/contribute)]
+
+#### Individuals
+
+<a href="https://opencollective.com/aero"><img src="https://opencollective.com/aero/individuals.svg?width=890"></a>
+
+#### Organizations
+
+Support this project with your organization. Your logo will show up here with a link to your website. [[Contribute](https://opencollective.com/aero/contribute)]
+
+<a href="https://opencollective.com/aero/organization/0/website"><img src="https://opencollective.com/aero/organization/0/avatar.svg"></a>
+<a href="https://opencollective.com/aero/organization/1/website"><img src="https://opencollective.com/aero/organization/1/avatar.svg"></a>
+<a href="https://opencollective.com/aero/organization/2/website"><img src="https://opencollective.com/aero/organization/2/avatar.svg"></a>
+<a href="https://opencollective.com/aero/organization/3/website"><img src="https://opencollective.com/aero/organization/3/avatar.svg"></a>
+<a href="https://opencollective.com/aero/organization/4/website"><img src="https://opencollective.com/aero/organization/4/avatar.svg"></a>
+<a href="https://opencollective.com/aero/organization/5/website"><img src="https://opencollective.com/aero/organization/5/avatar.svg"></a>
+<a href="https://opencollective.com/aero/organization/6/website"><img src="https://opencollective.com/aero/organization/6/avatar.svg"></a>
+<a href="https://opencollective.com/aero/organization/7/website"><img src="https://opencollective.com/aero/organization/7/avatar.svg"></a>
+<a href="https://opencollective.com/aero/organization/8/website"><img src="https://opencollective.com/aero/organization/8/avatar.svg"></a>
+<a href="https://opencollective.com/aero/organization/9/website"><img src="https://opencollective.com/aero/organization/9/avatar.svg"></a>
