@@ -1,12 +1,12 @@
 package aero
 
 import (
+	"encoding/json"
 	"errors"
 	"io"
 	"io/ioutil"
 
 	"github.com/akyoto/stringutils/unsafe"
-	jsoniter "github.com/json-iterator/go"
 )
 
 // Body represents a request body.
@@ -25,7 +25,7 @@ func (body Body) JSON() (interface{}, error) {
 		return nil, errors.New("Empty body")
 	}
 
-	decoder := jsoniter.NewDecoder(body.reader)
+	decoder := json.NewDecoder(body.reader)
 	defer body.reader.Close()
 
 	var data interface{}

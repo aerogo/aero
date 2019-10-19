@@ -17,7 +17,6 @@ import (
 	"github.com/aerogo/aero"
 	"github.com/aerogo/session"
 	"github.com/akyoto/assert"
-	jsoniter "github.com/json-iterator/go"
 )
 
 func TestContextResponseHeader(t *testing.T) {
@@ -277,7 +276,7 @@ func TestContextReader(t *testing.T) {
 
 		go func() {
 			defer writer.Close()
-			encoder := jsoniter.NewEncoder(writer)
+			encoder := json.NewEncoder(writer)
 			err := encoder.Encode(app.Config)
 			assert.Nil(t, err)
 		}()
@@ -291,7 +290,7 @@ func TestContextReader(t *testing.T) {
 
 		go func() {
 			defer writer.Close()
-			encoder := jsoniter.NewEncoder(writer)
+			encoder := json.NewEncoder(writer)
 			err := encoder.Encode(app.Config)
 			assert.Nil(t, err)
 		}()
