@@ -4,8 +4,6 @@ name: default
 steps:
 - name: test
   image: golang
-  environment:
-    GO111MODULE: on
   commands:
   - go version
   - go get ./...
