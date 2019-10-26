@@ -46,32 +46,26 @@ Now you can build your app with `go build` or use the [run](https://github.com/a
 - Shows response time and size for your routes
 - Can run standalone without `nginx` babysitting it
 
-## Optional
-
-- [pack](https://github.com/aerogo/pack) to compile Pixy, Scarlet and JS assets in record time
-- [run](https://github.com/aerogo/run) which automatically restarts your server on code/template/style changes
-- [pixy](https://github.com/aerogo/pixy) as a high-performance template engine similar to Jade/Pug
-- [scarlet](https://github.com/aerogo/scarlet) as an aggressively compressing stylesheet preprocessor
-- [nano](https://github.com/aerogo/nano) as a fast, decentralized and git-trackable database
-- [manifest](https://github.com/aerogo/manifest) to load and manipulate web manifests
-- [markdown](https://github.com/aerogo/markdown) as an overly simplified markdown wrapper
-- [graphql](https://github.com/aerogo/graphql) to automatically implement your GraphQL API
-- [packet](https://github.com/aerogo/packet) as a way to send TCP/UDP messages between nodes
-- [http](https://github.com/aerogo/http) as an HTTP client with a simple and clean API
-- [log](https://github.com/aerogo/log) for simple & performant logging
-
-## Documentation
+## Links
 
 - [API](docs/API.md)
 - [Configuration](docs/Configuration.md)
 - [Benchmarks](docs/Benchmarks.md)
+- [Slides](https://docs.google.com/presentation/d/166I69goLEVuvuFeeRfUu8c5lwl2_HAeSi2SZyzIuEKg/edit) (Osaka, May 2018)
+- [Community](http://t.me/aeroframework) on Telegram
 
-## Others
+## Optional
 
-- [Slides for OWDDM talk](https://docs.google.com/presentation/d/166I69goLEVuvuFeeRfUu8c5lwl2_HAeSi2SZyzIuEKg/edit) (Osaka, May 2018)
-- [Discord](https://discord.gg/V3y4xTY)
-- [Twitter](https://twitter.com/aeroframework)
-- [Facebook](https://www.facebook.com/aeroframework/)
+- [http](https://github.com/aerogo/http) as an HTTP client with a simple and clean API
+- [log](https://github.com/aerogo/log) for simple & performant logging
+- [manifest](https://github.com/aerogo/manifest) to load and manipulate web manifests
+- [markdown](https://github.com/aerogo/markdown) as an overly simplified markdown wrapper
+- [nano](https://github.com/aerogo/nano) as a fast, decentralized and git-trackable database
+- [pack](https://github.com/aerogo/pack) to compile Pixy, Scarlet and JS assets in record time
+- [packet](https://github.com/aerogo/packet) as a way to send TCP/UDP messages between nodes
+- [pixy](https://github.com/aerogo/pixy) as a high-performance template engine similar to Jade/Pug
+- [run](https://github.com/aerogo/run) which automatically restarts your server on code/template/style changes
+- [scarlet](https://github.com/aerogo/scarlet) as an aggressively compressing stylesheet preprocessor
 
 ## Style
 
@@ -79,7 +73,7 @@ Please take a look at the [style guidelines](https://github.com/akyoto/quality/b
 
 ## Sponsors
 
-| [![Cedric Fung](https://avatars3.githubusercontent.com/u/2269238?s=70&v=4)](https://github.com/cedricfung) | [![Scott Rayapoullé](https://avatars3.githubusercontent.com/u/11772084?s=70&v=4)](https://github.com/soulcramer) | [![Eduard Urbach](https://avatars3.githubusercontent.com/u/438936?s=70&v=4)](https://twitter.com/eduardurbach) |
+| [![Cedric Fung](https://avatars3.githubusercontent.com/u/2269238?s=70&v=4)](https://github.com/cedricfung) | [![Scott Rayapoullé](https://avatars3.githubusercontent.com/u/11772084?s=70&v=4)](https://github.com/soulcramer) | [![Eduard Urbach](https://avatars3.githubusercontent.com/u/438936?s=70&v=4)](https://eduardurbach.com) |
 | --- | --- | --- |
 | [Cedric Fung](https://github.com/cedricfung) | [Scott Rayapoullé](https://github.com/soulcramer) | [Eduard Urbach](https://eduardurbach.com) |
 
