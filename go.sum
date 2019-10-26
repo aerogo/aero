@@ -6,8 +6,8 @@ github.com/aerogo/linter-performance v1.0.6 h1:BrMKf+4s4hlKf7tV+B9/YQzTz7LKWmWZc
 github.com/aerogo/linter-performance v1.0.6/go.mod h1:E5myVvu3+U1NmdW3c+A6xs9Me/U/Ey4Khz35uJdB5Yc=
 github.com/aerogo/session v0.1.8 h1:l28Ii/YBfh4/vDWOc1YXLXg2vkHsRFuMLAeVhhl1eME=
 github.com/aerogo/session v0.1.8/go.mod h1:Q9QqpT8nM6HTaklE14T+bzNSKrwW1M2wZ/NZV1HUTB0=
-github.com/aerogo/session-store-memory v0.1.8 h1:3h2+YEcDF/4iyJK3O8MOGAeKQ48pNWXNJQgZbUmg1GI=
-github.com/aerogo/session-store-memory v0.1.8/go.mod h1:z4ZxP+xLVdH69F/Cvgy93v8fWzeDmiJo+Mm+Th3un4c=
+github.com/aerogo/session-store-memory v0.1.9 h1:1OswTCtyqzffX5aGr6jI3H8gt/hkU3LKNiKpia7ntcs=
+github.com/aerogo/session-store-memory v0.1.9/go.mod h1:z4ZxP+xLVdH69F/Cvgy93v8fWzeDmiJo+Mm+Th3un4c=
 github.com/akyoto/assert v0.2.2/go.mod h1:g5e6ag+ksCEQENq/LnmU9z04wCAIFDr8KacBusVL0H8=
 github.com/akyoto/assert v0.2.3 h1:ftENRGDEK5AKuKmZb9LtbDIHeE8p8cIYI4M92CbA9nE=
 github.com/akyoto/assert v0.2.3/go.mod h1:g5e6ag+ksCEQENq/LnmU9z04wCAIFDr8KacBusVL0H8=
