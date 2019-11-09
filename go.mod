@@ -11,5 +11,5 @@ require (
 	github.com/akyoto/assert v0.2.3
 	github.com/akyoto/color v1.8.11
 	github.com/akyoto/hash v0.4.8
-	github.com/akyoto/stringutils v0.2.6
+	github.com/akyoto/stringutils v0.3.0
 )
