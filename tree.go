@@ -31,7 +31,8 @@ type dataType = Handler
 // tree represents a radix tree.
 type tree struct {
 	prefix    string
-	children  [224]*tree
+	indices   [224]uint8
+	children  []*tree
 	data      dataType
 	parameter *tree
 	wildcard  *tree
@@ -134,11 +135,11 @@ func (node *tree) split(index int, path string, data dataType) {
 	// Just assign the data for the existing node and store a single child node.
 	if path == "" {
 		node.data = data
-		node.children[splitNode.prefix[0]-32] = splitNode
+		node.addChild(splitNode)
 		return
 	}
 
-	node.children[splitNode.prefix[0]-32] = splitNode
+	node.addChild(splitNode)
 
 	// Create new nodes with the remaining path
 	node.append(path, data)
@@ -149,6 +150,7 @@ func (node *tree) clone(prefix string) *tree {
 	return &tree{
 		prefix:    prefix,
 		data:      node.data,
+		indices:   node.indices,
 		children:  node.children,
 		parameter: node.parameter,
 		wildcard:  node.wildcard,
@@ -163,19 +165,30 @@ func (node *tree) reset(prefix string) {
 	node.parameter = nil
 	node.wildcard = nil
 	node.kind = 0
-	node.children = [224]*tree{}
+	node.indices = [224]uint8{}
+	node.children = nil
+}
+
+// addChild adds a child tree.
+func (node *tree) addChild(child *tree) {
+	if len(node.children) == 0 {
+		node.children = append(node.children, nil)
+	}
+
+	node.indices[child.prefix[0]-32] = uint8(len(node.children))
+	node.children = append(node.children, child)
 }
 
 // addTrailingSlash adds a trailing slash with the same data.
 func (node *tree) addTrailingSlash(data dataType) {
-	if strings.HasSuffix(node.prefix, "/") || node.children[separator-32] != nil || node.kind == wildcard {
+	if strings.HasSuffix(node.prefix, "/") || node.indices[separator-32] != 0 || node.kind == wildcard {
 		return
 	}
 
-	node.children[separator-32] = &tree{
+	node.addChild(&tree{
 		prefix: "/",
 		data:   data,
-	}
+	})
 }
 
 // append appends the given path to the tree.
@@ -212,7 +225,7 @@ func (node *tree) append(path string, data dataType) {
 				data:   data,
 			}
 
-			node.children[path[0]-32] = child
+			node.addChild(child)
 			child.addTrailingSlash(data)
 			return
 		}
@@ -267,7 +280,7 @@ func (node *tree) append(path string, data dataType) {
 			child.data = node.data
 		}
 
-		node.children[path[0]-32] = child
+		node.addChild(child)
 		node = child
 		path = path[paramStart:]
 	}
@@ -276,10 +289,10 @@ func (node *tree) append(path string, data dataType) {
 // end is called when the node was fully parsed
 // and needs to decide the next control flow.
 func (node *tree) end(path string, data dataType, i int, offset int) (*tree, int, controlFlow) {
-	child := node.children[path[i]-32]
+	index := node.indices[path[i]-32]
 
-	if child != nil {
-		node = child
+	if index != 0 {
+		node = node.children[index]
 		offset = i
 		return node, offset, controlNext
 	}
@@ -327,7 +340,8 @@ func (node *tree) find(path string, ctx *context) {
 				// path: /blog|/post
 				if path[i] == separator {
 					ctx.addParameter(node.prefix, path[offset:i])
-					node = node.children[separator-32]
+					index := node.indices[separator-32]
+					node = node.children[index]
 					offset = i
 					i++
 					break
@@ -363,10 +377,10 @@ func (node *tree) find(path string, ctx *context) {
 				lastWildcardOffset = i
 			}
 
-			child := node.children[path[i]-32]
+			index := node.indices[path[i]-32]
 
-			if child != nil {
-				node = child
+			if index != 0 {
+				node = node.children[index]
 				offset = i
 				i++
 				continue
