@@ -306,9 +306,9 @@ func (node *tree) end(path string, data dataType, i int, offset int) (*tree, int
 // find finds the data for the given path and assigns it to ctx.handler, if available.
 func (node *tree) find(path string, ctx *context) {
 	var (
-		i                  int
-		offset             int
-		lastWildcardOffset int
+		i                  uint
+		offset             uint
+		lastWildcardOffset uint
 		lastWildcard       *tree
 	)
 
@@ -317,7 +317,7 @@ func (node *tree) find(path string, ctx *context) {
 	begin:
 		switch node.kind {
 		case parameter:
-			if i == len(path) {
+			if i == uint(len(path)) {
 				ctx.addParameter(node.prefix, path[offset:i])
 				ctx.handler = node.data
 				return
@@ -333,10 +333,10 @@ func (node *tree) find(path string, ctx *context) {
 
 		default:
 			// We reached the end.
-			if i == len(path) {
+			if i == uint(len(path)) {
 				// node: /blog|
 				// path: /blog|
-				if i-offset == len(node.prefix) {
+				if i-offset == uint(len(node.prefix)) {
 					ctx.handler = node.data
 					return
 				}
@@ -350,7 +350,7 @@ func (node *tree) find(path string, ctx *context) {
 			// The node we just checked is entirely included in our path.
 			// node: /|
 			// path: /|blog
-			if i-offset == len(node.prefix) {
+			if i-offset == uint(len(node.prefix)) {
 				if node.wildcard != nil {
 					lastWildcard = node.wildcard
 					lastWildcardOffset = i
