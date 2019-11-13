@@ -315,24 +315,27 @@ func (node *tree) find(path string, ctx *context) {
 	// Search tree for equal parts until we can no longer proceed
 	for {
 		if node.kind == parameter {
-			// We reached the end.
-			if i == uint(len(path)) {
-				ctx.addParameter(node.prefix, path[offset:i])
-				ctx.handler = node.data
-				return
-			}
+			for {
+				// We reached the end.
+				if i == uint(len(path)) {
+					ctx.addParameter(node.prefix, path[offset:i])
+					ctx.handler = node.data
+					return
+				}
 
-			// node: /:xxx|/:yyy
-			// path: /blog|/post
-			if path[i] == separator {
-				ctx.addParameter(node.prefix, path[offset:i])
-				node = node.children[separator-32]
-				offset = i
+				// node: /:xxx|/:yyy
+				// path: /blog|/post
+				if path[i] == separator {
+					ctx.addParameter(node.prefix, path[offset:i])
+					node = node.children[separator-32]
+					offset = i
+					i++
+					break
+				}
+
 				i++
-				continue
 			}
 
-			i++
 			continue
 		}
 
