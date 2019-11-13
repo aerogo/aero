@@ -13,6 +13,8 @@ github.com/aerogo/session-store-memory v0.1.9/go.mod h1:z4ZxP+xLVdH69F/Cvgy93v8f
 github.com/akyoto/assert v0.2.2/go.mod h1:g5e6ag+ksCEQENq/LnmU9z04wCAIFDr8KacBusVL0H8=
 github.com/akyoto/assert v0.2.3 h1:ftENRGDEK5AKuKmZb9LtbDIHeE8p8cIYI4M92CbA9nE=
 github.com/akyoto/assert v0.2.3/go.mod h1:g5e6ag+ksCEQENq/LnmU9z04wCAIFDr8KacBusVL0H8=
+github.com/akyoto/assert v0.2.4 h1:n0FwcNH5dMYq3I8Iu7MOR1WWGkkGH8ao84nvCRJmsbs=
+github.com/akyoto/assert v0.2.4/go.mod h1:SoqVayyOmM/YSBnwOxJHCt4BCocoIrgeceWtJV701C0=
 github.com/akyoto/color v1.8.11 h1:uCQi+uRyngo1cJhJSv28PQmduGFiOAGNF6F9MFoRDek=
 github.com/akyoto/color v1.8.11/go.mod h1:Q77HnNKrgGSfXOpkR7cuyazaOXQsKLWKbDPh2cy+jto=
 github.com/akyoto/colorable v0.1.7 h1:ge91E25hiOiT/Zu47ij/rTO3cks7wMlTrcQspua1hFM=
