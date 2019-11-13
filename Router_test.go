@@ -19,13 +19,20 @@ func TestRouterStatic(t *testing.T) {
 	router := aero.Router{}
 	page := func(aero.Context) error { return nil }
 	assert.Nil(t, router.Find("GET", "/"))
+	assert.Nil(t, router.Find("GET", "/日"))
+	assert.Nil(t, router.Find("GET", "/日本"))
+	assert.Nil(t, router.Find("GET", "/日本語"))
 
 	router.Add("GET", "/", page)
 	assert.NotNil(t, router.Find("GET", "/"))
+	assert.Nil(t, router.Find("GET", "/日"))
+	assert.Nil(t, router.Find("GET", "/日本"))
 	assert.Nil(t, router.Find("GET", "/日本語"))
 
 	router.Add("GET", "/日本語", page)
 	assert.NotNil(t, router.Find("GET", "/"))
+	assert.Nil(t, router.Find("GET", "/日"))
+	assert.Nil(t, router.Find("GET", "/日本"))
 	assert.NotNil(t, router.Find("GET", "/日本語"))
 }
 
@@ -48,6 +55,10 @@ func TestRouterParameters(t *testing.T) {
 	assert.NotNil(t, router.Find("GET", "/user/123/profile/456"))
 	assert.NotNil(t, router.Find("GET", "/user/123/456"))
 	assert.NotNil(t, router.Find("GET", "/admin"))
+
+	assert.Nil(t, router.Find("GET", "/x"))
+	assert.Nil(t, router.Find("GET", "/user/123/456/x"))
+	assert.Nil(t, router.Find("GET", "/admin/x"))
 }
 
 func TestRouterWildcards(t *testing.T) {
