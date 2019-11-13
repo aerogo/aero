@@ -327,7 +327,8 @@ func (node *tree) find(path string, ctx *context) {
 				ctx.addParameter(node.prefix, path[offset:i])
 				node = node.children[separator-32]
 				offset = i
-				goto next
+				i++
+				goto begin
 			}
 
 		default:
@@ -360,7 +361,8 @@ func (node *tree) find(path string, ctx *context) {
 				if child != nil {
 					node = child
 					offset = i
-					goto next
+					i++
+					goto begin
 				}
 
 				// node: /|:id
@@ -398,7 +400,6 @@ func (node *tree) find(path string, ctx *context) {
 			}
 		}
 
-	next:
 		i++
 	}
 }
