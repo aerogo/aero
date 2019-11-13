@@ -31,8 +31,8 @@ type dataType = Handler
 // tree represents a radix tree.
 type tree struct {
 	prefix    string
-	data      dataType
 	children  [224]*tree
+	data      dataType
 	parameter *tree
 	wildcard  *tree
 	kind      byte
@@ -314,9 +314,7 @@ func (node *tree) find(path string, ctx *context) {
 
 	// Search tree for equal parts until we can no longer proceed
 	for {
-	begin:
-		switch node.kind {
-		case parameter:
+		if node.kind == parameter {
 			if i == uint(len(path)) {
 				ctx.addParameter(node.prefix, path[offset:i])
 				ctx.handler = node.data
@@ -328,76 +326,78 @@ func (node *tree) find(path string, ctx *context) {
 				node = node.children[separator-32]
 				offset = i
 				i++
-				goto begin
+				continue
 			}
 
-		default:
-			// We reached the end.
-			if i == uint(len(path)) {
-				// node: /blog|
-				// path: /blog|
-				if i-offset == uint(len(node.prefix)) {
-					ctx.handler = node.data
-					return
-				}
+			i++
+			continue
+		}
 
-				// node: /blog|feed
-				// path: /blog|
-				ctx.handler = nil
-				return
-			}
-
-			// The node we just checked is entirely included in our path.
-			// node: /|
-			// path: /|blog
+		// We reached the end.
+		if i == uint(len(path)) {
+			// node: /blog|
+			// path: /blog|
 			if i-offset == uint(len(node.prefix)) {
-				if node.wildcard != nil {
-					lastWildcard = node.wildcard
-					lastWildcardOffset = i
-				}
-
-				child := node.children[path[i]-32]
-
-				if child != nil {
-					node = child
-					offset = i
-					i++
-					goto begin
-				}
-
-				// node: /|:id
-				// path: /|blog
-				if node.parameter != nil {
-					node = node.parameter
-					offset = i
-					goto begin
-				}
-
-				// node: /|*any
-				// path: /|image.png
-				if node.wildcard != nil {
-					ctx.addParameter(node.wildcard.prefix, path[i:])
-					ctx.handler = node.wildcard.data
-					return
-				}
-
-				ctx.handler = nil
+				ctx.handler = node.data
 				return
 			}
 
-			// We got a conflict.
-			// node: /b|ag
-			// path: /b|riefcase
-			if path[i] != node.prefix[i-offset] {
-				if lastWildcard != nil {
-					ctx.addParameter(lastWildcard.prefix, path[lastWildcardOffset:])
-					ctx.handler = lastWildcard.data
-					return
-				}
+			// node: /blog|feed
+			// path: /blog|
+			ctx.handler = nil
+			return
+		}
 
-				ctx.handler = nil
+		// The node we just checked is entirely included in our path.
+		// node: /|
+		// path: /|blog
+		if i-offset == uint(len(node.prefix)) {
+			if node.wildcard != nil {
+				lastWildcard = node.wildcard
+				lastWildcardOffset = i
+			}
+
+			child := node.children[path[i]-32]
+
+			if child != nil {
+				node = child
+				offset = i
+				i++
+				continue
+			}
+
+			// node: /|:id
+			// path: /|blog
+			if node.parameter != nil {
+				node = node.parameter
+				offset = i
+				continue
+			}
+
+			// node: /|*any
+			// path: /|image.png
+			if node.wildcard != nil {
+				ctx.addParameter(node.wildcard.prefix, path[i:])
+				ctx.handler = node.wildcard.data
 				return
 			}
+
+			ctx.handler = nil
+			return
+		}
+
+		// We got a conflict.
+		// node: /b|ag
+		// path: /b|riefcase
+		if path[i] != node.prefix[i-offset] {
+			if lastWildcard != nil {
+				ctx.addParameter(lastWildcard.prefix, path[lastWildcardOffset:])
+				ctx.handler = lastWildcard.data
+				return
+			}
+
+			ctx.handler = nil
+			return
 		}
 
 		i++
