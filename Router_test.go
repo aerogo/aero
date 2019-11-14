@@ -78,7 +78,7 @@ func TestRouterWildcards(t *testing.T) {
 	assert.NotNil(t, router.Find("GET", "/documents/hello.txt"))
 }
 
-func TestRouterStaticData(t *testing.T) {
+func TestRouterStaticRoutes(t *testing.T) {
 	router := aero.Router{}
 	routes := loadRoutes("testdata/router/static.txt")
 	page := func(aero.Context) error { return nil }
@@ -94,7 +94,7 @@ func TestRouterStaticData(t *testing.T) {
 	}
 }
 
-func TestRouterGitHubData(t *testing.T) {
+func TestRouterGitHubRoutes(t *testing.T) {
 	router := aero.Router{}
 	routes := loadRoutes("testdata/router/github.txt")
 	page := func(aero.Context) error { return nil }

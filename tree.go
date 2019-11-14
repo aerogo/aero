@@ -175,8 +175,16 @@ func (node *tree) addChild(child *tree) {
 		node.children = append(node.children, nil)
 	}
 
-	node.indices[child.prefix[0]-32] = uint8(len(node.children))
-	node.children = append(node.children, child)
+	firstChar := child.prefix[0] - 32
+	index := node.indices[firstChar]
+
+	if index == 0 {
+		node.indices[firstChar] = uint8(len(node.children))
+		node.children = append(node.children, child)
+		return
+	}
+
+	node.children[index] = child
 }
 
 // addTrailingSlash adds a trailing slash with the same data.
