@@ -252,8 +252,8 @@ func (app *Application) StartTime() time.Time {
 	return app.start
 }
 
-// NewContext returns a new context from the pool.
-func (app *Application) NewContext(req *http.Request, res http.ResponseWriter) *context {
+// newContext returns a new context from the pool.
+func (app *Application) newContext(req *http.Request, res http.ResponseWriter) *context {
 	ctx := app.contextPool.Get().(*context)
 	ctx.status = http.StatusOK
 	ctx.request.inner = req
@@ -266,7 +266,7 @@ func (app *Application) NewContext(req *http.Request, res http.ResponseWriter) *
 
 // ServeHTTP responds to the given request.
 func (app *Application) ServeHTTP(response http.ResponseWriter, request *http.Request) {
-	ctx := app.NewContext(request, response)
+	ctx := app.newContext(request, response)
 
 	for _, rewrite := range app.rewrite {
 		rewrite(ctx)
