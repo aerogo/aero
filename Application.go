@@ -357,10 +357,8 @@ func (app *Application) acquireGZipWriter(response io.Writer) *gzip.Writer {
 // This is called by `Run` automatically and should never be called
 // outside of tests.
 func (app *Application) BindMiddleware() {
-	app.router.Each(func(node *tree) {
-		if node.data != nil {
-			node.data = node.data.Bind(app.middleware...)
-		}
+	app.router.bind(func(handler Handler) Handler {
+		return handler.Bind(app.middleware...)
 	})
 }
 

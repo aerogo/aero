@@ -42,34 +42,32 @@ func (router *Router) Find(method string, path string) Handler {
 // Lookup finds the handler and parameters for the given route
 // and assigns them to the given context.
 func (router *Router) Lookup(method string, path string, ctx *context) {
-	tree := router.selectTree(method)
-
-	// Fast path for the root node
-	if tree.prefix == path {
-		ctx.handler = tree.data
+	if method[0] == 'G' {
+		router.get.find(path, ctx)
 		return
 	}
 
+	tree := router.selectTree(method)
 	tree.find(path, ctx)
 }
 
-// Each traverses all trees and calls the given function on every node.
-func (router *Router) Each(callback func(*tree)) {
-	router.get.each(callback)
-	router.post.each(callback)
-	router.delete.each(callback)
-	router.put.each(callback)
-	router.patch.each(callback)
-	router.head.each(callback)
-	router.connect.each(callback)
-	router.trace.each(callback)
-	router.options.each(callback)
+// bind traverses all trees and calls the given function on every node.
+func (router *Router) bind(transform func(Handler) Handler) {
+	router.get.bind(transform)
+	router.post.bind(transform)
+	router.delete.bind(transform)
+	router.put.bind(transform)
+	router.patch.bind(transform)
+	router.head.bind(transform)
+	router.connect.bind(transform)
+	router.trace.bind(transform)
+	router.options.bind(transform)
 }
 
-// Print shows a pretty print of the routes.
+// Print shows a pretty print of the dynamic routes.
 func (router *Router) Print(method string) {
 	tree := router.selectTree(method)
-	tree.PrettyPrint(os.Stdout)
+	tree.root.PrettyPrint(os.Stdout)
 }
 
 // selectTree returns the tree by the given HTTP method.
