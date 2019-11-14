@@ -35,7 +35,6 @@ type Application struct {
 
 	router         Router
 	routeTests     map[string][]string
-	start          time.Time
 	rewrite        []func(RewriteContext)
 	middleware     []Middleware
 	pushConditions []func(Context) bool
@@ -58,7 +57,6 @@ type Application struct {
 // New creates a new application.
 func New() *Application {
 	app := &Application{
-		start:                 time.Now(),
 		stop:                  make(chan os.Signal, 1),
 		routeTests:            make(map[string][]string),
 		Config:                &Configuration{},
@@ -245,11 +243,6 @@ func (app *Application) AddPushCondition(test func(Context) bool) {
 // Rewrite adds a URL path rewrite function.
 func (app *Application) Rewrite(rewrite func(RewriteContext)) {
 	app.rewrite = append(app.rewrite, rewrite)
-}
-
-// StartTime returns the time the application started.
-func (app *Application) StartTime() time.Time {
-	return app.start
 }
 
 // newContext returns a new context from the pool.
