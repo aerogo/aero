@@ -1,6 +1,6 @@
 # Benchmarks
 
-The following results were performed on an Intel Core i7-8700 with Go version 1.13.4. Last update: 2019-11-14.
+The following benchmarks were performed on an Intel Core i7-8700 with Go version 1.13.4. Last update: 2019-11-14.
 
 ## Comparison with Echo and Gin
 
