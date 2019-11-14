@@ -30,13 +30,15 @@ type dataType = Handler
 
 // tree represents a radix tree.
 type tree struct {
-	prefix    string
-	indices   [224]uint8
-	children  []*tree
-	data      dataType
-	parameter *tree
-	wildcard  *tree
-	kind      byte
+	prefix     string
+	startIndex uint8
+	endIndex   uint8
+	indices    []uint8
+	children   []*tree
+	data       dataType
+	parameter  *tree
+	wildcard   *tree
+	kind       byte
 }
 
 // add adds a new element to the tree.
@@ -148,13 +150,15 @@ func (node *tree) split(index int, path string, data dataType) {
 // clone clones the node with a new prefix.
 func (node *tree) clone(prefix string) *tree {
 	return &tree{
-		prefix:    prefix,
-		data:      node.data,
-		indices:   node.indices,
-		children:  node.children,
-		parameter: node.parameter,
-		wildcard:  node.wildcard,
-		kind:      node.kind,
+		prefix:     prefix,
+		data:       node.data,
+		indices:    node.indices,
+		startIndex: node.startIndex,
+		endIndex:   node.endIndex,
+		children:   node.children,
+		parameter:  node.parameter,
+		wildcard:   node.wildcard,
+		kind:       node.kind,
 	}
 }
 
@@ -165,7 +169,9 @@ func (node *tree) reset(prefix string) {
 	node.parameter = nil
 	node.wildcard = nil
 	node.kind = 0
-	node.indices = [224]uint8{}
+	node.startIndex = 0
+	node.endIndex = 0
+	node.indices = nil
 	node.children = nil
 }
 
@@ -175,11 +181,34 @@ func (node *tree) addChild(child *tree) {
 		node.children = append(node.children, nil)
 	}
 
-	firstChar := child.prefix[0] - 32
-	index := node.indices[firstChar]
+	firstChar := child.prefix[0]
+
+	switch {
+	case node.startIndex == 0:
+		node.startIndex = firstChar
+		node.indices = []uint8{0}
+		node.endIndex = node.startIndex + uint8(len(node.indices))
+
+	case firstChar < node.startIndex:
+		diff := node.startIndex - firstChar
+		newIndices := make([]uint8, diff+uint8(len(node.indices)))
+		copy(newIndices[diff:], node.indices)
+		node.startIndex = firstChar
+		node.indices = newIndices
+		node.endIndex = node.startIndex + uint8(len(node.indices))
+
+	case firstChar >= node.endIndex:
+		diff := firstChar - node.endIndex + 1
+		newIndices := make([]uint8, diff+uint8(len(node.indices)))
+		copy(newIndices, node.indices)
+		node.indices = newIndices
+		node.endIndex = node.startIndex + uint8(len(node.indices))
+	}
+
+	index := node.indices[firstChar-node.startIndex]
 
 	if index == 0 {
-		node.indices[firstChar] = uint8(len(node.children))
+		node.indices[firstChar-node.startIndex] = uint8(len(node.children))
 		node.children = append(node.children, child)
 		return
 	}
@@ -189,7 +218,7 @@ func (node *tree) addChild(child *tree) {
 
 // addTrailingSlash adds a trailing slash with the same data.
 func (node *tree) addTrailingSlash(data dataType) {
-	if strings.HasSuffix(node.prefix, "/") || node.indices[separator-32] != 0 || node.kind == wildcard {
+	if strings.HasSuffix(node.prefix, "/") || node.kind == wildcard || (separator >= node.startIndex && separator < node.endIndex && node.indices[separator-node.startIndex] != 0) {
 		return
 	}
 
@@ -297,12 +326,16 @@ func (node *tree) append(path string, data dataType) {
 // end is called when the node was fully parsed
 // and needs to decide the next control flow.
 func (node *tree) end(path string, data dataType, i int, offset int) (*tree, int, controlFlow) {
-	index := node.indices[path[i]-32]
+	char := path[i]
 
-	if index != 0 {
-		node = node.children[index]
-		offset = i
-		return node, offset, controlNext
+	if char >= node.startIndex && char < node.endIndex {
+		index := node.indices[char-node.startIndex]
+
+		if index != 0 {
+			node = node.children[index]
+			offset = i
+			return node, offset, controlNext
+		}
 	}
 
 	// No fitting children found, does this node even contain a prefix yet?
@@ -348,7 +381,7 @@ func (node *tree) find(path string, ctx *context) {
 				// path: /blog|/post
 				if path[i] == separator {
 					ctx.addParameter(node.prefix, path[offset:i])
-					index := node.indices[separator-32]
+					index := node.indices[separator-node.startIndex]
 					node = node.children[index]
 					offset = i
 					i++
@@ -385,13 +418,17 @@ func (node *tree) find(path string, ctx *context) {
 				lastWildcardOffset = i
 			}
 
-			index := node.indices[path[i]-32]
+			char := path[i]
 
-			if index != 0 {
-				node = node.children[index]
-				offset = i
-				i++
-				continue
+			if char >= node.startIndex && char < node.endIndex {
+				index := node.indices[char-node.startIndex]
+
+				if index != 0 {
+					node = node.children[index]
+					offset = i
+					i++
+					continue
+				}
 			}
 
 			// node: /|:id
