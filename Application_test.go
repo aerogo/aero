@@ -89,6 +89,7 @@ func TestApplicationLoadConfig(t *testing.T) {
 }
 
 func TestApplicationRun(t *testing.T) {
+	start := time.Now()
 	app := aero.New()
 
 	// When frontpage is requested, kill the server
@@ -107,7 +108,7 @@ func TestApplicationRun(t *testing.T) {
 
 	// When the server ends, check elapsed time
 	app.OnEnd(func() {
-		elapsed := time.Since(app.StartTime())
+		elapsed := time.Since(start)
 		assert.Equal(t, elapsed < 2*time.Second, true)
 	})
 
