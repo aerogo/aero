@@ -4,6 +4,8 @@ The following benchmarks were performed on an Intel Core i7-8700 with Go version
 
 ## Julien Schmidt's benchmark
 
+You can [run these on your own](https://github.com/julienschmidt/go-http-routing-benchmark).
+
 ### GitHub routes
 
 ```text
@@ -111,8 +113,6 @@ BenchmarkTigerTonic_Param5           227000         5649 ns/op        2279 B/op 
 BenchmarkTraffic_Param5              294430         4149 ns/op        2208 B/op          27 allocs/op
 BenchmarkVulcan_Param5              2452029          486 ns/op          98 B/op           3 allocs/op
 ```
-
-You can [run these by yourself](https://github.com/julienschmidt/go-http-routing-benchmark).
 
 ## Latency
 
