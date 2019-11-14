@@ -445,10 +445,6 @@ func initMIMETypes() {
 		typ       string
 	}{
 		{
-			extension: ".webp",
-			typ:       "image/webp",
-		},
-		{
 			extension: ".apng",
 			typ:       "image/apng",
 		},
