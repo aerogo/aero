@@ -136,33 +136,8 @@ func (tree *tree) find(path string, ctx *context) {
 	)
 
 	// Search tree for equal parts until we can no longer proceed
+begin:
 	for {
-		if node.kind == parameter {
-			for {
-				// We reached the end.
-				if i == uint(len(path)) {
-					ctx.addParameter(node.prefix, path[offset:i])
-					ctx.handler = node.data
-					return
-				}
-
-				// node: /:xxx|/:yyy
-				// path: /blog|/post
-				if path[i] == separator {
-					ctx.addParameter(node.prefix, path[offset:i])
-					index := node.indices[separator-node.startIndex]
-					node = node.children[index]
-					offset = i
-					i++
-					break
-				}
-
-				i++
-			}
-
-			continue
-		}
-
 		// We reached the end.
 		if i == uint(len(path)) {
 			// node: /blog|
@@ -205,7 +180,29 @@ func (tree *tree) find(path string, ctx *context) {
 			if node.parameter != nil {
 				node = node.parameter
 				offset = i
-				continue
+				i++
+
+				for {
+					// We reached the end.
+					if i == uint(len(path)) {
+						ctx.addParameter(node.prefix, path[offset:i])
+						ctx.handler = node.data
+						return
+					}
+
+					// node: /:id|/posts
+					// path: /123|/posts
+					if path[i] == separator {
+						ctx.addParameter(node.prefix, path[offset:i])
+						index := node.indices[separator-node.startIndex]
+						node = node.children[index]
+						offset = i
+						i++
+						goto begin
+					}
+
+					i++
+				}
 			}
 
 			// node: /|*any
