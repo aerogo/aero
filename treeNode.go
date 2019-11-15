@@ -36,7 +36,7 @@ func (node *treeNode) split(index int, path string, data dataType) {
 	// Create split node with the remaining string
 	splitNode := node.clone(node.prefix[index:])
 
-	/// The existing data must be removed
+	// The existing data must be removed
 	node.reset(node.prefix[:index])
 
 	// If the path is empty, it means we don't create a 2nd child node.
