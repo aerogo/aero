@@ -135,8 +135,8 @@ func (tree *tree) find(path string, ctx *context) {
 		node               = &tree.root
 	)
 
-	// Search tree for equal parts until we can no longer proceed
 begin:
+	// Search tree for equal parts until we can no longer proceed
 	for {
 		// We reached the end.
 		if i == uint(len(path)) {
