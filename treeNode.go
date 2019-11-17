@@ -17,15 +17,15 @@ const (
 
 // treeNode represents a radix tree node.
 type treeNode struct {
-	prefix     string
 	startIndex uint8
 	endIndex   uint8
+	kind       byte
+	prefix     string
 	indices    []uint8
 	children   []*treeNode
 	data       dataType
 	parameter  *treeNode
 	wildcard   *treeNode
-	kind       byte
 }
 
 // split splits the node at the given index and inserts

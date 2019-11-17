@@ -172,7 +172,7 @@ func TestApplicationUnavailablePort(t *testing.T) {
 }
 
 // test sends a request to the server and returns the response.
-func test(app *aero.Application, route string) *httptest.ResponseRecorder {
+func test(app http.Handler, route string) *httptest.ResponseRecorder {
 	request := httptest.NewRequest("GET", route, nil)
 	request.Header.Set("Accept-Encoding", "gzip")
 

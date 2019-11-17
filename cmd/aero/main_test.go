@@ -9,7 +9,6 @@ import (
 )
 
 func TestNoParameters(t *testing.T) {
-
 	oldPath, err := os.Getwd()
 	assert.Nil(t, err)
 
@@ -31,7 +30,6 @@ func TestNoParameters(t *testing.T) {
 }
 
 func TestNewApp(t *testing.T) {
-
 	oldPath, err := os.Getwd()
 	assert.Nil(t, err)
 
