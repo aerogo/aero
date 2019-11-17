@@ -6,7 +6,7 @@
 [![Coverage][coverage-image]][coverage-url]
 [![Sponsor][sponsor-image]][sponsor-url]
 
-Aero is a high-performance web server with a clean API for web development.
+Aero is a high-performance web server with a clean API.
 
 ## Installation
 
@@ -42,7 +42,7 @@ Now you can build your app with `go build` or use the [run](https://github.com/a
 - Lets you push resources via HTTP/2
 - Supports session data with custom stores
 - Allows sending live data to the client via SSE
-- Provides http and https listener
+- Provides a context interface for custom contexts
 - Shows response time and size for your routes
 - Can run standalone without `nginx` babysitting it
 
