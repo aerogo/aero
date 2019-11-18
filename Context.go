@@ -170,21 +170,6 @@ func (ctx *context) Bytes(body []byte) error {
 	return err
 }
 
-// createSessionCookie creates a session cookie in the client.
-func (ctx *context) createSessionCookie() {
-	sessionCookie := http.Cookie{
-		Name:     "sid",
-		Value:    ctx.session.ID(),
-		HttpOnly: true,
-		Secure:   true,
-		MaxAge:   ctx.app.Sessions.Duration,
-		Path:     "/",
-		SameSite: http.SameSiteLaxMode,
-	}
-
-	http.SetCookie(ctx.response.inner, &sessionCookie)
-}
-
 // addParameter adds a new parameter to the context.
 func (ctx *context) addParameter(name string, value string) {
 	ctx.paramNames[ctx.paramCount] = name
@@ -576,7 +561,7 @@ func (ctx *context) Session() *session.Session {
 
 	// Create a new session
 	ctx.session = ctx.app.Sessions.New()
-	ctx.createSessionCookie()
+	http.SetCookie(ctx.response.inner, ctx.app.Sessions.Cookie(ctx.session))
 	return ctx.session
 }
 

@@ -6,7 +6,7 @@ require (
 	github.com/aerogo/csp v0.1.10
 	github.com/aerogo/http v1.1.1
 	github.com/aerogo/linter-performance v1.0.6
-	github.com/aerogo/session v0.1.8
+	github.com/aerogo/session v0.1.9
 	github.com/aerogo/session-store-memory v0.1.9
 	github.com/akyoto/assert v0.2.4
 	github.com/akyoto/color v1.8.11
