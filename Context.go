@@ -179,7 +179,7 @@ func (ctx *context) createSessionCookie() {
 		Secure:   true,
 		MaxAge:   ctx.app.Sessions.Duration,
 		Path:     "/",
-		SameSite: http.SameSiteDefaultMode,
+		SameSite: http.SameSiteLaxMode,
 	}
 
 	http.SetCookie(ctx.response.inner, &sessionCookie)
