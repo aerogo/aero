@@ -84,6 +84,9 @@ func New() *Application {
 		"form-action":  "'self'",
 	})
 
+	// Default SameSite value is "Lax"
+	app.Sessions.SameSite = http.SameSiteLaxMode
+
 	// Context pool
 	app.contextPool.New = func() interface{} {
 		return &context{
