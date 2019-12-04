@@ -27,7 +27,7 @@ const (
 	// and the overhead of compressing can lead up to a 75% reduction
 	// in server speed under high load. Therefore in this case
 	// we're trying to optimize for performance, not bandwidth.
-	gzipThreshold = 1450
+	gzipThreshold = 1436
 
 	// maxParams defines the maximum number of parameters per route.
 	maxParams = 16
