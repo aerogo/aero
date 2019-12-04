@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	github.com/aerogo/csp v0.1.10
-	github.com/aerogo/http v1.1.2
+	github.com/aerogo/http v1.1.3
 	github.com/aerogo/linter-performance v1.0.7
 	github.com/aerogo/session v0.1.9
 	github.com/aerogo/session-store-memory v0.1.9
