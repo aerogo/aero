@@ -21,13 +21,14 @@ import (
 )
 
 const (
-	// gzipThreshold should be close to the MTU size of a TCP packet.
+	// gzipThreshold should be close to the size of a TCP packet.
 	// Regarding performance it makes no sense to compress smaller files.
-	// Bandwidth can be saved however the savings are minimal for small files
-	// and the overhead of compressing can lead up to a 75% reduction
-	// in server speed under high load. Therefore in this case
-	// we're trying to optimize for performance, not bandwidth.
-	gzipThreshold = 1436
+	// This value used to be around 1.4 KB, however with the rise
+	// of mobile connections that have tiny MTUs even small savings
+	// provide a reasonable benefit and therefore we're setting this
+	// to 256 which reduces the final packet size by roughly 70 bytes
+	// in the smallest case.
+	gzipThreshold = 256
 
 	// maxParams defines the maximum number of parameters per route.
 	maxParams = 16
