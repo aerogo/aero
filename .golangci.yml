@@ -4,6 +4,7 @@ linters:
     - funlen
     - gochecknoglobals
     - gocognit
+    - gomnd
     - gosec
     - lll
     - stylecheck
