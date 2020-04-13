@@ -248,7 +248,7 @@ func TestContextContentTypes(t *testing.T) {
 	// Verify JS response
 	assert.Equal(t, responseJS.Code, http.StatusOK)
 	assert.Equal(t, responseJS.Body.String(), "console.log(42)")
-	assert.Contains(t, responseJS.Header().Get("Content-Type"), "application/javascript")
+	assert.Contains(t, responseJS.Header().Get("Content-Type"), "text/javascript")
 
 	// Verify file response
 	appSourceCode, err := ioutil.ReadFile("Application.go")
