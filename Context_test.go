@@ -255,7 +255,7 @@ func TestContextContentTypes(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, responseFile.Code, http.StatusOK)
 	assert.DeepEqual(t, responseFile.Body.Bytes(), appSourceCode)
-	assert.Contains(t, responseFile.Header().Get("Content-Type"), "text/plain")
+	assert.Contains(t, responseFile.Header().Get("Content-Type"), "text/x-go")
 
 	// Verify media file response
 	imageData, err := ioutil.ReadFile("docs/media/usage.apng")
