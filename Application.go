@@ -401,7 +401,7 @@ func (app *Application) serveHTTP(listener Listener) {
 	// it will be `http.ErrServerClosed`.
 	err := server.Serve(listener)
 
-	if errors.Is(err, http.ErrServerClosed) {
+	if !errors.Is(err, http.ErrServerClosed) {
 		panic(err)
 	}
 }
@@ -419,7 +419,7 @@ func (app *Application) serveHTTPS(listener Listener) {
 	// it will be `http.ErrServerClosed`.
 	err := server.ServeTLS(listener, app.Security.Certificate, app.Security.Key)
 
-	if errors.Is(err, http.ErrServerClosed) {
+	if !errors.Is(err, http.ErrServerClosed) {
 		panic(err)
 	}
 }
