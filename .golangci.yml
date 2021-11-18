@@ -1,11 +1,30 @@
 linters:
   enable-all: true
   disable:
+    - cyclop
+    - exhaustivestruct
+    - forbidigo
+    - forcetypeassert
     - funlen
     - gochecknoglobals
     - gocognit
+    - godot
+    - goerr113
+    - gofumpt
+    - golint
     - gomnd
     - gosec
+    - ifshort
+    - interfacer
+    - ireturn
     - lll
+    - maligned
+    - nestif
+    - nlreturn
+    - paralleltest
+    - scopelint
     - stylecheck
+    - testpackage
+    - varnamelen
+    - wrapcheck
     - wsl
