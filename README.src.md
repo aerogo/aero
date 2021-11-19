@@ -6,18 +6,6 @@ Aero is a high-performance web server with a clean API.
 
 {go:install}
 
-## Usage
-
-![Aero usage](docs/media/usage.apng)
-
-Run this in an empty directory:
-
-```bash
-aero -new
-```
-
-Now you can build your app with `go build` or use the [run](https://github.com/aerogo/run) development server.
-
 ## Benchmarks
 
 [![Web server performance](docs/media/server-performance.png)](docs/Benchmarks.md)
@@ -35,8 +23,6 @@ Now you can build your app with `go build` or use the [run](https://github.com/a
 - Supports session data with custom stores
 - Allows sending live data to the client via SSE
 - Provides a context interface for custom contexts
-- Shows response time and size for your routes
-- Can run standalone without `nginx` babysitting it
 
 ## Links
 

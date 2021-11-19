@@ -37,3 +37,14 @@ go get -u github.com/aerogo/aero/...
 - [API](docs/API.md)
 - [Configuration](docs/Configuration.md)
 - [Benchmarks](docs/Benchmarks.md)
+
+[godoc-image]: https://godoc.org/github.com/aerogo/aero?status.svg
+[godoc-url]: https://godoc.org/github.com/aerogo/aero
+[report-image]: https://goreportcard.com/badge/github.com/aerogo/aero
+[report-url]: https://goreportcard.com/report/github.com/aerogo/aero
+[tests-image]: https://cloud.drone.io/api/badges/aerogo/aero/status.svg
+[tests-url]: https://cloud.drone.io/aerogo/aero
+[coverage-image]: https://codecov.io/gh/aerogo/aero/graph/badge.svg
+[coverage-url]: https://codecov.io/gh/aerogo/aero
+[sponsor-image]: https://img.shields.io/badge/github-donate-green.svg
+[sponsor-url]: https://github.com/users/akyoto/sponsorship
