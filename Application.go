@@ -11,16 +11,12 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"sort"
 	"strconv"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
 
 	"github.com/aerogo/csp"
-	"github.com/aerogo/http/client"
-	performance "github.com/aerogo/linter-performance"
 	"github.com/aerogo/session"
 	memstore "github.com/aerogo/session-store-memory"
 	"github.com/akyoto/color"
@@ -31,11 +27,9 @@ type Application struct {
 	Config                *Configuration
 	Sessions              session.Manager
 	Security              ApplicationSecurity
-	Linters               []Linter
 	ContentSecurityPolicy *csp.ContentSecurityPolicy
 
 	router         Router
-	routeTests     map[string][]string
 	rewrite        []func(RewriteContext)
 	middleware     []Middleware
 	pushConditions []func(Context) bool
@@ -59,14 +53,8 @@ type Application struct {
 func New() *Application {
 	app := &Application{
 		stop:                  make(chan os.Signal, 1),
-		routeTests:            make(map[string][]string),
 		Config:                &Configuration{},
 		ContentSecurityPolicy: csp.New(),
-
-		// Default linters
-		Linters: []Linter{
-			performance.New(),
-		},
 	}
 
 	// Default CSP
@@ -163,7 +151,6 @@ func (app *Application) Run() {
 		callback()
 	}
 
-	app.TestRoutes()
 	app.wait()
 	app.Shutdown()
 }
@@ -286,60 +273,6 @@ func (app *Application) ServeHTTP(response http.ResponseWriter, request *http.Re
 	}
 
 	ctx.Close()
-}
-
-// Test tests the given URI paths when the application starts.
-func (app *Application) Test(route string, paths ...string) {
-	app.routeTests[route] = paths
-}
-
-// TestRoutes tests your application's routes.
-func (app *Application) TestRoutes() {
-	fmt.Println(strings.Repeat("-", 80))
-
-	go func() {
-		sort.Strings(app.routes.GET)
-
-		for _, route := range app.routes.GET {
-			// Skip ajax routes
-			if strings.HasPrefix(route, "/_") {
-				continue
-			}
-
-			// Check if the user defined test routes for the given route
-			testRoutes, exists := app.routeTests[route]
-
-			if exists {
-				for _, testRoute := range testRoutes {
-					app.TestRoute(route, testRoute)
-				}
-
-				continue
-			}
-
-			// Skip routes with parameters and display a warning to indicate it needs a test route
-			if strings.Contains(route, ":") {
-				color.Yellow(route)
-				continue
-			}
-
-			// Test the static route without parameters
-			app.TestRoute(route, route)
-		}
-	}()
-}
-
-// TestRoute tests the given route.
-func (app *Application) TestRoute(route string, uri string) {
-	for _, linter := range app.Linters {
-		linter.Begin(route, uri)
-	}
-
-	response, _ := client.Get("http://localhost:"+strconv.Itoa(app.Config.Ports.HTTP)+uri).Header("Accept", "text/html,*/*").End()
-
-	for _, linter := range app.Linters {
-		linter.End(route, uri, response)
-	}
 }
 
 // acquireGZipWriter will return a clean gzip writer from the pool.

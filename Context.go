@@ -102,7 +102,7 @@ func (ctx *context) App() *Application {
 func (ctx *context) Bytes(body []byte) error {
 	// If the request has been canceled by the client, stop.
 	if ctx.request.Context().Err() != nil {
-		return errors.New("Request interrupted by the client")
+		return ErrRequestInterruptedByClient
 	}
 
 	// If we registered any response body modifiers, invoke them.

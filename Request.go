@@ -7,7 +7,7 @@ import (
 
 // Request is an interface for HTTP requests.
 type Request interface {
-	Body() Body
+	Body() RequestBody
 	Context() stdContext.Context
 	Header(string) string
 	Host() string
@@ -24,8 +24,8 @@ type request struct {
 }
 
 // Body represents the request body.
-func (req *request) Body() Body {
-	return Body{
+func (req *request) Body() RequestBody {
+	return RequestBody{
 		reader: req.inner.Body,
 	}
 }

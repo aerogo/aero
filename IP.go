@@ -4,7 +4,6 @@
 package aero
 
 import (
-	"errors"
 	"net"
 	"net/http"
 	"strings"
@@ -19,7 +18,7 @@ func isPrivateAddress(address string) (bool, error) {
 	ipAddress := net.ParseIP(address)
 
 	if ipAddress == nil {
-		return false, errors.New("Address is not valid")
+		return false, ErrAddressNotValid
 	}
 
 	for _, cidr := range privateCIDRs {

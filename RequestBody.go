@@ -2,27 +2,26 @@ package aero
 
 import (
 	"encoding/json"
-	"errors"
 	"io"
 	"io/ioutil"
 
 	"github.com/akyoto/stringutils/unsafe"
 )
 
-// Body represents a request body.
-type Body struct {
+// RequestBody represents a request body.
+type RequestBody struct {
 	reader io.ReadCloser
 }
 
 // Reader returns an io.Reader for the request body.
-func (body Body) Reader() io.ReadCloser {
+func (body RequestBody) Reader() io.ReadCloser {
 	return body.reader
 }
 
 // JSON parses the body as a JSON object.
-func (body Body) JSON() (interface{}, error) {
+func (body RequestBody) JSON() (interface{}, error) {
 	if body.reader == nil {
-		return nil, errors.New("Empty body")
+		return nil, ErrEmptyBody
 	}
 
 	decoder := json.NewDecoder(body.reader)
@@ -39,7 +38,7 @@ func (body Body) JSON() (interface{}, error) {
 }
 
 // JSONObject parses the body as a JSON object and returns a map[string]interface{}.
-func (body Body) JSONObject() (map[string]interface{}, error) {
+func (body RequestBody) JSONObject() (map[string]interface{}, error) {
 	json, err := body.JSON()
 
 	if err != nil {
@@ -49,14 +48,14 @@ func (body Body) JSONObject() (map[string]interface{}, error) {
 	data, ok := json.(map[string]interface{})
 
 	if !ok {
-		return nil, errors.New("Invalid format: Expected JSON object")
+		return nil, ErrExpectedJSONObject
 	}
 
 	return data, nil
 }
 
 // Bytes returns a slice of bytes containing the request body.
-func (body Body) Bytes() ([]byte, error) {
+func (body RequestBody) Bytes() ([]byte, error) {
 	data, err := ioutil.ReadAll(body.reader)
 	defer body.reader.Close()
 
@@ -68,7 +67,7 @@ func (body Body) Bytes() ([]byte, error) {
 }
 
 // String returns a string containing the request body.
-func (body Body) String() (string, error) {
+func (body RequestBody) String() (string, error) {
 	bytes, err := body.Bytes()
 
 	if err != nil {

@@ -1,10 +1,7 @@
 github.com/aerogo/csp v0.1.10 h1:2PJf9gkdRvCFYOA0baTUyp34vwPp5ZJJX8GZRCYc/nM=
 github.com/aerogo/csp v0.1.10/go.mod h1:UrxbTXv+X9kJatyuLeu2yGFpOiWVPjbqA/DzqxSVhl8=
-github.com/aerogo/http v1.1.2/go.mod h1:h+m3WxevpaifyVpRAMV58qt8ScXSZhU1a5DdvBkRwwE=
 github.com/aerogo/http v1.1.3 h1:cvwOYL+zNEfNHvJcX6A6OgUwQ4KROlu8ypuQEQc1HtU=
 github.com/aerogo/http v1.1.3/go.mod h1:h+m3WxevpaifyVpRAMV58qt8ScXSZhU1a5DdvBkRwwE=
-github.com/aerogo/linter-performance v1.0.7 h1:8a+GBJl8JP7NobmEN8wtuhxHOUr77Yazzq8sxdFJzuQ=
-github.com/aerogo/linter-performance v1.0.7/go.mod h1:F5uPm704+MFf3BL8d1tYs50giZRtxM49nefGW+QjLW4=
 github.com/aerogo/session v0.1.8/go.mod h1:Q9QqpT8nM6HTaklE14T+bzNSKrwW1M2wZ/NZV1HUTB0=
 github.com/aerogo/session v0.1.9 h1:pgsFEtCteOQaZ/103q2/O+qrqZileiCZe+vboWKZMlU=
 github.com/aerogo/session v0.1.9/go.mod h1:dgpdXvs9tZXcag5ay6tEoKuySPga226iSh748uIES/E=
@@ -13,7 +10,6 @@ github.com/aerogo/session-store-memory v0.1.9/go.mod h1:z4ZxP+xLVdH69F/Cvgy93v8f
 github.com/akyoto/assert v0.2.3/go.mod h1:g5e6ag+ksCEQENq/LnmU9z04wCAIFDr8KacBusVL0H8=
 github.com/akyoto/assert v0.2.4 h1:n0FwcNH5dMYq3I8Iu7MOR1WWGkkGH8ao84nvCRJmsbs=
 github.com/akyoto/assert v0.2.4/go.mod h1:SoqVayyOmM/YSBnwOxJHCt4BCocoIrgeceWtJV701C0=
-github.com/akyoto/color v1.8.11/go.mod h1:Q77HnNKrgGSfXOpkR7cuyazaOXQsKLWKbDPh2cy+jto=
 github.com/akyoto/color v1.8.12 h1:7F/iF/POG6z+oppoGYWO6UOx8E2ZAypANO9rsfsBuHI=
 github.com/akyoto/color v1.8.12/go.mod h1:rG1eiYoSE+arV6oLuGuuekPtgujUlIErWeqqM13pVoA=
 github.com/akyoto/colorable v0.1.7 h1:ge91E25hiOiT/Zu47ij/rTO3cks7wMlTrcQspua1hFM=
@@ -32,6 +28,5 @@ github.com/klauspost/cpuid/v2 v2.0.9/go.mod h1:FInQzS24/EEf25PyTYn52gqo7WaD8xa02
 github.com/zeebo/xxh3 v1.0.1 h1:FMSRIbkrLikb/0hZxmltpg84VkqDAT5M8ufXynuhXsI=
 github.com/zeebo/xxh3 v1.0.1/go.mod h1:8VHV24/3AZLn3b6Mlp/KuC33LWH687Wq6EnziEB+rsA=
 golang.org/x/sys v0.0.0-20191025090151-53bf42e6b339/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
-golang.org/x/sys v0.0.0-20191127021746-63cb32ae39b2/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20211117180635-dee7805ff2e1 h1:kwrAHlwJ0DUBZwQ238v+Uod/3eZ8B2K5rYsUHBQvzmI=
 golang.org/x/sys v0.0.0-20211117180635-dee7805ff2e1/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
