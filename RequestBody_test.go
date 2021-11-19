@@ -12,7 +12,7 @@ import (
 	"github.com/akyoto/assert"
 )
 
-func TestBody(t *testing.T) {
+func TestRequestBody(t *testing.T) {
 	app := aero.New()
 
 	app.Get("/", func(ctx aero.Context) error {
@@ -31,7 +31,7 @@ func TestBody(t *testing.T) {
 	assert.Equal(t, response.Body.String(), helloWorld)
 }
 
-func TestBodyJSON(t *testing.T) {
+func TestRequestBodyJSON(t *testing.T) {
 	app := aero.New()
 
 	app.Get("/", func(ctx aero.Context) error {
@@ -49,7 +49,7 @@ func TestBodyJSON(t *testing.T) {
 	assert.Equal(t, response.Body.String(), "value")
 }
 
-func TestBodyErrors(t *testing.T) {
+func TestRequestBodyErrors(t *testing.T) {
 	app := aero.New()
 
 	app.Get("/", func(ctx aero.Context) error {
