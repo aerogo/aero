@@ -52,9 +52,9 @@ type Application struct {
 // New creates a new application.
 func New() *Application {
 	app := &Application{
-		stop:                  make(chan os.Signal, 1),
 		Config:                &Configuration{},
 		ContentSecurityPolicy: csp.New(),
+		stop:                  make(chan os.Signal, 1),
 	}
 
 	// Default CSP
