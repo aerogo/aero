@@ -43,10 +43,6 @@ type Application struct {
 	gzipWriterPool sync.Pool
 	serversMutex   sync.Mutex
 	servers        [2]*http.Server
-
-	routes struct {
-		GET []string
-	}
 }
 
 // New creates a new application.
@@ -110,7 +106,6 @@ func New() *Application {
 
 // Get registers your function to be called when the given GET path has been requested.
 func (app *Application) Get(path string, handler Handler) {
-	app.routes.GET = append(app.routes.GET, path)
 	app.router.Add(http.MethodGet, path, handler)
 }
 
