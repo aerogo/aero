@@ -33,16 +33,17 @@ type Application struct {
 	rewrite        []func(RewriteContext)
 	middleware     []Middleware
 	pushConditions []func(Context) bool
-	onStart        []func()
-	onShutdown     []func()
-	onPush         []func(Context)
-	onError        []func(Context, error)
-	stop           chan os.Signal
-	pushOptions    http.PushOptions
 	contextPool    sync.Pool
 	gzipWriterPool sync.Pool
+	pushOptions    http.PushOptions
 	serversMutex   sync.Mutex
 	servers        [2]*http.Server
+	stop           chan os.Signal
+
+	onStart    []func()
+	onShutdown []func()
+	onPush     []func(Context)
+	onError    []func(Context, error)
 }
 
 // New creates a new application.
@@ -69,6 +70,9 @@ func New() *Application {
 		"form-action":  "'self'",
 	})
 
+	// MIME types
+	mime.AddExtensionType(".apng", "image/apng")
+
 	// Default SameSite value is "Lax"
 	app.Sessions.SameSite = http.SameSiteLaxMode
 
@@ -88,18 +92,12 @@ func New() *Application {
 		},
 	}
 
-	// Configuration
-	app.Config.Reset()
-	app.Load()
-
 	// Default session store: Memory
 	app.Sessions.Store = memstore.New()
 
-	// MIME types
-	initMIMETypes()
-
-	// Receive signals
-	signal.Notify(app.stop, os.Interrupt, syscall.SIGTERM)
+	// Configuration
+	app.Config.Reset()
+	app.Load()
 
 	return app
 }
@@ -139,6 +137,7 @@ func (app *Application) Router() *Router {
 
 // Run starts your application.
 func (app *Application) Run() {
+	signal.Notify(app.stop, os.Interrupt, syscall.SIGTERM)
 	app.BindMiddleware()
 	app.ListenAndServe()
 
@@ -146,7 +145,7 @@ func (app *Application) Run() {
 		callback()
 	}
 
-	app.wait()
+	<-app.stop
 	app.Shutdown()
 }
 
@@ -182,18 +181,14 @@ func (app *Application) ListenAndServe() {
 	fmt.Println("Server running on:", color.GreenString("http://localhost:"+strconv.Itoa(app.Config.Ports.HTTP)))
 }
 
-// wait will make the process wait until it is killed.
-func (app *Application) wait() {
-	<-app.stop
-}
-
 // Shutdown will gracefully shut down all servers.
 func (app *Application) Shutdown() {
 	app.serversMutex.Lock()
 	defer app.serversMutex.Unlock()
 
-	shutdown(app.servers[0])
-	shutdown(app.servers[1])
+	for _, server := range app.servers {
+		shutdown(server, app.Config.Timeouts.Shutdown)
+	}
 
 	for _, callback := range app.onShutdown {
 		callback()
@@ -298,9 +293,9 @@ func (app *Application) BindMiddleware() {
 func (app *Application) createServer() *http.Server {
 	return &http.Server{
 		Handler:           app,
-		ReadHeaderTimeout: 5 * time.Second,
-		WriteTimeout:      180 * time.Second,
-		IdleTimeout:       120 * time.Second,
+		ReadHeaderTimeout: app.Config.Timeouts.ReadHeader,
+		WriteTimeout:      app.Config.Timeouts.Write,
+		IdleTimeout:       app.Config.Timeouts.Idle,
 		TLSConfig:         createTLSConfig(),
 	}
 }
@@ -353,13 +348,13 @@ func (app *Application) serveHTTPS(listener Listener) {
 }
 
 // shutdown will gracefully shut down the server.
-func shutdown(server *http.Server) {
+func shutdown(server *http.Server, timeout time.Duration) {
 	if server == nil {
 		return
 	}
 
 	// Add a timeout to the server shutdown
-	ctx, cancel := stdContext.WithTimeout(stdContext.Background(), 250*time.Millisecond)
+	ctx, cancel := stdContext.WithTimeout(stdContext.Background(), timeout)
 	defer cancel()
 
 	// Shut down server
@@ -367,26 +362,5 @@ func shutdown(server *http.Server) {
 
 	if err != nil {
 		fmt.Println(err)
-	}
-}
-
-// initMIMETypes adds a few additional types to the MIME package.
-func initMIMETypes() {
-	mimeTypes := []struct {
-		extension string
-		typ       string
-	}{
-		{
-			extension: ".apng",
-			typ:       "image/apng",
-		},
-	}
-
-	for _, m := range mimeTypes {
-		err := mime.AddExtensionType(m.extension, m.typ)
-
-		if err != nil {
-			color.Red("Failed adding '%s' MIME extension", m.typ)
-		}
 	}
 }
