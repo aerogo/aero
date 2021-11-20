@@ -71,7 +71,7 @@ func New() *Application {
 	})
 
 	// MIME types
-	mime.AddExtensionType(".apng", "image/apng")
+	_ = mime.AddExtensionType(".apng", "image/apng")
 
 	// Default SameSite value is "Lax"
 	app.Sessions.SameSite = http.SameSiteLaxMode
