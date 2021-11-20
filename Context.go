@@ -171,51 +171,6 @@ func (ctx *context) Bytes(body []byte) error {
 	return err
 }
 
-// addParameter adds a new parameter to the context.
-func (ctx *context) addParameter(name string, value string) {
-	ctx.paramNames[ctx.paramCount] = name
-	ctx.paramValues[ctx.paramCount] = value
-	ctx.paramCount++
-}
-
-// JSON encodes the object to a JSON string and responds.
-func (ctx *context) JSON(value interface{}) error {
-	ctx.response.SetHeader(contentTypeHeader, contentTypeJSON)
-	bytes, err := json.Marshal(value)
-
-	if err != nil {
-		return err
-	}
-
-	return ctx.Bytes(bytes)
-}
-
-// HTML sends a HTML string.
-func (ctx *context) HTML(html string) error {
-	header := ctx.response.inner.Header()
-	header.Set(contentTypeHeader, contentTypeHTML)
-	header.Set(contentTypeOptionsHeader, contentTypeOptions)
-	header.Set(xssProtectionHeader, xssProtection)
-	header.Set(referrerPolicyHeader, referrerPolicySameOrigin)
-
-	if ctx.app.Security.Certificate != "" {
-		header.Set(strictTransportSecurityHeader, strictTransportSecurity)
-		header.Set(contentSecurityPolicyHeader, ctx.app.ContentSecurityPolicy.String())
-	}
-
-	if len(ctx.app.Config.Push) > 0 {
-		err := ctx.pushResources()
-
-		if err != nil {
-			for _, callback := range ctx.app.onError {
-				callback(ctx, err)
-			}
-		}
-	}
-
-	return ctx.String(html)
-}
-
 // Close frees up resources and is automatically called
 // in the ServeHTTP part of the web server.
 func (ctx *context) Close() {
@@ -228,10 +183,36 @@ func (ctx *context) CSS(text string) error {
 	return ctx.String(text)
 }
 
-// JavaScript sends a script.
-func (ctx *context) JavaScript(code string) error {
-	ctx.response.SetHeader(contentTypeHeader, contentTypeJavaScript)
-	return ctx.String(code)
+// Error should be used for sending error messages to the client.
+func (ctx *context) Error(statusCode int, errorList ...interface{}) error {
+	ctx.status = statusCode
+
+	if len(errorList) == 0 {
+		message := http.StatusText(statusCode)
+		_ = ctx.String(message)
+		return errors.New(message)
+	}
+
+	messageBuffer := strings.Builder{}
+
+	for index, param := range errorList {
+		switch err := param.(type) {
+		case string:
+			messageBuffer.WriteString(err)
+		case error:
+			messageBuffer.WriteString(err.Error())
+		default:
+			continue
+		}
+
+		if index != len(errorList)-1 {
+			messageBuffer.WriteString(": ")
+		}
+	}
+
+	message := messageBuffer.String()
+	_ = ctx.String(message)
+	return errors.New(message)
 }
 
 // EventStream sends server events to the client.
@@ -301,48 +282,6 @@ func (ctx *context) File(file string) error {
 	return nil
 }
 
-// Error should be used for sending error messages to the client.
-func (ctx *context) Error(statusCode int, errorList ...interface{}) error {
-	ctx.status = statusCode
-
-	if len(errorList) == 0 {
-		message := http.StatusText(statusCode)
-		_ = ctx.String(message)
-		return errors.New(message)
-	}
-
-	messageBuffer := strings.Builder{}
-
-	for index, param := range errorList {
-		switch err := param.(type) {
-		case string:
-			messageBuffer.WriteString(err)
-		case error:
-			messageBuffer.WriteString(err.Error())
-		default:
-			continue
-		}
-
-		if index != len(errorList)-1 {
-			messageBuffer.WriteString(": ")
-		}
-	}
-
-	message := messageBuffer.String()
-	_ = ctx.String(message)
-	return errors.New(message)
-}
-
-// Path returns the relative request path, e.g. /blog/post/123.
-func (ctx *context) Path() string {
-	return ctx.request.inner.URL.Path
-}
-
-// SetPath sets the relative request path, e.g. /blog/post/123.
-func (ctx *context) SetPath(path string) {
-	ctx.request.inner.URL.Path = path
-}
-
 // Get retrieves an URL parameter.
 func (ctx *context) Get(param string) string {
 	for i := 0; i < ctx.paramCount; i++ {
@@ -357,105 +296,6 @@ func (ctx *context) Get(param string) string {
 // GetInt retrieves an URL parameter as an integer.
 func (ctx *context) GetInt(param string) (int, error) {
 	return strconv.Atoi(ctx.Get(param))
-}
-
-// IP tries to determine the real IP address of the client.
-func (ctx *context) IP() string {
-	return strings.Trim(realIP(ctx.request.inner), "[]")
-}
-
-// RemoteIP returns the remote IP address. This will return
-// the IP address of the endpoint (e.g. a proxy) but not
-// necessarily the IP of the client.
-func (ctx *context) RemoteIP() string {
-	remoteIP := ctx.request.inner.RemoteAddr
-
-	// If there is a colon in the remote address,
-	// remove the port number.
-	if strings.ContainsRune(remoteIP, ':') {
-		remoteIP, _, _ = net.SplitHostPort(remoteIP)
-	}
-
-	return remoteIP
-}
-
-// Query retrieves the value for the given URL query parameter.
-func (ctx *context) Query(param string) string {
-	return ctx.request.inner.URL.Query().Get(param)
-}
-
-// Redirect redirects to the given URL.
-func (ctx *context) Redirect(status int, url string) error {
-	ctx.status = status
-	ctx.response.SetHeader("Location", url)
-	ctx.response.inner.WriteHeader(ctx.status)
-	return nil
-}
-
-// isMedia returns whether the given content type is a media type.
-func isMedia(contentType string) bool {
-	switch {
-	case strings.HasPrefix(contentType, "image/"):
-		return true
-	case strings.HasPrefix(contentType, "video/"):
-		return true
-	case strings.HasPrefix(contentType, "audio/"):
-		return true
-	default:
-		return false
-	}
-}
-
-// canCompress returns whether the given content type should be compressed via gzip.
-func canCompress(contentType string) bool {
-	switch {
-	case strings.HasPrefix(contentType, "image/") && contentType != contentTypeSVG:
-		return false
-	case strings.HasPrefix(contentType, "video/"):
-		return false
-	case strings.HasPrefix(contentType, "audio/"):
-		return false
-	default:
-		return true
-	}
-}
-
-// push will start pushing the given resources in a separate goroutine.
-func (ctx *context) push(paths ...string) error {
-	// Check if we can push
-	pusher, ok := ctx.response.inner.(http.Pusher)
-
-	if !ok {
-		return nil
-	}
-
-	// OnPush callbacks
-	for _, callback := range ctx.app.onPush {
-		callback(ctx)
-	}
-
-	// Push every resource
-	for _, path := range paths {
-		err := pusher.Push(path, &ctx.app.pushOptions)
-
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// pushResources will start pushing the given resources
-// in a separate goroutine if the defined conditions are true.
-func (ctx *context) pushResources() error {
-	for _, pushCondition := range ctx.app.pushConditions {
-		if !pushCondition(ctx) {
-			return nil
-		}
-	}
-
-	return ctx.push(ctx.app.Config.Push...)
 }
 
 // HasSession indicates whether the client has a valid session or not.
@@ -477,6 +317,60 @@ func (ctx *context) HasSession() bool {
 	}
 
 	return ctx.session != nil
+}
+
+// HTML sends a HTML string.
+func (ctx *context) HTML(html string) error {
+	header := ctx.response.inner.Header()
+	header.Set(contentTypeHeader, contentTypeHTML)
+	header.Set(contentTypeOptionsHeader, contentTypeOptions)
+	header.Set(xssProtectionHeader, xssProtection)
+	header.Set(referrerPolicyHeader, referrerPolicySameOrigin)
+
+	if ctx.app.Security.Certificate != "" {
+		header.Set(strictTransportSecurityHeader, strictTransportSecurity)
+		header.Set(contentSecurityPolicyHeader, ctx.app.ContentSecurityPolicy.String())
+	}
+
+	if len(ctx.app.Config.Push) > 0 {
+		err := ctx.pushResources()
+
+		if err != nil {
+			for _, callback := range ctx.app.onError {
+				callback(ctx, err)
+			}
+		}
+	}
+
+	return ctx.String(html)
+}
+
+// IP tries to determine the real IP address of the client.
+func (ctx *context) IP() string {
+	return strings.Trim(realIP(ctx.request.inner), "[]")
+}
+
+// JavaScript sends a script.
+func (ctx *context) JavaScript(code string) error {
+	ctx.response.SetHeader(contentTypeHeader, contentTypeJavaScript)
+	return ctx.String(code)
+}
+
+// JSON encodes the object to a JSON string and responds.
+func (ctx *context) JSON(value interface{}) error {
+	ctx.response.SetHeader(contentTypeHeader, contentTypeJSON)
+	bytes, err := json.Marshal(value)
+
+	if err != nil {
+		return err
+	}
+
+	return ctx.Bytes(bytes)
+}
+
+// Path returns the relative request path, e.g. /blog/post/123.
+func (ctx *context) Path() string {
+	return ctx.request.inner.URL.Path
 }
 
 // ReadAll returns the contents of the reader.
@@ -508,20 +402,27 @@ func (ctx *context) ReadSeeker(reader io.ReadSeeker) error {
 	return nil
 }
 
-// Status returns the HTTP status.
-func (ctx *context) Status() int {
-	return ctx.status
-}
-
-// SetStatus sets the HTTP status.
-func (ctx *context) SetStatus(status int) {
+// Redirect redirects to the given URL.
+func (ctx *context) Redirect(status int, url string) error {
 	ctx.status = status
+	ctx.response.SetHeader("Location", url)
+	ctx.response.inner.WriteHeader(ctx.status)
+	return nil
 }
 
-// String responds either with raw text or gzipped if the
-// text length is greater than the gzip threshold.
-func (ctx *context) String(body string) error {
-	return ctx.Bytes(unsafe.StringToBytes(body))
+// RemoteIP returns the remote IP address. This will return
+// the IP address of the endpoint (e.g. a proxy) but not
+// necessarily the IP of the client.
+func (ctx *context) RemoteIP() string {
+	remoteIP := ctx.request.inner.RemoteAddr
+
+	// If there is a colon in the remote address,
+	// remove the port number.
+	if strings.ContainsRune(remoteIP, ':') {
+		remoteIP, _, _ = net.SplitHostPort(remoteIP)
+	}
+
+	return remoteIP
 }
 
 // Request returns the HTTP request.
@@ -566,8 +467,107 @@ func (ctx *context) Session() *session.Session {
 	return ctx.session
 }
 
+// SetPath sets the relative request path, e.g. /blog/post/123.
+func (ctx *context) SetPath(path string) {
+	ctx.request.inner.URL.Path = path
+}
+
+// SetStatus sets the HTTP status.
+func (ctx *context) SetStatus(status int) {
+	ctx.status = status
+}
+
+// Status returns the HTTP status.
+func (ctx *context) Status() int {
+	return ctx.status
+}
+
+// String responds either with raw text or gzipped if the
+// text length is greater than the gzip threshold.
+func (ctx *context) String(body string) error {
+	return ctx.Bytes(unsafe.StringToBytes(body))
+}
+
 // Text sends a plain text string.
 func (ctx *context) Text(text string) error {
 	ctx.response.SetHeader(contentTypeHeader, contentTypePlainText)
 	return ctx.String(text)
+}
+
+// Query retrieves the value for the given URL query parameter.
+func (ctx *context) Query(param string) string {
+	return ctx.request.inner.URL.Query().Get(param)
+}
+
+// addParameter adds a new parameter to the context.
+func (ctx *context) addParameter(name string, value string) {
+	ctx.paramNames[ctx.paramCount] = name
+	ctx.paramValues[ctx.paramCount] = value
+	ctx.paramCount++
+}
+
+// canCompress returns whether the given content type should be compressed via gzip.
+func canCompress(contentType string) bool {
+	switch {
+	case strings.HasPrefix(contentType, "image/") && contentType != contentTypeSVG:
+		return false
+	case strings.HasPrefix(contentType, "video/"):
+		return false
+	case strings.HasPrefix(contentType, "audio/"):
+		return false
+	default:
+		return true
+	}
+}
+
+// isMedia returns whether the given content type is a media type.
+func isMedia(contentType string) bool {
+	switch {
+	case strings.HasPrefix(contentType, "image/"):
+		return true
+	case strings.HasPrefix(contentType, "video/"):
+		return true
+	case strings.HasPrefix(contentType, "audio/"):
+		return true
+	default:
+		return false
+	}
+}
+
+// push will start pushing the given resources in a separate goroutine.
+func (ctx *context) push(paths ...string) error {
+	// Check if we can push
+	pusher, ok := ctx.response.inner.(http.Pusher)
+
+	if !ok {
+		return nil
+	}
+
+	// OnPush callbacks
+	for _, callback := range ctx.app.onPush {
+		callback(ctx)
+	}
+
+	// Push every resource
+	for _, path := range paths {
+		err := pusher.Push(path, &ctx.app.pushOptions)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// pushResources will start pushing the given resources
+// in a separate goroutine if the defined conditions are true.
+func (ctx *context) pushResources() error {
+	for _, pushCondition := range ctx.app.pushConditions {
+		if !pushCondition(ctx) {
+			return nil
+		}
+	}
+
+	return ctx.push(ctx.app.Config.Push...)
 }
