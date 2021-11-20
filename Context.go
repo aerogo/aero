@@ -1,7 +1,6 @@
 package aero
 
 import (
-	stdContext "context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aerogo/aero/event"
 	"github.com/aerogo/session"
 	"github.com/akyoto/color"
 	"github.com/akyoto/stringutils/unsafe"
@@ -47,7 +47,7 @@ type Context interface {
 	Get(string) string
 	GetInt(string) (int, error)
 	Error(int, ...interface{}) error
-	EventStream(stream *EventStream) error
+	EventStream(stream *event.Stream) error
 	File(string) error
 	HasSession() bool
 	HTML(string) error
@@ -216,29 +216,26 @@ func (ctx *context) Error(statusCode int, errorList ...interface{}) error {
 }
 
 // EventStream sends server events to the client.
-func (ctx *context) EventStream(stream *EventStream) error {
+func (ctx *context) EventStream(stream *event.Stream) error {
 	defer close(stream.Closed)
 
-	// Flush
+	// Flush supported?
 	flusher, ok := ctx.response.inner.(http.Flusher)
 
 	if !ok {
 		return ctx.Error(http.StatusNotImplemented, "Flushing not supported")
 	}
 
-	// Catch disconnect events
-	disconnectedContext := ctx.request.Context()
-	disconnectedContext, cancel := stdContext.WithDeadline(disconnectedContext, time.Now().Add(2*time.Hour))
-	disconnected := disconnectedContext.Done()
-	defer cancel()
-
 	// Send headers
 	header := ctx.response.inner.Header()
 	header.Set(contentTypeHeader, contentTypeEventStream)
-	header.Set(cacheControlHeader, "no-cache")
-	header.Set("Connection", "keep-alive")
-	header.Set("Access-Control-Allow-Origin", "*")
+	header.Set(cacheControlHeader, cacheControlNoCache)
+	header.Set(connectionHeader, connectionKeepAlive)
+	header.Set(corsHeader, corsAll)
 	ctx.response.inner.WriteHeader(200)
+
+	// Catch disconnect events
+	disconnected := ctx.request.Context().Done()
 
 	for {
 		select {
@@ -246,24 +243,27 @@ func (ctx *context) EventStream(stream *EventStream) error {
 			return nil
 
 		case event := <-stream.Events:
-			if event != nil {
-				data := event.Data
+			if event == nil {
+				continue
+			}
 
-				switch data.(type) {
-				case string, []byte:
-					// Do nothing with the data if it's already a string or byte slice.
-				default:
-					var err error
-					data, err = json.Marshal(data)
+			data := event.Data
 
-					if err != nil {
-						color.Red("Failed encoding event data as JSON: %v", data)
-					}
+			switch data.(type) {
+			case string, []byte:
+				fmt.Fprintf(ctx.response.inner, "event: %s\ndata: %s\n\n", event.Name, data)
+
+			default:
+				jsonData, err := json.Marshal(data)
+
+				if err != nil {
+					return err
 				}
 
-				fmt.Fprintf(ctx.response.inner, "event: %s\ndata: %s\n\n", event.Name, data)
-				flusher.Flush()
+				fmt.Fprintf(ctx.response.inner, "event: %s\ndata: %s\n\n", event.Name, jsonData)
 			}
+
+			flusher.Flush()
 		}
 	}
 }

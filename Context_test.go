@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/aerogo/aero"
+	"github.com/aerogo/aero/event"
 	"github.com/aerogo/session"
 	"github.com/akyoto/assert"
 )
@@ -423,7 +424,7 @@ func TestContextEventStream(t *testing.T) {
 	app := aero.New()
 
 	app.Get("/", func(ctx aero.Context) error {
-		stream := aero.NewEventStream()
+		stream := event.NewStream()
 
 		go func() {
 			for {
@@ -433,29 +434,14 @@ func TestContextEventStream(t *testing.T) {
 					return
 
 				case <-time.After(10 * time.Millisecond):
-					stream.Events <- &aero.Event{
-						Name: "ping",
-						Data: "{}",
-					}
-
-					stream.Events <- &aero.Event{
-						Name: "ping",
-						Data: []byte("{}"),
-					}
-
-					stream.Events <- &aero.Event{
-						Name: "ping",
-						Data: struct {
-							Message string `json:"message"`
-						}{
-							Message: "Hello",
-						},
-					}
-
-					stream.Events <- &aero.Event{
-						Name: "ping",
-						Data: nil,
-					}
+					stream.Events <- event.New("ping", "{}")
+					stream.Events <- event.New("ping", []byte("{}"))
+					stream.Events <- event.New("ping", nil)
+					stream.Events <- event.New("ping", struct {
+						Message string `json:"message"`
+					}{
+						Message: "Hello",
+					})
 				}
 			}
 		}()

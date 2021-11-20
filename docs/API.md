@@ -215,10 +215,10 @@ Using an event stream, you can push data from your server at any time to your cl
 
 ```go
 app.Get("/events/live", func(ctx aero.Context) error {
-	stream := aero.NewEventStream()
+	stream := event.NewStream()
 
 	go func() {
-		defer println("disconnected")
+		defer println("Disconnected.")
 
 		for {
 			select {
@@ -226,10 +226,7 @@ app.Get("/events/live", func(ctx aero.Context) error {
 				return
 
 			case <-time.After(1 * time.Second):
-				stream.Events <- &aero.Event{
-					Name: "ping",
-					Data: "Hello World",
-				}
+				stream.Events <- events.New("ping", "Hello World")
 			}
 		}
 	}()
