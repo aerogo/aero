@@ -25,6 +25,21 @@ Enable or disable gzip compression for your server. Setting this to `true` is hi
 }
 ```
 
+## timeouts
+
+Defines timeouts in nanoseconds.
+
+```json
+{
+	"timeouts": {
+		"idle": 1000000000,
+		"readHeader": 1000000000,
+		"write": 1000000000,
+		"shutdown": 1000000000
+    }
+}
+```
+
 ## push
 
 Specifies resources that you want to be HTTP/2 pushed on `ctx.HTML` responses:
