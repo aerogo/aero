@@ -60,7 +60,7 @@ A middleware function is a function that accepts an `aero.Handler` and returns a
 The accepted handler is the next handler in the middleware chain.
 
 ```go
-app.Use(func(next aero.Handler) {
+app.Use(func(next aero.Handler) aero.Handler {
 	return func(ctx aero.Context) error {
 		// Measure response time
 		start := time.Now()
